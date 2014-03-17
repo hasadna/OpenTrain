@@ -116,14 +116,18 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='260214_00077', day
         wifi_report_train = analysis.models.SingleWifiReport()
         wifi_report_train.report = report
         wifi_report_train.SSID = TRAIN_SSID
-        wifi_report_train.key = 'fake_bssid_train__%s' % (device_id)    
+        wifi_report_train.frequency = -13
+        wifi_report_train.signal = 13
+        wifi_report_train.key = 'FAKE_%s' % (device_id)    
         report.wifi_set_mock = [wifi_report_train]
     
         if stop_id != stops.NOSTOP:
             wifi_report_station = analysis.models.SingleWifiReport()
             wifi_report_station.report = report
             wifi_report_station.SSID = STATION_SSID
-            wifi_report_station.key = 'fake_bssid_stop__%s' % (stop_id)
+            wifi_report_station.frequency = 12
+            wifi_report_station.signal = -12
+            wifi_report_station.key = 'FAKE_%s' % (stop_id)
             report.wifi_set_mock.append(wifi_report_station)
         
         report.device_id = device_id
@@ -139,6 +143,41 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='260214_00077', day
 #general
 STATION_SSID = 'S-ISRAEL-RAILWAYS'
 TRAIN_SSID = 'ISRAEL-RAILWAYS'
+
+
+def raw_report_from_report(report):
+    rr = dict()
+    items = []
+    fake_timestamp = int(ot_utils.dt_time_to_unix_time(report.timestamp)*1000)
+    item = dict()
+    item['app_version_name'] = u'0.7.6'
+    item['app_version_code'] = 18
+    item['time'] = fake_timestamp
+    item['device_id'] = report.device_id
+    wifis = []
+    for wifi in report.get_wifi_set_all():
+        w = dict()
+        w['signal'] = wifi.signal
+        w['frequency'] = wifi.frequency
+        w['SSID'] = wifi.SSID
+        w['key'] = wifi.key
+        wifis.append(w)
+    item['wifi'] = wifis
+    loc = report.get_my_loc()
+    if loc:
+        l = dict()
+        l['bearing'] = 0
+        l['altitude'] = 0
+        l['provider'] = loc.provider
+        l['long'] = loc.lon
+        l['lat'] = loc.lat
+        l['time'] = fake_timestamp
+        l['accuracy'] = loc.accuracy
+        item['location_api'] = l
+    items.append(item)
+    rr['items'] = items
+    return rr
+
 
 if __name__ == '__main__':
     reports = generate_mock_reports(nostop_percent=0.05)
