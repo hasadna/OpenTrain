@@ -49,7 +49,10 @@ def report_fake(filename,dev2,delay,server):
                 item['time'] = time.time() * 1000
                 if item.get('location_api'):
                     item['location_api']['time'] = time.time() * 1000
-                time.sleep(delay)
+                if delay < 0:
+		    raw_input('press')
+		else:
+                    time.sleep(delay)
                 items_sent += 1
             body = json.dumps(report)
             headers = {'content-type':'application/json'}
