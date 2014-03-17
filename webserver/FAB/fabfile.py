@@ -9,9 +9,9 @@ env.user = 'opentrain'
 
 # Ec2 configuration
 
-env.django_base_dir = os.path.join('/home/%s/' % (env.user),'work/OpenTrains/webserver/opentrain')
-env.repo = 'https://github.com/oferb/OpenTrains.git'
-env.repo_dir = 'work/OpenTrains'  #dir after clone
+env.django_base_dir = os.path.join('/home/%s/' % (env.user),'work/OpenTrain/webserver/opentrain')
+env.repo = 'https://github.com/hasadna/OpenTrain.git'
+env.repo_dir = 'work/OpenTrain'  #dir after clone
 env.dns = 'opentrain.hasadna.org.il'
 
 def get_ctx():
