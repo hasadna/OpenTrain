@@ -25,7 +25,7 @@ from redis import WatchError
 
 TRACKER_TTL = 1 * 60
 TRACKER_REPORT_FOR_TRIP_COUNT_LOWER_THAN = 3
-HISTORY_LENGTH = 1000
+HISTORY_LENGTH = 100000
 
 class TrackedStopTime(object):
     def __init__(self, stop_id):
