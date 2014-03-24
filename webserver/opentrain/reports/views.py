@@ -8,6 +8,7 @@ import json
 
 @csrf_exempt
 def add(req):
+    import analysis.logic
     if req.method != 'POST':
         return HttpResponseNotAllowed(permitted_methods=["POST"],content="405 - ONLY POST")
     
@@ -15,7 +16,6 @@ def add(req):
     text = json.dumps(json.loads(body))
     rep = models.RawReport(text=text)
     rep.save()
-    import analysis.logic
     analysis.logic.analyze_single_raw_report(rep)
     return HttpResponse(status=201,content="report accepted")
 
