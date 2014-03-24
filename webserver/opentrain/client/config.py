@@ -1,5 +1,6 @@
 def get_client_config():
 	prefs = {}
+	prefs['CONFIG_VERSION'] = 1
 	prefs['RECORD_BATCH_SIZE'] = 5
 	prefs['TRAIN_INDICATION_TTL'] = 1 * 1 * 30 * 1000
 	prefs['LOCATION_API_UPDATE_INTERVAL'] = 5 * 1000
