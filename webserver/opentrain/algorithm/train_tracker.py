@@ -305,8 +305,8 @@ def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_a
 def save_stop_times_to_db(tracker_id, arrival_unix_timestamp, stop_id_and_departure_time):
     stop_id, departure_unix_timestamp = stop_id_and_departure_time.split('_')
     name = stops.all_stops[stop_id].name
-    departure = ot_utils.unix_time_to_localtime(int(departure_unix_timestamp)) if departure_unix_timestamp else None 
-    arrival = ot_utils.unix_time_to_localtime(int(arrival_unix_timestamp))
+    departure_time = ot_utils.unix_time_to_localtime(int(departure_unix_timestamp)) if departure_unix_timestamp else None 
+    arrival_time = ot_utils.unix_time_to_localtime(int(arrival_unix_timestamp))
     
     trips, time_deviation_in_seconds = get_possible_trips(tracker_id)
     if len(time_deviation_in_seconds) > 1:
@@ -321,6 +321,7 @@ def save_stop_times_to_db(tracker_id, arrival_unix_timestamp, stop_id_and_depart
         except RealTimeStop.DoesNotExist:
             rs = RealTimeStop()
         rs.tracker_id = tracker_id
+        rs.trip_id = trip_id
         rs.stop_id = stop_id
         rs.arrival_time = arrival_time
         rs.departure_time = departure_time
