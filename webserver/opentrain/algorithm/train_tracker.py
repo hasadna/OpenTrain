@@ -279,10 +279,6 @@ def update_trips(tracker_id):
     #if len(trips) <= 100:
     save_by_key(get_train_tracker_trip_ids_key(tracker_id), trips)
     save_by_key(get_train_tracker_trip_ids_deviation_seconds_key(tracker_id), time_deviation_in_seconds)
-    save_trips_to_db(tracker_id, trips, time_deviation_in_seconds)
-
-def save_trips_to_db(tracker_id, trips, time_deviation_in_seconds):
-    pass
         
 def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time):
     prev_stops_counter_key = get_train_tracker_tracked_stops_prev_stops_counter_key(tracker_id)
@@ -306,23 +302,30 @@ def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_a
             done = True
             p.unwatch()
 
-def save_stop_time_to_db(tracker_id,trip_id,stop_id,arrival_time,departure_time):
-    from analysis.models import RealTimeStop
-    try:
-        rs = RealTimeStop.objects.get(tracker_id=tracker_id,stop_id=stop_id,trip_id=trip_id)
-    except RealTimeStop.DoesNotExist:
-        rs = RealTimeStop()
-    rs.tracker_id = tracker_id
-    rs.stop_id = stop_id
-    rs.arrival_time = arrival_time
-    rs.departure_time = departure_time
-    rs.save()
-    
 def save_stop_times_to_db(tracker_id, arrival_unix_timestamp, stop_id_and_departure_time):
     stop_id, departure_unix_timestamp = stop_id_and_departure_time.split('_')
     name = stops.all_stops[stop_id].name
     departure = ot_utils.unix_time_to_localtime(int(departure_unix_timestamp)) if departure_unix_timestamp else None 
     arrival = ot_utils.unix_time_to_localtime(int(arrival_unix_timestamp))
+    
+    trips, time_deviation_in_seconds = get_possible_trips(tracker_id)
+    if len(time_deviation_in_seconds) > 1:
+        time_deviation_ratio = time_deviation_in_seconds[0]/time_deviation_in_seconds[1] 
+    else:
+        time_deviation_ratio = 0;
+    if len(trips) > 0 and len(trips) <= 3 and time_deviation_ratio < 0.5:
+        trip_id = trips[0]
+        from analysis.models import RealTimeStop
+        try:
+            rs = RealTimeStop.objects.get(tracker_id=tracker_id,stop_id=stop_id,trip_id=trip_id)
+        except RealTimeStop.DoesNotExist:
+            rs = RealTimeStop()
+        rs.tracker_id = tracker_id
+        rs.stop_id = stop_id
+        rs.arrival_time = arrival_time
+        rs.departure_time = departure_time
+        rs.save()    
+        
     # should save tracker_id, stop_id, arrival, departure (may be None) to db
 
 def add_prev_stop(tracker_id, stop_id, timestamp):
