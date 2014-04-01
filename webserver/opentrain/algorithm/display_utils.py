@@ -7,7 +7,6 @@ import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from scipy import spatial
-import shelve
 try:
     import matplotlib.pyplot as plt
 except ImportError:

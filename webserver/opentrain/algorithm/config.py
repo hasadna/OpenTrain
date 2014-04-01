@@ -17,7 +17,6 @@ def set_config(base_dir):
     # reports
     config.output_data = os.path.join(config.temp_data, 'output')  
     mkdir_p(config.output_data)    
-    config.output_shelve_file = os.path.join(config.output_data, 'shelve.data')  
 
     # params
     config.max_accuracy_radius_meters = 300
@@ -30,8 +29,8 @@ def set_config(base_dir):
     config.late_departure_max_seconds = 35 * 60 # how late can a train depart before the actual departure
     config.shape_probability_threshold= 0.80
     config.stop_discovery_location_timeout_seconds = 60
-    config.stop_discovery_probability_thresh = 0.95
-    config.stop_discovery_count_thresh = 10
+    config.stop_discovery_probability_thresh = 0.90
+    config.stop_discovery_count_thresh = 3
     
 base_dir = os.path.dirname(os.path.dirname(__file__))
 set_config(base_dir)

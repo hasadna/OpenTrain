@@ -2,7 +2,6 @@ import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 import gtfs.models
 from scipy import spatial
-import shelve
 import os
 import config
 import numpy as np
@@ -106,20 +105,8 @@ class ShapeList(dict):
   
 
 def get_all_shapes():
-    #from shapes import ShapeList
-    #import shapes
-    #datafile = shelve.open(config.gtfs_shape_file)
-
-    #if not datafile.has_key('shapesList'):
-        #gtfs_shapes_data = gtfs.models.Shape.objects.all().values_list('shape_id', 'shape_pt_lat', 'shape_pt_lon').order_by('shape_id', 'shape_pt_sequence')
     gtfs_shapes_data = list(gtfs.models.ShapeJson.objects.all())
     all_shapes = ShapeList(gtfs_shapes_data)
-        #gtfs_shapes_data = list(gtfs_shapes_data)
-        #datafile['shapesList'] = ShapeList(gtfs_shapes_data)
-    #all_shapes = datafile['shapesList']
-    
-    #datafile.close() 
-    
     return all_shapes
 
 all_shapes = get_all_shapes()
