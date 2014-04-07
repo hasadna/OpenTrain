@@ -93,6 +93,6 @@ class RealTimeStop(models.Model):
         unique_together = (('tracker_id','trip','stop'),)
         
     def __unicode__(self):
-        return '%s %s @%s' % (self.tracker,self.stop,self.arrival_time)
+        return '%s %s @%s' % (self.tracker_id,self.stop,self.arrival_time)
     
     
