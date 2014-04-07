@@ -16,7 +16,7 @@ class NonEmptyTripFilter(admin.SimpleListFilter):
     parameter_name = 'trip'
 
     def lookups(self, request, model_admin):
-        return models.RealTimeStop.objects.values('trip_id').distinct()
+        return [(x,x) for x in models.RealTimeStop.objects.values('trip_id').distinct()]
 
     def queryset(self, request, queryset):
         return queryset.filter(trip_id=self.value())
