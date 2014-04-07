@@ -95,4 +95,14 @@ class RealTimeStop(models.Model):
     def __unicode__(self):
         return '%s %s @%s' % (self.tracker_id,self.stop,self.arrival_time)
     
+    def get_expected(self):
+        from gtfs.models import StopTime
+        import common.ot_utils
+        try:
+            exp_stop_time = self.trip.stoptime_set.get(stop=self.stop)
+        except StopTime.DoesNotExist:
+            print 'Did not find expected - should stop here?'
+            return None
+        return common.ot_utils.db_time_to_datetime(exp_stop_time.arrival_time)
+
     
