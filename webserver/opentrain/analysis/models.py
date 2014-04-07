@@ -93,7 +93,9 @@ class RealTimeStop(models.Model):
         unique_together = (('tracker_id','trip','stop'),)
         
     def __unicode__(self):
-        return '%s %s @%s (exp=%s)' % (self.tracker_id,self.stop,self.arrival_time,self.get_expected())
+        import common.ot_utils
+        local_at = common.ot_utils.get_localtime(self.arrival_time).time().replace(microsecond=0)
+        return '%s %s @%s (exp=%s)' % (self.tracker_id,self.stop,local_at,self.get_expected())
     
     def get_expected(self):
         from gtfs.models import StopTime
