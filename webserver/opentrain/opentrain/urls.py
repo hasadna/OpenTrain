@@ -15,5 +15,6 @@ urlpatterns = patterns('',
     url(r'^analysis/',include('analysis.urls',namespace='analysis')),
     url(r'^api/1/',include('ot_api.urls',namespace='ot_api')),
     url(r'^static/jsi18n/he/django.js$', 'gtfs.views.home'),
+    url(r'^privacy','common.views.privacy')
 )
 
