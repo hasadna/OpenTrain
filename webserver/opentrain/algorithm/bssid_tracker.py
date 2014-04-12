@@ -5,7 +5,6 @@ from scipy import spatial
 import os
 import config
 import numpy as np
-import copy
 import stops
 import shapes
 from sklearn.hmm import MultinomialHMM

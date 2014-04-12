@@ -1,30 +1,22 @@
 import gtfs.models
-from scipy import spatial
 import os
 import config
 import numpy as np
-import copy
 import stops
 import shapes
-from sklearn.hmm import MultinomialHMM
 from utils import *
 from common.ot_utils import *
-from collections import deque
 from common import ot_utils
 try:
     import matplotlib.pyplot as plt
 except ImportError:
     pass
 import datetime
-import bssid_tracker 
 from redis_intf.client import (get_redis_pipeline, 
                                get_redis_client,
                                load_by_key, 
                                save_by_key)
 import json
-from utils import enum
-from redis import WatchError
-from stop_detector import get_train_tracker_tracked_stops_key
 from stop_detector import DetectedStopTime
 
 
