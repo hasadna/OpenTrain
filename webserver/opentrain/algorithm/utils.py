@@ -42,3 +42,15 @@ def is_strictly_increasing(L):
 
 def is_increasing(L):
     return all(x<=y for x, y in zip(L, L[1:])) 
+
+def find_index_of_first_consecutive_value(values, start_index):
+    res = None
+    for i in reversed(range(start_index)):
+        if values[i] != values[start_index]:
+            res = i+1
+            break
+        elif i == 0:
+            res = 0
+            break        
+    
+    return res

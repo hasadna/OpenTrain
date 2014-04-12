@@ -22,7 +22,7 @@ import time
 from display_utils import *
 from export_utils import *
 import shapes
-from train_tracker import add_report, get_possible_trips, print_possible_trips
+from train_tracker import add_report, print_possible_trips, get_possible_trips
 
 import stops
 from common.mock_reports_generator import generate_mock_reports
@@ -77,7 +77,7 @@ class train_tracker_test(TestCase):
     def track_mock_reports(self, reports, tracker_id):
         for i, report in enumerate(reports):
             add_report(report)
-
+        
         trips, deviation_in_seconds = get_possible_trips(tracker_id)
         return tracker_id, trips
     
@@ -107,29 +107,26 @@ class train_tracker_test(TestCase):
         self.assertTrue(self.is_trip_in_list(trips, trip_id))
         
     def test_tracker_on_real_devices(self):    
-        device_ids = ['1cb87f1e', '02090d12', 'f752c40d']
-        
+        device_ids = []
+        trip_suffixes_list = []
+        device_ids.append('1cb87f1e')# Udi's trip  
+        trip_suffixes_list.append(['_00073'])
+        device_ids.append('02090d12')# Eran's trip
+        trip_suffixes_list.append(['_00077', '_00177'])
+        device_ids.append('f752c40d')# Ofer's trip
+        trip_suffixes_list.append(['_00283'])
+
         self.remove_from_redis(device_ids)
         
-        device_id = device_ids[0] # Udi's trip        
-        tracker_id, trips = self.track_device(device_id, do_preload_reports=True)
-        print trips
-        self.assertEquals(len(trips), 1)        
-        self.assertTrue(self.is_trip_in_list(trips, '_00073'))
-        
-        device_id = device_ids[1] # Eran's trip
-        tracker_id, trips = self.track_device(device_id)
-        print trips
-        self.assertEquals(len(trips), 2)
-        self.assertTrue(self.is_trip_in_list(trips, '_00077'))
-        self.assertTrue(self.is_trip_in_list(trips, '_00177'))
-        
-        device_id = device_ids[2] # Ofer's trip
-        tracker_id, trips = self.track_device(device_id)
-        print trips
-        self.assertEquals(len(trips), 1)  
-        self.assertTrue(self.is_trip_in_list(trips, '_00283'))
-        
+        for i in xrange(len(device_ids)):
+            device_id = device_ids[i] 
+            trip_suffixes = trip_suffixes_list[i]
+            tracker_id, trips = self.track_device(device_id, do_preload_reports=True)
+            print trips
+            self.assertEquals(len(trips), len(trip_suffixes))
+            for trip_suffix in trip_suffixes:
+                self.assertTrue(self.is_trip_in_list(trips, trip_suffix))
+      
         self.remove_from_redis(device_ids)
         
     def remove_from_redis(self, device_ids):
