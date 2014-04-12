@@ -32,8 +32,7 @@ import trip_matcher
 TRACKER_TTL = 1 * 60
 TRACKER_REPORT_FOR_TRIP_COUNT_LOWER_THAN = 3
 
-
-# what is this used for?
+# this field saves visited shape points so our location estimatewe don't jitter back and forth when reports are inaccurate or not processed in order
 def get_train_tracker_visited_shape_sampled_point_ids_key(tracker_id):
     return "train_tracker:%s:visited_shape_sampled_point_ids" % (tracker_id)   
 
@@ -86,23 +85,20 @@ def add_report_to_tracker(tracker_id, report):
     if report.get_my_loc():
         try_update_coords(report, tracker_id)
     
-    stop_times, stops_have_changed = stop_detector.add_report(tracker_id,\
+    stop_times, is_stops_updated = stop_detector.add_report(tracker_id,\
                                                               report)
     
-    if stops_have_changed:
-        update_trips(tracker_id, stop_times)
-        # send last stop_time from stop_times
-        #save_stop_times_to_db(tracker_id, arrival_unix_timestamp, 
-        #                     stop_id_and_departure_time)
+    if is_stops_updated:
+        trips, time_deviation_in_seconds = update_trips(tracker_id, stop_times)
+        save_stop_times_to_db(tracker_id, stop_times[-1], trips,\
+                              time_deviation_in_seconds)
 
-def save_stop_times_to_db(tracker_id, arrival_unix_timestamp, stop_id_and_departure_time):
-    stop_id, departure_unix_timestamp = stop_id_and_departure_time.split('_')
-    name = stops.all_stops[stop_id].name
-    departure_time = ot_utils.unix_time_to_localtime(int(departure_unix_timestamp)) if departure_unix_timestamp else None 
-    arrival_time = ot_utils.unix_time_to_localtime(int(arrival_unix_timestamp))
-    stop_time = DetectedStopTime(stop_id, arrival_time, departure_time)
-    print stop_time
-    trips, time_deviation_in_seconds = get_possible_trips(tracker_id)
+def save_stop_times_to_db(tracker_id, detected_stop_time, trips,\
+                          time_deviation_in_seconds):
+    stop_id = detected_stop_time.stop_id
+    departure_time = detected_stop_time.departure
+    arrival_time = detected_stop_time.arrival
+    print detected_stop_time
     if len(time_deviation_in_seconds) > 1:
         time_deviation_ratio = time_deviation_in_seconds[0]/time_deviation_in_seconds[1] 
     else:
@@ -144,22 +140,22 @@ def try_update_coords(report, tracker_id):
 
 def update_trips(tracker_id, detected_stop_times):
     relevant_service_ids = get_relevant_service_ids(tracker_id)
-    trips, time_deviation_in_seconds = trip_matcher.get_possible_trips(tracker_id, detected_stop_times, relevant_service_ids)
-    #if len(trips) <= 100:
+    trips, time_deviation_in_seconds = trip_matcher.get_matched_trips(tracker_id, detected_stop_times, relevant_service_ids)
     save_by_key(get_train_tracker_trip_ids_key(tracker_id), trips)
     save_by_key(get_train_tracker_trip_ids_deviation_seconds_key(tracker_id), time_deviation_in_seconds)
+    return trips, time_deviation_in_seconds
         
 def print_possible_trips(tracker_id):
-    trips, arrival_delta_abs_sums_seconds = get_possible_trips(tracker_id)
+    trips, arrival_delta_abs_sums_seconds = get_trips(tracker_id)
     print 'Trip count = %d' %(len(trips))
-    for t in trips:
-        trip_stop_times = gtfs.models.StopTime.objects.filter(trip = t).order_by('arrival_time')
-        print "trip id: %s" % (t)
+    for trip in trips:
+        print "trip id: %s" % (trip)        
+        trip_stop_times = gtfs.models.StopTime.objects.filter(trip = trip).order_by('arrival_time')
         for x in trip_stop_times:
             print db_time_to_datetime(x.arrival_time), db_time_to_datetime(x.departure_time), x.stop
-        print        
+        print
 
-def get_possible_trips(tracker_id):
+def get_trips(tracker_id):
     trips = load_by_key(get_train_tracker_trip_ids_key(tracker_id))
     time_deviation_in_seconds = load_by_key(get_train_tracker_trip_ids_deviation_seconds_key(tracker_id))    
     return trips, time_deviation_in_seconds

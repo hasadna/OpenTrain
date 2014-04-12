@@ -22,7 +22,7 @@ import time
 from display_utils import *
 from export_utils import *
 import shapes
-from train_tracker import add_report, print_possible_trips, get_possible_trips
+from train_tracker import add_report, print_possible_trips, get_trips
 
 import stops
 from common.mock_reports_generator import generate_mock_reports
@@ -52,7 +52,7 @@ class train_tracker_test(TestCase):
                 fps_period_start = time.clock()                
             
             if i % 900 == 0:
-                trips = get_possible_trips(tracker_id)
+                trips = get_trips(tracker_id)
             report = reports_queryset[i]
             
             if set_reports_to_same_weekday_last_week:
@@ -70,7 +70,7 @@ class train_tracker_test(TestCase):
 
         #tracker.print_tracked_stop_times()
         #tracker.print_possible_trips()
-        trips, deviation_in_seconds = get_possible_trips(tracker_id)
+        trips, deviation_in_seconds = get_trips(tracker_id)
         return tracker_id, trips
         
   
@@ -78,7 +78,7 @@ class train_tracker_test(TestCase):
         for i, report in enumerate(reports):
             add_report(report)
         
-        trips, deviation_in_seconds = get_possible_trips(tracker_id)
+        trips, deviation_in_seconds = get_trips(tracker_id)
         return tracker_id, trips
     
     def teXXXst_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010314_07117','010314_07117'], remove_some_locations=True):
@@ -109,10 +109,10 @@ class train_tracker_test(TestCase):
     def test_tracker_on_real_devices(self):    
         device_ids = []
         trip_suffixes_list = []
-        device_ids.append('1cb87f1e')# Udi's trip  
-        trip_suffixes_list.append(['_00073'])
-        device_ids.append('02090d12')# Eran's trip
-        trip_suffixes_list.append(['_00077', '_00177'])
+        #device_ids.append('1cb87f1e')# Udi's trip  
+        #trip_suffixes_list.append(['_00073'])
+        #device_ids.append('02090d12')# Eran's trip
+        #trip_suffixes_list.append(['_00077', '_00177'])
         device_ids.append('f752c40d')# Ofer's trip
         trip_suffixes_list.append(['_00283'])
 

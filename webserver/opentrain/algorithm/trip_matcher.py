@@ -22,7 +22,7 @@ from stop_detector import DetectedStopTime
 
 # None means we cannot find a reasonable trip list
 # empty list means there are no trips that fit this tracker
-def get_possible_trips(tracker_id, detected_stop_times,\
+def get_matched_trips(tracker_id, detected_stop_times,\
                        relevant_service_ids, print_debug_info=False):
     if len(detected_stop_times) == 0:
         return None, None
