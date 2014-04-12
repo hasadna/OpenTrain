@@ -76,6 +76,10 @@ def get_relevant_service_ids(tracker_id):
                     result)    
     return result
 
+def add_report(report):  
+    bssid_tracker.tracker.add(report)
+    add_report_to_tracker(report.device_id, report)
+
 def add_report_to_tracker(tracker_id, report):
     set_tracker_day(tracker_id, report)
     
@@ -91,21 +95,6 @@ def add_report_to_tracker(tracker_id, report):
         print stop_times[-1]
         save_stop_times_to_db(tracker_id, stop_times[-1], trips,\
                               time_deviation_in_seconds)
-
-def get_trusted_trip_or_none(trips, time_deviation_in_seconds):
-    # some heuristics to evaluate if we already have a trip we trust
-    # enough to save it in db:
-    if not trips:
-        return None
-    if len(time_deviation_in_seconds) > 1:
-        time_deviation_ratio = time_deviation_in_seconds[0]/time_deviation_in_seconds[1] 
-    else:
-        time_deviation_ratio = 0;
-    do_trust_trip = len(trips) > 0 and len(trips) <= config.trip_list_length_thresh and time_deviation_ratio < 0.5
-    if do_trust_trip:
-        return trips[0] 
-    else:
-        return None 
 
 def save_stop_times_to_db(tracker_id, detected_stop_time, trips,\
                           time_deviation_in_seconds):
@@ -157,7 +146,12 @@ def update_trips(tracker_id, detected_stop_times):
     save_by_key(get_train_tracker_trip_ids_deviation_seconds_key(tracker_id), time_deviation_in_seconds)
     return trips, time_deviation_in_seconds
         
-def print_possible_trips(tracker_id):
+def get_trips(tracker_id):
+    trips = load_by_key(get_train_tracker_trip_ids_key(tracker_id))
+    time_deviation_in_seconds = load_by_key(get_train_tracker_trip_ids_deviation_seconds_key(tracker_id))    
+    return trips, time_deviation_in_seconds
+
+def print_trips(tracker_id):
     trips, arrival_delta_abs_sums_seconds = get_trips(tracker_id)
     print 'Trip count = %d' %(len(trips))
     for trip in trips:
@@ -167,14 +161,20 @@ def print_possible_trips(tracker_id):
             print db_time_to_datetime(x.arrival_time), db_time_to_datetime(x.departure_time), x.stop
         print
 
-def get_trips(tracker_id):
-    trips = load_by_key(get_train_tracker_trip_ids_key(tracker_id))
-    time_deviation_in_seconds = load_by_key(get_train_tracker_trip_ids_deviation_seconds_key(tracker_id))    
-    return trips, time_deviation_in_seconds
-
-def add_report(report):  
-    bssid_tracker.tracker.add(report)
-    add_report_to_tracker(report.device_id, report)
+def get_trusted_trip_or_none(trips, time_deviation_in_seconds):
+    # some heuristics to evaluate if we already have a trip we trust
+    # enough to save it in db:
+    if not trips:
+        return None
+    if len(time_deviation_in_seconds) > 1:
+        time_deviation_ratio = time_deviation_in_seconds[0]/time_deviation_in_seconds[1] 
+    else:
+        time_deviation_ratio = 0;
+    do_trust_trip = len(trips) > 0 and len(trips) <= config.trip_list_length_thresh and time_deviation_ratio < 0.5
+    if do_trust_trip:
+        return trips[0] 
+    else:
+        return None 
 
 cl = get_redis_client()
 p = get_redis_pipeline()

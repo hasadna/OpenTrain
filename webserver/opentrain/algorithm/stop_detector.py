@@ -96,6 +96,7 @@ def setup_hmm():
 def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time):
     prev_stops_counter_key = get_train_tracker_tracked_stops_prev_stops_counter_key(tracker_id)
     done = False
+    # we try to update a stop_time only if no stop_time was updated since we started the report processing. If one was updated, we don't update at all:
     while not done:
         p.watch(prev_stops_counter_key)
         prev_stops_counter_value = cl.get(prev_stops_counter_key)

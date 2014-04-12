@@ -22,7 +22,7 @@ import time
 from display_utils import *
 from export_utils import *
 import shapes
-from train_tracker import add_report, print_possible_trips, get_trips
+from train_tracker import add_report, print_trips, get_trips
 
 import stops
 from common.mock_reports_generator import generate_mock_reports
@@ -101,7 +101,7 @@ class train_tracker_test(TestCase):
             del report.my_loc_mock
         
         tracker_id, trips = self.track_mock_reports(reports, tracker_id)
-        print_possible_trips(tracker_id)
+        print_trips(tracker_id)
         self.remove_from_redis(tracker_id)
         self.assertEquals(len(trips), 1)
         self.assertTrue(self.is_trip_in_list(trips, trip_id))
