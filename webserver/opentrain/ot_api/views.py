@@ -56,7 +56,11 @@ class ApiView(View):
         return urls
     
 class TripIdsForDate(ApiView):
-    """ Return list of trips for given date """
+    """ Return list of trips for given date given 
+        paramters: one of:
+                 date : in format dd/mm/yyyy 
+                 today : 0/1         
+        """
     api_url = r'^trips/trips-for-date/$'
     def get(self,request):
         import gtfs.logic
@@ -76,7 +80,9 @@ class TripIdsForDate(ApiView):
         return HttpResponse(status=200,content=json.dumps(result),content_type='application/json')
 
 class TripDetails(ApiView):
-    """ Return details for trip with trip_id trip_id"""
+    """ Return details for trip with id trip_id (given in url) 
+        details include the points in order to draw the trip on map
+    """
     api_url = r'^trips/(?P<trip_id>\w+)/details/$'
     def get(self,request,trip_id):
         from gtfs.models import Trip

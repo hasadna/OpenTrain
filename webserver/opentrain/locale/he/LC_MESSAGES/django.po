@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-03 15:42+0200\n"
+"POT-Creation-Date: 2014-04-08 09:15+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -464,15 +464,19 @@ msgstr "מ"
 msgid "Hackita"
 msgstr "הכיתה - 2014"
 
-#: common/templates/common/base.html:70
+#: common/templates/common/base.html:69
+msgid "Privacy Policy"
+msgstr "מדיניות פרטיות"
+
+#: common/templates/common/base.html:71
 msgid "Download the"
 msgstr "הורד את ה"
 
-#: common/templates/common/base.html:70
+#: common/templates/common/base.html:71
 msgid "app"
 msgstr "אפליקציה"
 
-#: common/templates/common/base.html:70
+#: common/templates/common/base.html:71
 msgid "Alpha version - on your own risk"
 msgstr "גרסת אלפא, על אחריותך"
 
