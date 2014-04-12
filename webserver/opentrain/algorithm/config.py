@@ -31,6 +31,9 @@ def set_config(base_dir):
     config.stop_discovery_location_timeout_seconds = 60
     config.stop_discovery_probability_thresh = 0.90
     config.stop_discovery_count_thresh = 3
+    # if the trip list is longer than the threshold, we do not 
+    # have a match to GTFS
+    config.trip_list_length_thresh = 3
     
 base_dir = os.path.dirname(os.path.dirname(__file__))
 set_config(base_dir)

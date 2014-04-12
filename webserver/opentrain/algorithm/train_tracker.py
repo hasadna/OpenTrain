@@ -30,7 +30,6 @@ import trip_matcher
 
 
 TRACKER_TTL = 1 * 60
-TRACKER_REPORT_FOR_TRIP_COUNT_LOWER_THAN = 3
 
 # this field saves visited shape points so our location estimatewe don't jitter back and forth when reports are inaccurate or not processed in order
 def get_train_tracker_visited_shape_sampled_point_ids_key(tracker_id):
@@ -44,9 +43,6 @@ def get_train_tracker_day(tracker_id):
 def get_train_tracker_relevant_services_key(tracker_id):
     return "train_tracker:%s:relevant_services" % (tracker_id)
 
-def get_train_tracker_coords_key(tracker_id):
-    return "train_tracker:%s:coords" % (tracker_id)
-
 def get_train_tracker_trip_ids_deviation_seconds_key(tracker_id):
     return "train_tracker:%s:trip_ids_deviation_seconds" % (tracker_id)
 
@@ -56,9 +52,11 @@ def get_train_tracker_trip_ids_key(tracker_id):
 def get_current_trip_id_coords_key(trip_id):
     return 'current_trip_id:coords:%s' % (trip_id)
 
+# last report timestamp for which coords was updated
 def get_current_trip_id_coords_timestamp_key(trip_id):
     return 'current_trip_id:coords_timestamp:%s' % (trip_id)
 
+# last report timestamp for which coords was observed. If the train is standing still and reports are coming in, this field will continue to update while the coords_timestamp_key field will not
 def get_current_trip_id_report_timestamp_key(trip_id):
     return 'current_trip_id:report_timestamp:%s' % (trip_id)
 
@@ -83,28 +81,39 @@ def add_report_to_tracker(tracker_id, report):
     
     # update train position
     if report.get_my_loc():
-        try_update_coords(report, tracker_id)
+        update_coords(report, tracker_id)
     
     stop_times, is_stops_updated = stop_detector.add_report(tracker_id,\
                                                               report)
     
     if is_stops_updated:
         trips, time_deviation_in_seconds = update_trips(tracker_id, stop_times)
+        print stop_times[-1]
         save_stop_times_to_db(tracker_id, stop_times[-1], trips,\
                               time_deviation_in_seconds)
+
+def get_trusted_trip_or_none(trips, time_deviation_in_seconds):
+    # some heuristics to evaluate if we already have a trip we trust
+    # enough to save it in db:
+    if not trips:
+        return None
+    if len(time_deviation_in_seconds) > 1:
+        time_deviation_ratio = time_deviation_in_seconds[0]/time_deviation_in_seconds[1] 
+    else:
+        time_deviation_ratio = 0;
+    do_trust_trip = len(trips) > 0 and len(trips) <= config.trip_list_length_thresh and time_deviation_ratio < 0.5
+    if do_trust_trip:
+        return trips[0] 
+    else:
+        return None 
 
 def save_stop_times_to_db(tracker_id, detected_stop_time, trips,\
                           time_deviation_in_seconds):
     stop_id = detected_stop_time.stop_id
     departure_time = detected_stop_time.departure
     arrival_time = detected_stop_time.arrival
-    print detected_stop_time
-    if len(time_deviation_in_seconds) > 1:
-        time_deviation_ratio = time_deviation_in_seconds[0]/time_deviation_in_seconds[1] 
-    else:
-        time_deviation_ratio = 0;
-    if len(trips) > 0 and len(trips) <= 3 and time_deviation_ratio < 0.5:
-        trip_id = trips[0]
+    trip_id = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
+    if trip_id:
         from analysis.models import RealTimeStop
         try:
             rs = RealTimeStop.objects.get(tracker_id=tracker_id,stop_id=stop_id,trip_id=trip_id)
@@ -115,28 +124,31 @@ def save_stop_times_to_db(tracker_id, detected_stop_time, trips,\
         rs.stop_id = stop_id
         rs.arrival_time = arrival_time
         rs.departure_time = departure_time
-        rs.save()    
+        rs.save() 
 
-def try_update_coords(report, tracker_id):
+def update_coords(report, tracker_id):
     loc = report.get_my_loc()
     coords = [loc.lat, loc.lon]
     res_shape_sampled_point_ids, _ = shapes.all_shapes.query_sampled_points(coords, loc.accuracy_in_coords)
      
     added_count = cl.sadd(get_train_tracker_visited_shape_sampled_point_ids_key(tracker_id), res_shape_sampled_point_ids)
 
-    trips = load_by_key(get_train_tracker_trip_ids_key(tracker_id))
-    trip = trips[0] if trips else None
-    if added_count > 0:
-        
-        save_by_key(get_train_tracker_coords_key(tracker_id), coords, cl=p)
-        
-        if trip is not None and len(trips) <= TRACKER_REPORT_FOR_TRIP_COUNT_LOWER_THAN:
-            save_by_key(get_current_trip_id_coords_key(trip), coords, timeout=TRACKER_TTL, cl=p)
-            save_by_key(get_current_trip_id_coords_timestamp_key(trip), ot_utils.dt_time_to_unix_time(report.timestamp), timeout=TRACKER_TTL, cl=p)
-        p.execute()              
-    
-    if trip is not None:    
+    trips, time_deviation_in_seconds = get_trips(tracker_id)
+    trip = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
+
+    if trip:
         cl.setex(get_current_trip_id_report_timestamp_key(trip), TRACKER_TTL, ot_utils.dt_time_to_unix_time(report.timestamp))
+        if added_count > 0:
+            save_by_key(get_current_trip_id_coords_key(trip),\
+                        coords,\
+                        timeout=TRACKER_TTL, cl=p)
+            save_by_key(get_current_trip_id_coords_timestamp_key(trip),\
+                        ot_utils.dt_time_to_unix_time(report.timestamp),\
+                        timeout=TRACKER_TTL, cl=p)
+        else: # extend expiration:
+            p.expire(get_current_trip_id_coords_key(trip), TRACKER_TTL)
+            p.expire(get_current_trip_id_coords_timestamp_key(trip), TRACKER_TTL)
+        p.execute()          
 
 def update_trips(tracker_id, detected_stop_times):
     relevant_service_ids = get_relevant_service_ids(tracker_id)
