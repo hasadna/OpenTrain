@@ -32,31 +32,21 @@ from stop_detector import DetectedStopTime
 # empty list means there are no trips that fit this tracker
 def get_possible_trips(tracker_id, detected_stop_times,\
                        relevant_service_ids, print_debug_info=False):
-    # TODO: use detected_stop_times instead of stop_times_redis
-    stop_times_redis = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), 0, -1, withscores=True)
-    if len(stop_times_redis) == 0:
+    if len(detected_stop_times) == 0:
         return None, None
-    #arrival = get_localtime(datetime.datetime.fromtimestamp(stop_times_redis[0][1]), self.db_timezone)
-    
-    #shape_matches_inds = self.get_shape_ids_with_high_probability()
 
-    #trips = gtfs.models.Trip.objects.filter(shape_id__in=shape_matches_inds, service__in=relevant_service_ids)
     trips = gtfs.models.Trip.objects.filter(service__in=relevant_service_ids)
 
     # filter by stop existence and its time frame:
     trips_filtered_by_stops_and_times = trips
     if print_debug_info:
         print len(trips_filtered_by_stops_and_times)
-    stop_times = []
-    for cur in stop_times_redis:
-        arrival = ot_utils.unix_time_to_localtime(int(cur[1]))
-        cur_0_split = cur[0].split('_')
-        stop_id = cur_0_split[0]
+    
+    for stop_time in detected_stop_times:
+        arrival = stop_time.arrival
+        stop_id = stop_time.stop_id
         name = stops.all_stops[stop_id].name
-        departure = ot_utils.unix_time_to_localtime(int(cur_0_split[1])) if cur_0_split[1] != '' else None
-        stop_times.append(DetectedStopTime(stop_id))
-        stop_times[-1].arrival = arrival
-        stop_times[-1].departure = departure
+        departure = stop_time.departure
         
         trip_stop_times = gtfs.models.StopTime.objects.filter(trip__in = trips_filtered_by_stops_and_times)
         arrival_time__greater_than = arrival-datetime.timedelta(seconds=config.late_arrival_max_seconds)
@@ -82,7 +72,7 @@ def get_possible_trips(tracker_id, detected_stop_times,\
     for i, t in enumerate(trips_filtered_by_stops_and_times):
         trip_stop_times = gtfs.models.StopTime.objects.filter(trip = t).order_by('arrival_time').values_list('stop')
         trip_stop_times = [str(x[0]) for x in trip_stop_times]
-        stop_inds_by_visit_order = [trip_stop_times.index(x) for x in [x.stop_id for x in stop_times]]
+        stop_inds_by_visit_order = [trip_stop_times.index(x) for x in [x.stop_id for x in detected_stop_times]]
         if is_increasing(stop_inds_by_visit_order):
             trip_in_right_direction.append(i)
     
@@ -94,9 +84,9 @@ def get_possible_trips(tracker_id, detected_stop_times,\
         stop_times_redis = gtfs.models.StopTime.objects.filter(trip = t).order_by('arrival_time').values_list('stop', 'arrival_time')#, 'departure_time')
         arrival_delta_abs_sum = 0
         #departure_delta_abs_sum = 0
-        for tracked_stop_time in stop_times:
-            stop_time = [x for x in stop_times_redis if str(x[0]) == tracked_stop_time.stop_id][0]
-            arrival_delta_seconds = stop_time[1] - datetime_to_db_time(tracked_stop_time.arrival)
+        for detected_stop_time in detected_stop_times:
+            stop_time = [x for x in stop_times_redis if str(x[0]) == detected_stop_time.stop_id][0]
+            arrival_delta_seconds = stop_time[1] - datetime_to_db_time(detected_stop_time.arrival)
             #departure_delta_seconds = stop_time[2] - datetime_to_db_time(tracked_stop_time.departure)
             arrival_delta_abs_sum += abs(arrival_delta_seconds)
             #departure_delta_abs_sum += abs(departure_delta_seconds)

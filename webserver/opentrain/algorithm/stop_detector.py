@@ -45,15 +45,28 @@ def get_train_tracker_prev_stops_counter_key(tracker_id):
 
 
 class DetectedStopTime(object):
-    def __init__(self, stop_id):
+    def __init__(self, stop_id, arrival=None, departure=None):
         self.stop_id = stop_id
         self.stop_id = stops.all_stops[stop_id].id
         self.name = stops.all_stops[stop_id].name
-        self.arrival = None
-        self.departure = None
+        self.arrival = arrival
+        self.departure = departure
     
     def __str__(self):
         return DetectedStopTime.get_str(self.arrival, self.departure, self.name)
+    
+    @staticmethod
+    def load_from_redis(redis_data):
+        arrival = ot_utils.unix_time_to_localtime(int(redis_data[1]))
+        redis_data_0_split = redis_data[0].split('_')
+        stop_id = redis_data_0_split[0]
+        name = stops.all_stops[stop_id].name
+        departure = ot_utils.unix_time_to_localtime(int(redis_data_0_split[1])) if redis_data_0_split[1] != '' else None    
+        return DetectedStopTime(stop_id, arrival, departure)
+
+    def save_to_redis():
+        # TODO - implement
+        pass
 
     @staticmethod
     def get_str(arrival, departure, name):
@@ -151,6 +164,14 @@ def try_get_stop_id(report):
            
     return stop_id
 
+def get_detected_stop_times(tracker_id):
+    stop_times_redis = cl.zrange(get_train_tracker_tracked_stops_key(\
+                                     tracker_id), 0, -1, withscores=True)
+    stop_times = []
+    for cur in stop_times_redis:
+        stop_times.append(DetectedStopTime.load_from_redis(cur))
+    return stop_times
+
 def add_report(tracker_id, report):
     # 1) add stop or non-stop to prev_stops and prev_stops_timestamps     
     # 2) set calc_hmm to true if according to wifis and/or location, our
@@ -225,8 +246,8 @@ def add_report(tracker_id, report):
                 update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time)
                     
             prev_timestamp = unix_timestamp
-    # TODO: return stop_times
-    stop_times = None
+
+    stop_times = get_detected_stop_times(tracker_id)
     return stop_times, prev_state != current_state    
             
 hmm, hmm_non_stop_component_num = setup_hmm()

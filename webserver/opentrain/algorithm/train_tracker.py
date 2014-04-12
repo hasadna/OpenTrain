@@ -107,9 +107,7 @@ def save_stop_times_to_db(tracker_id, arrival_unix_timestamp, stop_id_and_depart
     name = stops.all_stops[stop_id].name
     departure_time = ot_utils.unix_time_to_localtime(int(departure_unix_timestamp)) if departure_unix_timestamp else None 
     arrival_time = ot_utils.unix_time_to_localtime(int(arrival_unix_timestamp))
-    stop_time = DetectedStopTime(stop_id)
-    stop_time.arrival = arrival_time
-    stop_time.departure = departure_time
+    stop_time = DetectedStopTime(stop_id, arrival_time, departure_time)
     print stop_time
     trips, time_deviation_in_seconds = get_possible_trips(tracker_id)
     if len(time_deviation_in_seconds) > 1:
