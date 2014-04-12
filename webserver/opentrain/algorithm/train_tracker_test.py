@@ -22,7 +22,7 @@ import time
 from display_utils import *
 from export_utils import *
 import shapes
-from train_tracker import add_report, get_possible_trips
+from train_tracker import add_report, get_possible_trips, print_possible_trips
 
 import stops
 from common.mock_reports_generator import generate_mock_reports
@@ -35,7 +35,6 @@ class train_tracker_test(TestCase):
         #device_coords, device_timestamps, device_accuracies_in_meters, device_accuracies_in_coords = get_location_info_from_device_id(device_id)
         now = ot_utils.get_localtime_now()
         reports_queryset = self.get_device_id_reports(device_id)
-        
         tracker_id = device_id
         
         fps_period_start = time.clock()
@@ -60,7 +59,11 @@ class train_tracker_test(TestCase):
                 # fix finding same weekday last week by http://stackoverflow.com/questions/6172782/find-the-friday-of-previous-last-week-in-python
                 day_fix = (now.weekday() - report.timestamp.weekday()) % 7
                 day = now + datetime.timedelta(days=-day_fix)
+                # move day and correct for DST (daylight savings time)
+                dst_before = report.get_timestamp_israel_time().dst()
                 report.timestamp = report.timestamp.replace(year=day.year, month=day.month, day=day.day)
+                dst_after = report.get_timestamp_israel_time().dst()
+                report.timestamp -= dst_after-dst_before
                 
             add_report(report)
             
@@ -78,18 +81,27 @@ class train_tracker_test(TestCase):
         trips, deviation_in_seconds = get_possible_trips(tracker_id)
         return tracker_id, trips
     
-    def test_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_id = '260214_00077', remove_some_locations=True):
-        day = datetime.datetime.strptime(trip_id.split('_')[0], '%d%m%y')
-        now = ot_utils.get_localtime_now() # we want to get the correct timezone so we take it from get_localtime_now()
-        day = now.replace(year=day.year, month=day.month, day=day.day)
-        reports = generate_mock_reports(device_id=device_id, trip_id=trip_id, nostop_percent=0.05, day=day)
+    def teXXXst_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010314_07117','010314_07117'], remove_some_locations=True):
+        self.test_tracker_on_mock_device(device_id, trip_ids, remove_some_locations)
+        
+    def test_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010314_07117'], remove_some_locations=True):
+        if not isinstance(trip_ids, list):
+            trip_ids = [trip_ids]
+        tracker_id = device_id
+        self.remove_from_redis(tracker_id)
+        reports = []
+        for trip_id in trip_ids:
+            day = datetime.datetime.strptime(trip_id.split('_')[0], '%d%m%y')
+            now = ot_utils.get_localtime_now() # we want to get the correct timezone so we take it from get_localtime_now()
+            day = now.replace(year=day.year, month=day.month, day=day.day)
+            trip_reports = generate_mock_reports(device_id=device_id, trip_id=trip_id, nostop_percent=0.05, day=day)
+            reports += trip_reports
 
         for report in reports[::2]:
             del report.my_loc_mock
         
-        tracker_id = reports[0].device_id
-        self.remove_from_redis(tracker_id)
         tracker_id, trips = self.track_mock_reports(reports, tracker_id)
+        print_possible_trips(tracker_id)
         self.remove_from_redis(tracker_id)
         self.assertEquals(len(trips), 1)
         self.assertTrue(self.is_trip_in_list(trips, trip_id))

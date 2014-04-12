@@ -223,8 +223,6 @@ def add_report_to_tracker(tracker_id, report):
                 update_trips(tracker_id)
                     
             prev_timestamp = unix_timestamp
-                
-        print_tracked_stop_times(tracker_id)
 
 def try_update_coords(report, tracker_id):
     loc = report.get_my_loc()
@@ -313,7 +311,10 @@ def save_stop_times_to_db(tracker_id, arrival_unix_timestamp, stop_id_and_depart
     name = stops.all_stops[stop_id].name
     departure_time = ot_utils.unix_time_to_localtime(int(departure_unix_timestamp)) if departure_unix_timestamp else None 
     arrival_time = ot_utils.unix_time_to_localtime(int(arrival_unix_timestamp))
-    
+    stop_time = TrackedStopTime(stop_id)
+    stop_time.arrival = arrival_time
+    stop_time.departure = departure_time
+    print stop_time
     trips, time_deviation_in_seconds = get_possible_trips(tracker_id)
     if len(time_deviation_in_seconds) > 1:
         time_deviation_ratio = time_deviation_in_seconds[0]/time_deviation_in_seconds[1] 
@@ -398,11 +399,7 @@ def get_possible_trips(tracker_id, print_debug_info=False):
             departure_time__greater_than = departure-datetime.timedelta(seconds=config.late_departure_max_seconds)
             departure_time__less_than = departure+datetime.timedelta(seconds=config.early_departure_max_seconds)
             departure_time__range = datetime_range_to_db_time(departure_time__greater_than, departure_time__less_than)
-        
-            trip_stop_times_for_specific_stop = trip_stop_times.filter(stop = stop_id, 
-                                                                       arrival_time__range=arrival_time__range,
-                                                                       departure_time__range=departure_time__range)
-        
+            trip_stop_times_for_specific_stop = trip_stop_times.filter(stop = stop_id, arrival_time__range=arrival_time__range, departure_time__range=departure_time__range)
         else:
             trip_stop_times_for_specific_stop = trip_stop_times.filter(stop = stop_id, 
                                                                        arrival_time__range=arrival_time__range)                
@@ -458,7 +455,7 @@ def get_shape_ids_with_high_probability(tracker_id):
     return shape_ids
 
 def print_possible_trips(tracker_id):
-    trips = get_possible_trips(tracker_id)
+    trips, arrival_delta_abs_sums_seconds = get_possible_trips(tracker_id)
     print 'Trip count = %d' %(len(trips))
     for t in trips:
         trip_stop_times = gtfs.models.StopTime.objects.filter(trip = t).order_by('arrival_time')

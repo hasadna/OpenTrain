@@ -20,6 +20,9 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='260214_00077', day
     stop_times = gtfs.models.StopTime.objects.filter(trip=trip_id).order_by('arrival_time')
     if not day:
         day = ot_utils.get_localtime_now()
+        print 'WARNING: Note that there may be time zone issues'
+    else:
+        day = ot_utils.get_localtime(day)
     
     # filter stop times by from_stop_id and to_stop_id:
     trip_stop_ids = [str(x.stop.stop_id) for x in stop_times]
@@ -85,9 +88,11 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='260214_00077', day
     prev_stop_id = None
     stop_index = -1
     counter = -1
+    group_index = -1
     for shape_point, stop_id, i in zip(shape_points, stop_ids, xrange(len(stop_ids))):
         if stop_id != prev_stop_id:
             counter = -1
+            group_index += 1
             if stop_id != stops.NOSTOP:
                 stop_index += 1
                 interval_start = stop_times[stop_index].arrival_time
@@ -98,7 +103,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='260214_00077', day
                 interval_end = stop_times[stop_index+1].arrival_time
         #print i, stop_id       
         counter += 1
-        interval_ratio = float(counter)/stop_id_group_lens[stop_index]
+        interval_ratio = float(counter)/stop_id_group_lens[group_index]
         timestamp = int(interval_start + interval_ratio*(interval_end-interval_start))
         timestamp = day.replace(hour=timestamp/3600, minute=timestamp % 3600 / 60, second=timestamp % 60 / 60)
         
