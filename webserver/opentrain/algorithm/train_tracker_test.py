@@ -22,7 +22,7 @@ import time
 from display_utils import *
 from export_utils import *
 import shapes
-from train_tracker import add_report, print_trips, get_trips
+from train_tracker import add_report, print_trips, get_trips, get_trusted_trip_or_none
 
 import stops
 from common.mock_reports_generator import generate_mock_reports
@@ -70,21 +70,22 @@ class train_tracker_test(TestCase):
 
         #tracker.print_tracked_stop_times()
         #tracker.print_possible_trips()
-        trips, deviation_in_seconds = get_trips(tracker_id)
-        return tracker_id, trips
+        trips, time_deviation_in_seconds = get_trips(tracker_id)
+        trip = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
+        return tracker_id, [trip]
         
   
     def track_mock_reports(self, reports, tracker_id):
         for i, report in enumerate(reports):
             add_report(report)
-        
-        trips, deviation_in_seconds = get_trips(tracker_id)
-        return tracker_id, trips
+        trips, time_deviation_in_seconds = get_trips(tracker_id)
+        trip = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
+        return trip
     
     def teXXXst_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010314_07117','010314_07117'], remove_some_locations=True):
         self.test_tracker_on_mock_device(device_id, trip_ids, remove_some_locations)
         
-    def test_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010314_07117'], remove_some_locations=True):
+    def test_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010414_00168'], remove_some_locations=True):
         if not isinstance(trip_ids, list):
             trip_ids = [trip_ids]
         tracker_id = device_id
@@ -100,19 +101,18 @@ class train_tracker_test(TestCase):
         for report in reports[::2]:
             del report.my_loc_mock
         
-        tracker_id, trips = self.track_mock_reports(reports, tracker_id)
+        matched_trip = self.track_mock_reports(reports, tracker_id)
         print_trips(tracker_id)
         self.remove_from_redis(tracker_id)
-        self.assertEquals(len(trips), 1)
-        self.assertTrue(self.is_trip_in_list(trips, trip_id))
+        self.assertEquals(matched_trip, trip_id)
         
     def test_tracker_on_real_devices(self):    
         device_ids = []
         trip_suffixes_list = []
-        #device_ids.append('1cb87f1e')# Udi's trip  
-        #trip_suffixes_list.append(['_00073'])
-        #device_ids.append('02090d12')# Eran's trip
-        #trip_suffixes_list.append(['_00077', '_00177'])
+        device_ids.append('1cb87f1e')# Udi's trip  
+        trip_suffixes_list.append(['_00073'])
+        device_ids.append('02090d12')# Eran's trip
+        trip_suffixes_list.append(['_00077'])
         device_ids.append('f752c40d')# Ofer's trip
         trip_suffixes_list.append(['_00283'])
 
