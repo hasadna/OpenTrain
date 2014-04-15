@@ -16,8 +16,11 @@ def datetime_range_to_db_time(datetime1, datetime2):
         d2 = d2 + 24*3600    
     return d1,d2
 
-def db_time_to_datetime(db_time):
-    return datetime.time(db_time / 3600 % 24, (db_time % 3600) / 60, db_time % 60)
+def db_time_to_datetime(db_time, date=None):
+    result = datetime.time(db_time / 3600 % 24, (db_time % 3600) / 60, db_time % 60)
+    if date:
+        result = datetime.datetime.combine(date, result)
+    return result
 
 def get_utc_time_underscored():
     """ return UTC time as underscored, to timestamp folders """
@@ -126,7 +129,10 @@ def delete_from_model(*models):
 
 def get_localtime(dt):
     tz = pytz.timezone(settings.TIME_ZONE)
-    return dt.astimezone(tz)
+    if dt.tzinfo:
+        return dt.astimezone(tz)
+    else:
+        return tz.localize(dt)
 
 def get_normal_time(dt):
     local_dt = get_localtime(dt)

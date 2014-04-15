@@ -18,11 +18,51 @@ from redis_intf.client import (get_redis_pipeline,
                                save_by_key)
 import json
 from stop_detector import DetectedStopTime
+import cProfile
 
+def do_cprofile(func):
+    def profiled_func(*args, **kwargs):
+        profile = cProfile.Profile()
+        try:
+            profile.enable()
+            result = func(*args, **kwargs)
+            profile.disable()
+            return result
+        finally:
+            profile.print_stats()
+    return profiled_func
+
+try:
+    from line_profiler import LineProfiler
+
+    def do_profile(follow=[]):
+        def inner(func):
+            def profiled_func(*args, **kwargs):
+                try:
+                    profiler = LineProfiler()
+                    profiler.add_function(func)
+                    for f in follow:
+                        profiler.add_function(f)
+                    profiler.enable_by_count()
+                    return func(*args, **kwargs)
+                finally:
+                    profiler.print_stats()
+            return profiled_func
+        return inner
+
+except ImportError:
+    def do_profile(follow=[]):
+        "Helpful if you accidentally leave in production!"
+        def inner(func):
+            def nothing(*args, **kwargs):
+                return func(*args, **kwargs)
+            return nothing
+        return inner
 
 # None means we cannot find a reasonable trip list
 # empty list means there are no trips that fit this tracker
-def get_matched_trips_new(tracker_id, detected_stop_times,\
+#@do_profile(follow=[])
+def get_matched_trips(tracker_id, detected_stop_times,\
                        relevant_service_ids, print_debug_info=True):
     if len(detected_stop_times) == 0:
         return None, None
@@ -36,17 +76,16 @@ def get_matched_trips_new(tracker_id, detected_stop_times,\
     possible_costops_ids = [stops.all_stops.id_list[x] for x in possible_costops_inds]
     impossible_costops_ids = [x for x in stops.all_stops if x not in possible_costops_ids]
     
+    # this one is slow:
     trips = gtfs.models.Trip.objects.filter(service__in=relevant_service_ids)
     trip_stop_times = gtfs.models.StopTime.objects.filter(trip__in = trips, stop__in = stop_ids)
     trips_with_visited_stops = list(set(trip_stop_times.values_list('trip')))
     trips_with_visited_stops = [x[0] for x in trips_with_visited_stops]
-    trips_with_visited_stops = gtfs.models.Trip.objects.filter(trip_id__in = trips_with_visited_stops)
-    trips_with_visited_stops_filtered_by_costops = []
-    for trip in trips_with_visited_stops:
-        #print trip.stoptime_set.filter(stop__in = impossible_costops_ids)
-        if not trip.stoptime_set.filter(stop__in = impossible_costops_ids):
-            trips_with_visited_stops_filtered_by_costops.append(trip)
-        
+    trips_with_visited_stops_stop_times = gtfs.models.StopTime.objects.filter(trip__in = trips_with_visited_stops)
+    trips_with_impossible_stops = list(set(trips_with_visited_stops_stop_times.filter(stop__stop_id__in = impossible_costops_ids).values_list('trip')))
+    trips_with_impossible_stops = [x[0] for x in trips_with_impossible_stops]
+    trips_with_visited_stops_filtered_by_costops = list(set(trips_with_visited_stops) - set(trips_with_impossible_stops))
+    
     # filter by stop existence and its time frame:
     trips_filtered_by_stops_and_times = trips_with_visited_stops_filtered_by_costops
     if print_debug_info:
@@ -56,12 +95,11 @@ def get_matched_trips_new(tracker_id, detected_stop_times,\
     # filter by stop order and at least two detected stops:
     trip_in_right_direction = []
     for i, t in enumerate(trips_filtered_by_stops_and_times):
-        trip_stop_times = gtfs.models.StopTime.objects.filter(trip = t).order_by('arrival_time').values_list('stop')
-        trip_stop_times = [str(x[0]) for x in trip_stop_times]
-        intersection_of_trip_and_detected_stop_times = [x.stop_id for x in detected_stop_times]
-        intersection_of_trip_and_detected_stop_times = [x for x in intersection_of_trip_and_detected_stop_times if x in trip_stop_times]
-        if len(intersection_of_trip_and_detected_stop_times) >= 2:
-            stop_inds_by_visit_order = [trip_stop_times.index(x) for x in intersection_of_trip_and_detected_stop_times]
+        detected_stop_ids = [x.stop_id for x in detected_stop_times]        
+        trip_stop_times = list(gtfs.models.StopTime.objects.filter(trip = t, stop__stop_id__in=detected_stop_ids).order_by('arrival_time').values_list('stop', flat=True))
+        
+        if len(trip_stop_times) >= 2:
+            stop_inds_by_visit_order = [trip_stop_times.index(x) for x in trip_stop_times]
             if is_increasing(stop_inds_by_visit_order):
                 trip_in_right_direction.append(i)
     
@@ -74,7 +112,7 @@ def get_matched_trips_new(tracker_id, detected_stop_times,\
         arrival_delta_abs_sum = 0
         #departure_delta_abs_sum = 0
         for detected_stop_time in detected_stop_times:
-            stop_and_arrival_gtfs = [x for x in stop_times_gtfs if str(x[0]) == detected_stop_time.stop_id]
+            stop_and_arrival_gtfs = [x for x in stop_times_gtfs if x[0] == detected_stop_time.stop_id]
             if stop_and_arrival_gtfs:
                 arrival_delta_seconds = stop_and_arrival_gtfs[0][1] - datetime_to_db_time(detected_stop_time.arrival)
                 #departure_delta_seconds = stop_time[2] - datetime_to_db_time(tracked_stop_time.departure)
@@ -87,13 +125,13 @@ def get_matched_trips_new(tracker_id, detected_stop_times,\
     sorted_trips = sorted(zip(arrival_delta_abs_sums_seconds,trips_filtered_by_stops_and_times))
     trips_filtered_by_stops_and_times = [x for (y,x) in sorted_trips]
     # trips_filtered_by_stops_and_times to trip_ids
-    trips_filtered_by_stops_and_times = [x.trip_id for x in trips_filtered_by_stops_and_times]
+    #trips_filtered_by_stops_and_times = [x.trip_id for x in trips_filtered_by_stops_and_times]
     arrival_delta_abs_sums_seconds = [y for (y,x) in sorted_trips]
     if print_debug_info:
         print "arrival_delta_abs_sums_seconds =", arrival_delta_abs_sums_seconds
     return trips_filtered_by_stops_and_times, arrival_delta_abs_sums_seconds
 
-def get_matched_trips(tracker_id, detected_stop_times,\
+def get_matched_trips_old(tracker_id, detected_stop_times,\
                        relevant_service_ids, print_debug_info=False):
     if len(detected_stop_times) == 0:
         return None, None
@@ -134,7 +172,7 @@ def get_matched_trips(tracker_id, detected_stop_times,\
     trip_in_right_direction = []
     for i, t in enumerate(trips_filtered_by_stops_and_times):
         trip_stop_times = gtfs.models.StopTime.objects.filter(trip = t).order_by('arrival_time').values_list('stop')
-        trip_stop_times = [str(x[0]) for x in trip_stop_times]
+        trip_stop_times = [x[0] for x in trip_stop_times]
         stop_inds_by_visit_order = [trip_stop_times.index(x) for x in [x.stop_id for x in detected_stop_times]]
         if is_increasing(stop_inds_by_visit_order):
             trip_in_right_direction.append(i)
@@ -148,7 +186,7 @@ def get_matched_trips(tracker_id, detected_stop_times,\
         arrival_delta_abs_sum = 0
         #departure_delta_abs_sum = 0
         for detected_stop_time in detected_stop_times:
-            stop_time = [x for x in stop_times_redis if str(x[0]) == detected_stop_time.stop_id][0]
+            stop_time = [x for x in stop_times_redis if x[0] == detected_stop_time.stop_id][0]
             arrival_delta_seconds = stop_time[1] - datetime_to_db_time(detected_stop_time.arrival)
             #departure_delta_seconds = stop_time[2] - datetime_to_db_time(tracked_stop_time.departure)
             arrival_delta_abs_sum += abs(arrival_delta_seconds)
@@ -178,11 +216,11 @@ def generate_costop_matrix():
         trip_stop_times = trip.get_stop_times()
         for stop_time1 in trip_stop_times:
             for stop_time2 in trip_stop_times:
-                stop_time1_ind = stop_id_to_ind_id[str(stop_time1.stop.stop_id)];
-                stop_time2_ind = stop_id_to_ind_id[str(stop_time2.stop.stop_id)];
+                stop_time1_ind = stop_id_to_ind_id[stop_time1.stop.stop_id];
+                stop_time2_ind = stop_id_to_ind_id[stop_time2.stop.stop_id];
                 costops[stop_time1_ind, stop_time2_ind] += 1
                 costops[stop_time2_ind, stop_time1_ind] += 1
-    names = [stops.all_stops[str(x)].name for x in stops.all_stops.id_list[0:-1]]
+    names = [stops.all_stops[x].name for x in stops.all_stops.id_list[0:-1]]
     if (0):
         import matplotlib.pyplot as plt
         plt.imshow(costops > 0, interpolation="none")

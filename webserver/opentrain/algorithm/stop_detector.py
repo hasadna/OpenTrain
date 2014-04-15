@@ -52,14 +52,25 @@ class DetectedStopTime(object):
     def __str__(self):
         return DetectedStopTime.get_str(self.arrival, self.departure, self.name)
     
+    def __repr__(self):
+        return self.__str__()
+    
     @staticmethod
     def load_from_redis(redis_data):
         arrival = ot_utils.unix_time_to_localtime(int(redis_data[1]))
         redis_data_0_split = redis_data[0].split('_')
-        stop_id = redis_data_0_split[0]
+        stop_id = int(redis_data_0_split[0])
         name = stops.all_stops[stop_id].name
         departure = ot_utils.unix_time_to_localtime(int(redis_data_0_split[1])) if redis_data_0_split[1] != '' else None    
         return DetectedStopTime(stop_id, arrival, departure)
+
+    @staticmethod
+    def load_from_gtfs(gtfs_stop_time, date):
+        arrival = ot_utils.db_time_to_datetime(gtfs_stop_time.arrival_time, date)
+        arrival = ot_utils.get_localtime(arrival)
+        departure = ot_utils.db_time_to_datetime(gtfs_stop_time.departure_time, date)
+        departure = ot_utils.get_localtime(departure)        
+        return DetectedStopTime(gtfs_stop_time.stop.stop_id, arrival, departure)        
 
     def save_to_redis():
         # TODO - implement
@@ -179,6 +190,8 @@ def add_report(tracker_id, report):
     #    state changed from stop to non-stop or vice versa
     prev_current_stop_id_by_hmm = cl.get(\
         get_train_tracker_current_stop_id_key(tracker_id))
+    prev_current_stop_id_by_hmm = int(prev_current_stop_id_by_hmm) if\
+        prev_current_stop_id_by_hmm else None
       
     if not prev_current_stop_id_by_hmm:
         prev_state = tracker_states.INITIAL
@@ -202,7 +215,7 @@ def add_report(tracker_id, report):
         prev_stop_ids_order = [int(x[0].split("_")[0]) for x in prev_stops_and_timestamps]
         prev_stops_and_timestamps = [x for (y,x) in sorted(zip(prev_stop_ids_order,prev_stops_and_timestamps))]
         
-        prev_stop_ids = [x[0].split("_")[1] for x in prev_stops_and_timestamps]
+        prev_stop_ids = [int(x[0].split("_")[1]) for x in prev_stops_and_timestamps]
         
         prev_stop_int_ids = np.array([stops.all_stops.id_list.index(x) for x in prev_stop_ids])
         #assert np.array_equal(prev_stop_int_ids, np.array(self.prev_stops))
@@ -257,7 +270,7 @@ def add_report(tracker_id, report):
             
 hmm, hmm_non_stop_component_num = setup_hmm()
 nostop_id = stops.all_stops.id_list[hmm_non_stop_component_num]
-tracker_states = enum(INITIAL='initial', NOSTOP='nostop', STOP='stop', UNKNOWN='unknown')
+tracker_states = enum(INITIAL='initial', NOSTOP=-1, STOP='stop', UNKNOWN='unknown')
 
 cl = get_redis_client()
 p = get_redis_pipeline()

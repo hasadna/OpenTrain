@@ -102,9 +102,10 @@ class train_tracker_test(TestCase):
             del report.my_loc_mock
         
         matched_trip = self.track_mock_reports(reports, tracker_id)
-        print_trips(tracker_id)
-        self.remove_from_redis(tracker_id)
+        if matched_trip:
+            gtfs.models.Trip.objects.filter(trip_id = matched_trip)[0].print_stoptimes()
         self.assertEquals(matched_trip, trip_id)
+        self.remove_from_redis(tracker_id)        
         
     def test_tracker_on_real_devices(self):    
         device_ids = []

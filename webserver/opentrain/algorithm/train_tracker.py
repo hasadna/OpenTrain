@@ -170,7 +170,7 @@ def get_trusted_trip_or_none(trips, time_deviation_in_seconds):
         time_deviation_ratio = time_deviation_in_seconds[0]/time_deviation_in_seconds[1] 
     else:
         time_deviation_ratio = 0;
-    do_trust_trip = len(trips) > 0 and len(trips) <= config.trip_list_length_thresh and time_deviation_ratio < 0.5
+    do_trust_trip = len(trips) > 0 and time_deviation_ratio < 0.5
     if do_trust_trip:
         return trips[0] 
     else:

@@ -25,7 +25,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='260214_00077', day
         day = ot_utils.get_localtime(day)
     
     # filter stop times by from_stop_id and to_stop_id:
-    trip_stop_ids = [str(x.stop.stop_id) for x in stop_times]
+    trip_stop_ids = [x.stop.stop_id for x in stop_times]
     from_stop_ind = 0
     if from_stop_id:
         from_stop_ind = trip_stop_ids.index(from_stop_id)
@@ -33,7 +33,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='260214_00077', day
     if to_stop_id:
         to_stop_ind = trip_stop_ids.index(to_stop_id)+1
     stop_times = stop_times[from_stop_ind:to_stop_ind]
-    trip_stop_ids = set([str(x.stop.stop_id) for x in stop_times])
+    trip_stop_ids = set([x.stop.stop_id for x in stop_times])
 
     # get coords:
     coords = []
@@ -70,7 +70,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='260214_00077', day
 
     stop_id_to_stop_time_dict = {}
     for stop_time in stop_times:
-        stop_id_to_stop_time_dict[str(stop_time.stop.stop_id)] = stop_time
+        stop_id_to_stop_time_dict[stop_time.stop.stop_id] = stop_time
     
     from itertools import groupby
     stop_id_groups = []
