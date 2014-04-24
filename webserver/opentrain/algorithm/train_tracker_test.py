@@ -28,6 +28,8 @@ import stops
 from common.mock_reports_generator import generate_mock_reports
 from analysis.models import SingleWifiReport
 from redis_intf.client import get_redis_pipeline, get_redis_client
+import stop_detector_test
+
 
 class train_tracker_test(TestCase):
 
@@ -89,7 +91,7 @@ class train_tracker_test(TestCase):
         if not isinstance(trip_ids, list):
             trip_ids = [trip_ids]
         tracker_id = device_id
-        self.remove_from_redis(tracker_id)
+        stop_detector_test.remove_from_redis(tracker_id)
         reports = []
         for trip_id in trip_ids:
             day = datetime.datetime.strptime(trip_id.split('_')[0], '%d%m%y')
@@ -105,7 +107,7 @@ class train_tracker_test(TestCase):
         if matched_trip:
             gtfs.models.Trip.objects.filter(trip_id = matched_trip)[0].print_stoptimes()
         self.assertEquals(matched_trip, trip_id)
-        self.remove_from_redis(tracker_id)        
+        stop_detector_test.remove_from_redis(tracker_id)        
         
     def test_tracker_on_real_devices(self):    
         device_ids = []
@@ -117,7 +119,7 @@ class train_tracker_test(TestCase):
         device_ids.append('f752c40d')# Ofer's trip
         trip_suffixes_list.append(['_00283'])
 
-        self.remove_from_redis(device_ids)
+        stop_detector_test.remove_from_redis(device_ids)
         
         for i in xrange(len(device_ids)):
             device_id = device_ids[i] 
@@ -128,18 +130,9 @@ class train_tracker_test(TestCase):
             for trip_suffix in trip_suffixes:
                 self.assertTrue(self.is_trip_in_list(trips, trip_suffix))
       
-        self.remove_from_redis(device_ids)
+        stop_detector_test.remove_from_redis(device_ids)
         
-    def remove_from_redis(self, device_ids):
-        if isinstance(device_ids, basestring):
-            device_ids = [device_ids]
-        cl = get_redis_client()
-        keys = []
-        for device_id in device_ids:
-            keys.extend(cl.keys(pattern='train_tracker:%s*' % (device_id)))
-        if len(keys) > 0:
-            cl.delete(*keys)
-            
+  
 
     def is_trip_in_list(self, trips, trip_id_end):
         return len([x for x in trips if x.endswith(trip_id_end)]) > 0

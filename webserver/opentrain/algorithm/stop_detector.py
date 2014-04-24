@@ -151,7 +151,7 @@ def print_tracked_stop_times(tracker_id):
     for cur in res:
         arrival = ot_utils.unix_time_to_localtime(int(cur[1]))
         cur_0_split = cur[0].split('_')
-        name = stops.all_stops[cur_0_split[0]].name
+        name = stops.all_stops[int(cur_0_split[0])].name
         departure = ot_utils.unix_time_to_localtime(int(cur_0_split[1])) if cur_0_split[1] != '' else None
         print DetectedStopTime.get_str(arrival, departure, name)
 
