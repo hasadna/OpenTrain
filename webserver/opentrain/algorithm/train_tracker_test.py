@@ -30,13 +30,12 @@ from analysis.models import SingleWifiReport
 from redis_intf.client import get_redis_pipeline, get_redis_client
 import stop_detector_test
 
-
 class train_tracker_test(TestCase):
 
     def track_device(self, device_id, do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=True):
         #device_coords, device_timestamps, device_accuracies_in_meters, device_accuracies_in_coords = get_location_info_from_device_id(device_id)
         now = ot_utils.get_localtime_now()
-        reports_queryset = self.get_device_id_reports(device_id)
+        reports_queryset = stop_detector_test.get_device_id_reports(device_id)
         tracker_id = device_id
         
         fps_period_start = time.clock()
@@ -137,13 +136,7 @@ class train_tracker_test(TestCase):
     def is_trip_in_list(self, trips, trip_id_end):
         return len([x for x in trips if x.endswith(trip_id_end)]) > 0
 
-    def get_device_id_reports(self, device_id):
-        qs = analysis.models.Report.objects.filter(device_id=device_id)#,my_loc__isnull=False)
-        #qs = qs.filter(timestamp__day=device_date_day,timestamp__month=device_date_month,timestamp__year=device_date_year)
-        qs = qs.order_by('timestamp')
-        qs = qs.prefetch_related('wifi_set','my_loc')
-        #reports = list(qs) takes a long time
-        return qs    
+
         
 if __name__ == '__main__':
     unittest.main()

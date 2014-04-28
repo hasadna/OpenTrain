@@ -61,7 +61,7 @@ except ImportError:
 
 # None means we cannot find a reasonable trip list
 # empty list means there are no trips that fit this tracker
-#@do_profile(follow=[])
+@do_profile(follow=[])
 def get_matched_trips(tracker_id, detected_stop_times,\
                        relevant_service_ids, print_debug_info=True):
     if len(detected_stop_times) == 0:
