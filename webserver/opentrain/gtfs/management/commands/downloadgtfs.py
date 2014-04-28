@@ -16,7 +16,7 @@ class Command(BaseCommand):
         download_only = not options['todb']
         self.stdout.write('Starting download_gtfs_file(donwload_only=%s)' % (download_only))
         gtfs.utils.download_gtfs_file(download_only=download_only)
-        self.stdout.write('GTFS was donwloaded successfully')
+        self.stdout.write('GTFS command completed')
         
 
                           
