@@ -49,6 +49,7 @@ class BSSIDTracker(object):
         res = p.execute()
         
         stop_id, score = res[0][0]
+        stop_id = int(stop_id)
         total = res[1]
         stop_probability = float(score)/float(total)
 

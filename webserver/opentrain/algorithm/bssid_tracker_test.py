@@ -37,8 +37,8 @@ class BSSIDTrackerTest(TestCase):
         low_confidence_bssids = [x for x in bssids if bssid_tracker.tracker.get_stop_id(x)[1] < config.stop_discovery_probability_thresh]
 
         bssid_tracker.tracker.print_table(low_confidence_bssids)
-
-        self.assertEquals(len(low_confidence_bssids), 0)
+        
+        self.assertEquals(len(low_confidence_bssids), 0, 'Some stops do not pass the threshold, and this should be investigated.')
 
     def teXXXst_all_bssids_are_mapped(self): # should re-enable this test when we have more stop coverage
         unmapped_bssids = [x for x in self.stop_bssids if not bssid_tracker.tracker.has_bssid(x)]
