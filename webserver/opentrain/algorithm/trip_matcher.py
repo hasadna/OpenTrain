@@ -61,7 +61,7 @@ except ImportError:
 
 # None means we cannot find a reasonable trip list
 # empty list means there are no trips that fit this tracker
-@do_profile(follow=[])
+#@do_profile(follow=[])
 def get_matched_trips(tracker_id, detected_stop_times,\
                        relevant_service_ids, print_debug_info=True):
     if len(detected_stop_times) == 0:
@@ -96,11 +96,13 @@ def get_matched_trips(tracker_id, detected_stop_times,\
     trip_in_right_direction = []
     for i, t in enumerate(trips_filtered_by_stops_and_times):
         detected_stop_ids = [x.stop_id for x in detected_stop_times]        
-        trip_stop_times = list(gtfs.models.StopTime.objects.filter(trip = t, stop__stop_id__in=detected_stop_ids).order_by('arrival_time').values_list('stop', flat=True))
-        
+        trip_stop_times = gtfs.models.StopTime.objects.filter(trip = t, stop__stop_id__in=detected_stop_ids).values_list('stop', 'arrival_time')
+        trip_stop_times_dict = dict(trip_stop_times)
         if len(trip_stop_times) >= 2:
-            stop_inds_by_visit_order = [trip_stop_times.index(x) for x in trip_stop_times]
-            if is_increasing(stop_inds_by_visit_order):
+            gtfs_arrival_of_detected_stops = [trip_stop_times_dict.get(x) for x in detected_stop_ids]
+            gtfs_arrival_of_detected_stops = [x for x in gtfs_arrival_of_detected_stops if x is not None]
+            #stop_inds_by_visit_order = [trip_stop_times.index(x) for x in detected_stop_ids]
+            if is_increasing(gtfs_arrival_of_detected_stops):
                 trip_in_right_direction.append(i)
     
     trips_filtered_by_stops_and_times = [trips_filtered_by_stops_and_times[i] for i in trip_in_right_direction]
