@@ -199,8 +199,10 @@ def analyze_reports():
         run('./reanalyze.py')
         
         
-
-
+@task
+def copy_dir(remote,dest_dir):
+    fabric.operations.get(remote, dest_dir)
+    
 
     
     
