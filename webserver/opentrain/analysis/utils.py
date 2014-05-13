@@ -19,4 +19,9 @@ def find_distance_in_reports(reports,full=False):
                 result.append(dist)
     return result
 
+def find_device_ids(device_pat):
+    import models
+    device_ids = models.Report.objects.filter(device_id__contains=device_pat).values_list('device_id',flat=True).distinct()
+    return device_ids
+
         
