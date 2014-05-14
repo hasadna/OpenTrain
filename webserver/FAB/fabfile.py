@@ -203,6 +203,11 @@ def analyze_reports():
 def copy_dir(remote,dest_dir):
     fabric.operations.get(remote, dest_dir)
     
+@task
+def manage(command):
+    with cd(env.django_base_dir):
+        run('python manage.py %s' % (command))
+
 
     
     
