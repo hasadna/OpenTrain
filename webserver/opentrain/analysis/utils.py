@@ -24,4 +24,8 @@ def find_device_ids(device_pat):
     device_ids = models.Report.objects.filter(device_id__contains=device_pat).values_list('device_id',flat=True).distinct()
     return device_ids
 
-        
+def get_reports(device_id):
+    import models
+    result = list(models.Report.objects.filter(device_id=device_id).order_by('timestamp'))
+    return result
+
