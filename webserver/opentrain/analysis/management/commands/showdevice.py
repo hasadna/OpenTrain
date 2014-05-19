@@ -4,11 +4,11 @@ import analysis.utils
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + ( 
-         make_option('--gps',
+         make_option('--gpsglitch',
             action='store_true',
-            dest='gps',
+            dest='gpsglitch',
             default=False,
-            help='Show gps info'),
+            help='Show gps glitches'),
         make_option('--wifi',
             action='store_true',
             dest='wifi',
@@ -27,7 +27,14 @@ class Command(BaseCommand):
         if len(device_ids) > 1:
             raise CommandError('Found more than one device id matching %s:\n%s' % (device_pat,'\n'.join(device_ids)))
         self.device_id = device_ids[0]
-        if options['gps']:
+        self.reports = analysis.utils.get_reports(self.device_id)
+        self.reports_with_loc = [r for r in self.reports if hasattr(r,'my_loc')] 
+        self.print_title('General info for %s' % (self.device_id))
+        self.stdout.write('# of reports = %s' % (len(self.reports)))
+        self.stdout.write('# of reports with loc = %s' % (len(self.reports_with_loc)))
+        self.stdout.write('From: %s' % (self.reports[0].timestamp.replace(microsecond=0)))
+        self.stdout.write('To: %s' % (self.reports[-1].timestamp.replace(microsecond=0)))
+        if options['gpsglitch']:
             self.print_gps_info()
         if options['wifi']:
             self.print_wifi_info()
@@ -39,20 +46,15 @@ class Command(BaseCommand):
         
     def print_gps_info(self):
         self.print_title('GPS REPORT for device %s' % self.device_id)
-        
-        reports = analysis.utils.get_reports(self.device_id)
-        reports_with_loc = [r for r in reports if hasattr(r,'my_loc')]
-        r = None
-        self.stdout.write('# of reports = %s' % (len(reports)))
-        self.stdout.write('# of reports with loc = %s' % (len(reports_with_loc)))
+        self.stdout.write('# of reports with loc = %s' % (len(self.reports_with_loc)))
         threshold = 1000
         path = '%10s %10s %10s %10s %10s %10s'
         pat = '%10s %10s %10.2f %10.2f %10s %10.2f'
         self.stdout.write(path % ('INDEX','ID','DIST PREV','DIST NEXT','ACCURACY','TS DIFF'))
-        for idx in xrange(1,len(reports_with_loc)-1):
-            r_prev = reports_with_loc[idx-1]
-            r_cur = reports_with_loc[idx]
-            r_next = reports_with_loc[idx+1]
+        for idx in xrange(1,len(self.reports_with_loc)-1):
+            r_prev = self.reports_with_loc[idx-1]
+            r_cur = self.reports_with_loc[idx]
+            r_next = self.reports_with_loc[idx+1]
             dist_prev = analysis.utils.find_reports_dist(r_prev, r_cur)
             dist_next = analysis.utils.find_reports_dist(r_cur, r_next)
             ts_diff = (r_cur.timestamp - r_cur.my_loc.timestamp).total_seconds()
@@ -61,13 +63,13 @@ class Command(BaseCommand):
         
     def print_wifi_info(self):
         self.print_title('WIFI analysis for device %s' % self.device_id)
-        reports = analysis.utils.get_reports(self.device_id)
         stations = []
-        for report in reports:
+        
+        for report in self.reports:
             if report.is_station():
                 stations.append(report)
-        print 'Reports : %s' % len(reports)
         print 'Reports in station: %s' % len(stations)
+        print 'Reports not in station: %s' % (len(self.reports) - len(stations))
             
                 
                           
