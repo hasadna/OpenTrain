@@ -4,12 +4,9 @@ import common.ot_utils
 
 # Create your models here.
 
-import datetime
-DEFAULT_TS = common.ot_utils.get_utc_now() - datetime.timedelta(days=200)
-
 class RawReport(models.Model):
     text = models.TextField()
-    saved_at = models.DateTimeField(auto_now_add=True,default=DEFAULT_TS)
+    saved_at = models.DateTimeField(auto_now_add=True,db_index=True)
     def get_text_as_dict(self):
         return json.loads(self.text)
     def get_text_nice(self):
@@ -18,7 +15,6 @@ class RawReport(models.Model):
         return dict(text=self.text,
                     id=self.id)
     def get_first_item_timestamp(self):
-        import common.ot_utils
         items = self.get_text_as_dict()['items']
         if items:
             item = items[0]
