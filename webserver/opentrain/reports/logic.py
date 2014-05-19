@@ -34,7 +34,11 @@ def backup_reports(filename,days):
         raise Exception('filename must be gz file')
     
     with gzip.open(filename,'w') as fh:
-        all_reports = models.RawReport.objects.all().order_by('id')
+        if from_ts:
+            all_reports = models.RawReport.objects.filter(saved_at__gt=from_ts)
+        else:
+            all_reports = models.RawReport.objects.all()
+        all_reports = all_reports.order_by('id')
         while True:
             reports = all_reports[index:index+chunk]
             reports_len = reports.count()
