@@ -93,7 +93,7 @@ class Command(BaseCommand):
                 
         for k in sorted(result.iterkeys()):
             if result[k]:
-                print '%-10d %-5d' % (k,result[k])        
+                print '%-10.2f %-5d' % (k,result[k])        
         
     def print_wifi_info(self):
         self.print_title('WIFI analysis')
