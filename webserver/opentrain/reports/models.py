@@ -1,11 +1,15 @@
 from django.db import models
 import json
+import common.ot_utils
 
 # Create your models here.
 
+import datetime
+DEFAULT_TS = common.ot_utils.get_utc_now() - datetime.timedelta(days=200)
+
 class RawReport(models.Model):
     text = models.TextField()
-    #saved_at = models.DateTimeField(auto_now_add=True)
+    saved_at = models.DateTimeField(auto_now_add=True,default=DEFAULT_TS)
     def get_text_as_dict(self):
         return json.loads(self.text)
     def get_text_nice(self):
