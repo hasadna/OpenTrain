@@ -72,7 +72,7 @@ class Command(BaseCommand):
     def print_gps_dist(self):
         import collections
         self.print_title('GPS Distribution')
-        buckets = (1,2,3,4,5,10,50,100,500,1000,5000,10000,50000,100000)
+        buckets = (0.5,1,2,3,4,5,10,50,100,500,1000,5000,10000,50000,100000)
         result = collections.defaultdict(int)
         for bucket in buckets:
             result[bucket] = 0
