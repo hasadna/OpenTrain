@@ -184,7 +184,7 @@ def reload_gunicorn():
 def download_db():
     """ Opentrain only. backup db on remote server and donwload it locally """
     with cd(env.django_base_dir):
-        run('./backup.py')
+        run('python manage.py backupreports')
         import os
         localfile = '/tmp/backup.gz'
         remotefile = '/tmp/backup.gz'

@@ -13,8 +13,15 @@ class RawReport(models.Model):
     def to_json(self):
         return dict(text=self.text,
                     id=self.id)
-
-
+    def get_first_item_timestamp(self):
+        import common.ot_utils
+        items = self.get_text_as_dict()['items']
+        if items:
+            item = items[0]
+            return common.ot_utils.get_utc_time_from_timestamp(float(item['time'])/1000)
+        return None
+    
+        
 
     
     
