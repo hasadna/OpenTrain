@@ -9,6 +9,11 @@ class Command(BaseCommand):
             dest='gpsglitch',
             default=False,
             help='Show gps glitches'),
+        make_option('--gpsdist',
+            action='store_true',
+            dest='gpsdist',
+            default=False,
+            help='Show gps distribution'),
         make_option('--wifi',
             action='store_true',
             dest='wifi',
@@ -38,6 +43,9 @@ class Command(BaseCommand):
             self.print_gps_info()
         if options['wifi']:
             self.print_wifi_info()
+        if options['gpsdist']:
+            self.print_gps_dist()
+            
     
     def print_title(self,msg):
         self.stdout.write('=' * (len(msg)))
@@ -45,7 +53,7 @@ class Command(BaseCommand):
         self.stdout.write('=' * (len(msg)))
         
     def print_gps_info(self):
-        self.print_title('GPS REPORT for device %s' % self.device_id)
+        self.print_title('GPS glitches')
         self.stdout.write('# of reports with loc = %s' % (len(self.reports_with_loc)))
         threshold = 1000
         path = '%10s %10s %10s %10s %10s %10s'
@@ -60,9 +68,35 @@ class Command(BaseCommand):
             ts_diff = (r_cur.timestamp - r_cur.my_loc.timestamp).total_seconds()
             if dist_prev > threshold:
                 self.stdout.write(pat % (idx,r_cur.id,dist_prev,dist_next,r_cur.my_loc.accuracy,ts_diff))
+                
+    def print_gps_dist(self):
+        import collections
+        self.print_title('GPS Distribution')
+        buckets = (5,10,50,100,500,1000,5000,10000,50000,100000)
+        result = collections.defaultdict(int)
+        for bucket in buckets:
+            result[bucket] = 0
+        for idx in xrange(1,len(self.reports_with_loc)-1):
+            r_prev = self.reports_with_loc[idx-1]
+            r_cur = self.reports_with_loc[idx]
+            dist_prev = analysis.utils.find_reports_dist(r_prev, r_cur)
+            found = False
+            #import pdb
+            #pdb.set_trace()
+            for bucket in buckets:
+                if dist_prev < bucket:
+                    result[bucket]+=1
+                    found = True
+                    break
+            if not found:
+                result[int(dist_prev)] += 1
+                
+        for k in sorted(result.iterkeys()):
+            if result[k]:
+                print '%-10d %-5d' % (k,result[k])        
         
     def print_wifi_info(self):
-        self.print_title('WIFI analysis for device %s' % self.device_id)
+        self.print_title('WIFI analysis')
         stations = []
         
         for report in self.reports:
