@@ -1,3 +1,6 @@
+import os
+os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
+
 from reports.models import RawReport
 for x in xrange(0,60000,1000):
 	rrs = list(RawReport.objects.all().order_by('id')[x:x+1000]) 
