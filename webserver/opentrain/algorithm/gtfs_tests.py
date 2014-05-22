@@ -4,6 +4,7 @@ from unittest import TestCase
 import gtfs.models
 import unittest
 import numpy as np
+from utils import *
 
 def get_field(services, name):
     service_ids = services.all().values_list(name)
@@ -25,7 +26,7 @@ class gtfs_test(TestCase):
         self.service_saturdays = np.array(get_field(services, 'saturday'))+0
         self.service_start_dates = get_field(services, 'start_date')
         self.service_end_dates = get_field(services, 'end_date')    
-        
+        self.trips = gtfs.models.Trip.objects.all()
     
     def test_is_every_service_different_weekday(self):
         service_sum_days = self.service_sundays+self.service_mondays+self.service_tuesdays+self.service_wednesdays+self.service_thursdays+self.service_fridays+self.service_saturdays
@@ -71,6 +72,10 @@ class gtfs_test(TestCase):
     #    "tear down test fixtures"
     
     #@with_setup(setup_func, teardown_func)
+    def test_if_trip_stop_sequence_is_ordered_as_arrival_time(self):
+        for trip in self.trips:
+            self.assertTrue(is_increasing([x.arrival_time for x in trip.get_stop_times()]))
+    
     
 if __name__ == '__main__':
     unittest.main()

@@ -24,9 +24,9 @@ def set_config(base_dir):
     config.route_sampling__min_distance_between_points_meters = 10.0
     config.station_radius_in_meters = 300
     config.early_arrival_max_seconds = 35 * 60 # how early can a train arrive before the actual arrival
-    config.late_arrival_max_seconds = 35 * 60 # how late can a train arrive before the actual arrival
+    config.late_arrival_max_seconds = 35 * 60 # how late can a train arrive after the actual arrival
     config.early_departure_max_seconds = 15 * 60 # how early can a train depart before the actual departure
-    config.late_departure_max_seconds = 35 * 60 # how late can a train depart before the actual departure
+    config.late_departure_max_seconds = 35 * 60 # how late can a train depart after the actual departure
     config.shape_probability_threshold= 0.80
     config.stop_discovery_location_timeout_seconds = 60
     config.stop_discovery_probability_thresh = 0.90
@@ -35,5 +35,6 @@ def set_config(base_dir):
     # have a match to GTFS
     config.trip_list_length_thresh = 3
     
+   
 base_dir = os.path.dirname(os.path.dirname(__file__))
 set_config(base_dir)

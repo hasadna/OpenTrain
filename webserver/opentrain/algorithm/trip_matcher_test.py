@@ -35,10 +35,10 @@ class trip_matcher_test(TestCase):
     
 
     def test_matcher_on_full_trip(self, trip_id = '010414_00168'):
-        detected_stop_times_gtfs, relevant_service_ids = self.load_trip_info_for_matcher(trip_id)
+        detected_stop_times_gtfs, relevant_service_ids, day = self.load_trip_info_for_matcher(trip_id)
             
         trips, time_deviation_in_seconds = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs,\
-                               relevant_service_ids, print_debug_info=True)
+                               relevant_service_ids, day, print_debug_info=True)
         matched_trip_id = get_trusted_trip_or_none(trips, time_deviation_in_seconds)        
         self.assertEquals(matched_trip_id, trip_id)
         
@@ -46,12 +46,12 @@ class trip_matcher_test(TestCase):
         for seed in seeds:
             for stop_count in stop_counts:
                 print 'seed =', seed, 'stop_count =', stop_count
-                detected_stop_times_gtfs, relevant_service_ids = self.load_trip_info_for_matcher(trip_id)
+                detected_stop_times_gtfs, relevant_service_ids, day = self.load_trip_info_for_matcher(trip_id)
                 random.seed(seed)
                 subset_inds = sorted(random.sample(xrange(0,len(detected_stop_times_gtfs)),stop_count))
                 detected_stop_times_gtfs_subset = [detected_stop_times_gtfs[i] for i in subset_inds]
                 trips, time_deviation_in_seconds = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs,\
-                                       relevant_service_ids, print_debug_info=True)
+                                       relevant_service_ids, day, print_debug_info=True)
 
                 matched_trip_id = get_trusted_trip_or_none(trips, time_deviation_in_seconds)        
                 self.assertEquals(matched_trip_id, unicode(trip_id))
@@ -59,15 +59,15 @@ class trip_matcher_test(TestCase):
     
 
     def load_trip_info_for_matcher(self, trip_id):
-        date = datetime.datetime.strptime(trip_id.split('_')[0], '%d%m%y').date()
+        day = datetime.datetime.strptime(trip_id.split('_')[0], '%d%m%y').date()
         trip = gtfs.models.Trip.objects.filter(trip_id = trip_id)
         stop_times_gtfs = gtfs.models.StopTime.objects.filter(trip = trip_id).order_by('arrival_time')
-        detected_stop_times_gtfs = [DetectedStopTime.load_from_gtfs(x, date) for x in stop_times_gtfs]      
+        detected_stop_times_gtfs = [DetectedStopTime.load_from_gtfs(x, day) for x in stop_times_gtfs]      
         relevant_services = gtfs.models.Service.objects.filter(start_date \
-                                                              = date)
+                                                              = day)
         relevant_service_ids = [x[0] for x in relevant_services.all().values_list(\
            'service_id')]
-        return detected_stop_times_gtfs, relevant_service_ids
+        return detected_stop_times_gtfs, relevant_service_ids, day
         
        
 if __name__ == '__main__':

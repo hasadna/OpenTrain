@@ -36,7 +36,7 @@ def get_train_tracker_visited_shape_sampled_point_ids_key(tracker_id):
     return "train_tracker:%s:visited_shape_sampled_point_ids" % (tracker_id)   
 
 # Save report's day. We may have to think about what happens after midnight and maybe stay with the previous day because that's how the GTFS works
-def get_train_tracker_day(tracker_id):
+def get_train_tracker_day_key(tracker_id):
     return "train_tracker:%s:day" % (tracker_id)
 
 # relevant_services = services for today. used to filter trips by day
@@ -62,12 +62,13 @@ def get_current_trip_id_report_timestamp_key(trip_id):
 
 def set_tracker_day(tracker_id, report):
     day_str = report.timestamp.strftime("%Y-%m-%d")
-    save_by_key(get_train_tracker_day(tracker_id), day_str, cl=p)
+    save_by_key(get_train_tracker_day_key(tracker_id), day_str, cl=p)
+    return report.timestamp.date()
 
 def get_relevant_service_ids(tracker_id):
     result = load_by_key(get_train_tracker_relevant_services_key(tracker_id))
     if not result:
-        start_date = load_by_key(get_train_tracker_day(tracker_id))
+        start_date = load_by_key(get_train_tracker_day_key(tracker_id))
         relevant_services = gtfs.models.Service.objects.filter(start_date \
                                                                = start_date)
         result = [x[0] for x in relevant_services.all().values_list(\
@@ -81,7 +82,7 @@ def add_report(report):
     add_report_to_tracker(report.device_id, report)
 
 def add_report_to_tracker(tracker_id, report):
-    set_tracker_day(tracker_id, report)
+    day = set_tracker_day(tracker_id, report)
     
     # update train position
     if report.get_my_loc():
@@ -91,7 +92,7 @@ def add_report_to_tracker(tracker_id, report):
                                                               report)
     
     if is_stops_updated:
-        trips, time_deviation_in_seconds = update_trips(tracker_id, stop_times)
+        trips, time_deviation_in_seconds = update_trips(tracker_id, day, stop_times)
         print stop_times[-1]
         save_stop_times_to_db(tracker_id, stop_times[-1], trips,\
                               time_deviation_in_seconds)
@@ -139,9 +140,9 @@ def update_coords(report, tracker_id):
             p.expire(get_current_trip_id_coords_timestamp_key(trip), TRACKER_TTL)
         p.execute()          
 
-def update_trips(tracker_id, detected_stop_times):
+def update_trips(tracker_id, day, detected_stop_times):
     relevant_service_ids = get_relevant_service_ids(tracker_id)
-    trips, time_deviation_in_seconds = trip_matcher.get_matched_trips(tracker_id, detected_stop_times, relevant_service_ids)
+    trips, time_deviation_in_seconds = trip_matcher.get_matched_trips(tracker_id, detected_stop_times, relevant_service_ids, day)
     save_by_key(get_train_tracker_trip_ids_key(tracker_id), trips)
     save_by_key(get_train_tracker_trip_ids_deviation_seconds_key(tracker_id), time_deviation_in_seconds)
     return trips, time_deviation_in_seconds
