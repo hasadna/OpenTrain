@@ -4,7 +4,7 @@ import glob
 from django.conf import settings
 from common import ot_utils
 
-MOT_FTP = "199.203.58.18"
+MOT_FTP = "gtfs.mot.gov.il"
 FILE_NAME = "irw_gtfs.zip"
 GTFS_DATA_DIR = os.path.join(settings.DATA_DIR,'gtfs','data')
 GTFS_ZIP_DIR = os.path.join(settings.DATA_DIR,'gtfs','zip_data')

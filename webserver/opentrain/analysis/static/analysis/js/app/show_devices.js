@@ -42,6 +42,9 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 	$scope.loadDeviceList = function(device_id) {
 		MyHttp.get('/api/1/devices/?limit=100').success(function(data) {
 			$scope.devices = data.objects;
+		    $scope.devices.forEach(function(d) {
+			d.title = $scope.getDeviceTitle(d);
+		    });
 			var found = false;
 			$scope.devices.forEach(function(d) {
 				if (device_id && d.device_id == device_id) {
@@ -122,7 +125,7 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 		});
 	};
 	$scope.getDeviceTitle = function(device) {
-		return device.device_id + '@' + new Date(device.device_date).toLocaleDateString('he') + ' ' + device.device_count;
+	    return device.device_id + '@' + new Date(device.device_date).toLocaleDateString('he') + ' ' + device.device_count;
 	};
 	
 	$scope.resizeMap = function() {

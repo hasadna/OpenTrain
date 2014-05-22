@@ -22,16 +22,25 @@ def restore_reports(filename,clean=True):
     print 'Saved to DB. # of items in DB = %s' % (models.RawReport.objects.count())
 
     
-def backup_reports(filename):
+def backup_reports(filename,days):
+    import datetime
     chunk = 100
     index = 0
+    from_ts = None
+    if days > 0:
+        from_ts = common.ot_utils.get_utc_now() - datetime.timedelta(days=days)
     
     if not filename.endswith('.gz'):
         raise Exception('filename must be gz file')
     
     with gzip.open(filename,'w') as fh:
+        if from_ts:
+            all_reports = models.RawReport.objects.filter(saved_at__gt=from_ts)
+        else:
+            all_reports = models.RawReport.objects.all()
+        all_reports = all_reports.order_by('id')
         while True:
-            reports = models.RawReport.objects.all().order_by('id')[index:index+chunk]
+            reports = all_reports[index:index+chunk]
             reports_len = reports.count()
             if reports_len == 0:
                 break
