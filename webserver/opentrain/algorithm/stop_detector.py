@@ -265,7 +265,7 @@ def add_report(tracker_id, report):
             prev_timestamp = unix_timestamp
 
     stop_times = get_detected_stop_times(tracker_id)
-    is_stops_updated = (prev_state != current_state) and len(stop_times) > 0
+    is_stops_updated = (prev_state != current_state) and current_state != tracker_states.UNKNOWN and len(stop_times) > 0
     return stop_times, is_stops_updated
             
 hmm, hmm_non_stop_component_num = setup_hmm()
