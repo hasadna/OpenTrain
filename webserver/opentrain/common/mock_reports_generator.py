@@ -149,6 +149,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='260214_00077', day
 STATION_SSID = 'S-ISRAEL-RAILWAYS'
 TRAIN_SSID = 'ISRAEL-RAILWAYS'
 
+
 def raw_report_from_report(report):
     rr = dict()
     items = []

@@ -47,33 +47,18 @@ def get_matched_trips(tracker_id, detected_stop_times,\
     impossible_costops_ids = [x for x in all_stops if x not in possible_costops_ids]
     impossible_costops_ind_ids = [all_stops.id_list.index(x) for x in impossible_costops_ids]
     
-    use_datastore = True
-    if use_datastore:
-        trips_with_visited_stops = trip_datastore.trip_stop_matrix[:,stop_ids_inds]
-        trips_with_visited_stops = (trips_with_visited_stops == 1).astype(int)
-        trips_with_visited_stops = trips_with_visited_stops.sum(axis=1).nonzero()[0]
-        inv_map = {v:k for k, v in trip_datastore.trip_stop_matrix_trip_ids_inds.items()}
-        trips_with_visited_stops = [inv_map[x] for x in trips_with_visited_stops]
-    
-    
-        trips_with_visited_stops_inds = [trip_datastore.trip_stop_matrix_trip_ids_inds[x] for x in trips_with_visited_stops]
-        trips_with_impossible_stops = (trip_datastore.trip_stop_matrix[trips_with_visited_stops_inds,:][:,impossible_costops_ind_ids] == 1).astype(int)
-        trips_with_impossible_stops = trips_with_impossible_stops.sum(axis=1).nonzero()[0]
-        trips_with_impossible_stops = [trips_with_visited_stops[x] for x in trips_with_impossible_stops]
-        trips_with_visited_stops_filtered_by_costops = list(set(trips_with_visited_stops) - set(trips_with_impossible_stops))
-    else:
-        trips = gtfs.models.Trip.objects.filter(service__in=relevant_service_ids)
-        trip_stop_times = gtfs.models.StopTime.objects.filter(trip__in = trips, stop__in = stop_ids)
-        trips_with_visited_stops = list(set(trip_stop_times.values_list('trip')))
-        trips_with_visited_stops = [x[0] for x in trips_with_visited_stops]
-        
-    
-        trips_with_visited_stops_stop_times = gtfs.models.StopTime.objects.filter(trip__in = trips_with_visited_stops)
-        trips_with_impossible_stops = list(set(trips_with_visited_stops_stop_times.filter(stop__stop_id__in = impossible_costops_ids).values_list('trip')))
-        trips_with_impossible_stops = [x[0] for x in trips_with_impossible_stops]
-        trips_with_visited_stops_filtered_by_costops = list(set(trips_with_visited_stops) - set(trips_with_impossible_stops))
-    
-    
+    trips_with_visited_stops = trip_datastore.trip_stop_matrix[:,stop_ids_inds]
+    trips_with_visited_stops = (trips_with_visited_stops == 1).astype(int)
+    trips_with_visited_stops = trips_with_visited_stops.sum(axis=1).nonzero()[0]
+    inv_map = {v:k for k, v in trip_datastore.trip_stop_matrix_trip_ids_inds.items()}
+    trips_with_visited_stops = [inv_map[x] for x in trips_with_visited_stops]
+
+    trips_with_visited_stops_inds = [trip_datastore.trip_stop_matrix_trip_ids_inds[x] for x in trips_with_visited_stops]
+    trips_with_impossible_stops = (trip_datastore.trip_stop_matrix[trips_with_visited_stops_inds,:][:,impossible_costops_ind_ids] == 1).astype(int)
+    trips_with_impossible_stops = trips_with_impossible_stops.sum(axis=1).nonzero()[0]
+    trips_with_impossible_stops = [trips_with_visited_stops[x] for x in trips_with_impossible_stops]
+    trips_with_visited_stops_filtered_by_costops = list(set(trips_with_visited_stops) - set(trips_with_impossible_stops))
+
     # filter by stop existence and its time frame:
     trips_filtered_by_stops_and_times = trips_with_visited_stops_filtered_by_costops
     if print_debug_info:
@@ -83,19 +68,10 @@ def get_matched_trips(tracker_id, detected_stop_times,\
     trip_in_right_direction = []
     for i, t in enumerate(trips_filtered_by_stops_and_times):
         detected_stop_ids = [x.stop_id for x in detected_stop_times]   
-        if use_datastore:
-            stops = trip_data_store[t]['stops']
-            trip_stop_times = [stops[x] for x in detected_stop_ids if x in stops]
-        else:
-            trip_stop_times = gtfs.models.StopTime.objects.filter(trip = t, stop__stop_id__in=detected_stop_ids).values_list('stop', 'arrival_time')
-            trip_stop_times_dict = dict(trip_stop_times)
+        stops = trip_data_store[t]['stops']
+        trip_stop_times = [stops[x] for x in detected_stop_ids if x in stops]
         if len(trip_stop_times) >= 2:
-            if use_datastore:
-                gtfs_arrival_of_detected_stops = [x[0] for x in trip_stop_times]
-            else:
-                gtfs_arrival_of_detected_stops = [trip_stop_times_dict.get(x) for x in detected_stop_ids]
-                gtfs_arrival_of_detected_stops = [x for x in gtfs_arrival_of_detected_stops if x is not None]
-                #stop_inds_by_visit_order = [trip_stop_times.index(x) for x in detected_stop_ids]
+            gtfs_arrival_of_detected_stops = [x[0] for x in trip_stop_times]
             if is_increasing(gtfs_arrival_of_detected_stops):
                 trip_in_right_direction.append(i)
     
@@ -104,22 +80,13 @@ def get_matched_trips(tracker_id, detected_stop_times,\
     arrival_delta_abs_sums_seconds = []
     #departure_delta_abs_sums = []
     for t in trips_filtered_by_stops_and_times:
-        if use_datastore:
-            stop_times_gtfs = trip_data_store[t]['stops']
-        else:
-            stop_times_gtfs = gtfs.models.StopTime.objects.filter(trip = t).order_by('arrival_time').values_list('stop', 'arrival_time')#, 'departure_time')
+        stop_times_gtfs = trip_data_store[t]['stops']
         arrival_delta_abs_sum = 0
         #departure_delta_abs_sum = 0
         for detected_stop_time in detected_stop_times:
-            if use_datastore:
-                stop_and_arrival_gtfs = stop_times_gtfs.get(detected_stop_time.stop_id)
-            else:
-                stop_and_arrival_gtfs = [x for x in stop_times_gtfs if x[0] == detected_stop_time.stop_id]
+            stop_and_arrival_gtfs = stop_times_gtfs.get(detected_stop_time.stop_id)
             if stop_and_arrival_gtfs:
-                if use_datastore:
-                    arrival_delta_seconds = stop_and_arrival_gtfs[1] - datetime_to_db_time(detected_stop_time.arrival)
-                else:
-                    arrival_delta_seconds = stop_and_arrival_gtfs[0][1] - datetime_to_db_time(detected_stop_time.arrival)
+                arrival_delta_seconds = stop_and_arrival_gtfs[1] - datetime_to_db_time(detected_stop_time.arrival)
                 #departure_delta_seconds = stop_time[2] - datetime_to_db_time(tracked_stop_time.departure)
                 arrival_delta_abs_sum += abs(arrival_delta_seconds)
                 #departure_delta_abs_sum += abs(departure_delta_seconds)
