@@ -42,6 +42,7 @@ def backup_reports(filename,days):
         while True:
             reports = all_reports[index:index+chunk]
             reports_len = reports.count()
+            print reports_len
             if reports_len == 0:
                 break
             for rr in reports:
