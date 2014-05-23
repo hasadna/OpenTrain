@@ -8,14 +8,15 @@ from django.conf import settings
 def analyze_raw_reports(clean=True):
     if clean:
         delete_all_reports()
-    COUNT = 100
+    COUNT = 20
     offset = 0
     while True:
         cont = analyze_raw_reports_subset(offset,COUNT)
         offset += COUNT
         if not cont:
             return 
-    
+        print 'Analyzed %s reports' % (offset)
+
 def analyze_raw_reports_subset(offset,count):
     items = _collect_items(offset,count)
     if items:

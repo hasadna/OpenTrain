@@ -17,9 +17,16 @@ def restore_reports(filename,clean=True):
             item = json.loads(line)
             rr = models.RawReport(text=item['text'])
             rrs.append(rr)
-    print 'Read %d raw reports from %s- saving to DB' % (len(rrs),filename)
-    models.RawReport.objects.bulk_create(rrs)
-    print 'Saved to DB. # of items in DB = %s' % (models.RawReport.objects.count())
+            if len(rrs) >= 1000:
+                print 'Read %d raw reports from %s- saving to DB' % (len(rrs),filename)
+                models.RawReport.objects.bulk_create(rrs)
+                print 'Saved to DB. # of items in DB = %s' % (models.RawReport.objects.count())
+                rrs = []
+        print 'Read %d raw reports from %s- saving to DB' % (len(rrs),filename)
+        models.RawReport.objects.bulk_create(rrs)
+        print 'Saved to DB. # of items in DB = %s' % (models.RawReport.objects.count())
+        rrs = []
+            
 
     
 def backup_reports(filename,days):
