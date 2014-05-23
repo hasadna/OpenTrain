@@ -7,6 +7,7 @@ import shapes
 from utils import *
 from common.ot_utils import *
 from common import ot_utils
+from alg_logger import logger
 try:
     import matplotlib.pyplot as plt
 except ImportError:
@@ -93,7 +94,7 @@ def add_report_to_tracker(tracker_id, report):
     
     if is_stops_updated:
         trips, time_deviation_in_seconds = update_trips(tracker_id, day, stop_times)
-        print stop_times[-1]
+        logger.debug(stop_times[-1])
         save_stop_times_to_db(tracker_id, stop_times[-1], trips,\
                               time_deviation_in_seconds)
 
@@ -115,6 +116,7 @@ def save_stop_times_to_db(tracker_id, detected_stop_time, trips,\
         rs.arrival_time = arrival_time
         rs.departure_time = departure_time
         rs.save() 
+        logger.debug(str(rs))  
 
 def update_coords(report, tracker_id):
     loc = report.get_my_loc()

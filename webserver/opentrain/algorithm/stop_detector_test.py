@@ -21,7 +21,7 @@ import time
 from display_utils import *
 from export_utils import *
 from train_tracker import print_trips, get_trips, get_trusted_trip_or_none
-
+from alg_logger import logger
 import stops
 from common.mock_reports_generator import generate_mock_reports
 from analysis.models import SingleWifiReport
@@ -118,7 +118,7 @@ class stop_detector_test(TestCase):
                 plt.show()
             stop_times, is_stops_updated = add_report(tracker_id, report)
             if is_stops_updated:
-                print stop_times[-1]
+                logger.debug(str(stop_times[-1]))
             
    
         trips, time_deviation_in_seconds = get_trips(tracker_id)

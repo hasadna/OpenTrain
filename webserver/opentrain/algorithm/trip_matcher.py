@@ -61,9 +61,6 @@ def get_matched_trips(tracker_id, detected_stop_times,\
 
     # filter by stop existence and its time frame:
     trips_filtered_by_stops_and_times = trips_with_visited_stops_filtered_by_costops
-    if print_debug_info:
-        print "trips_with_visited_stops =", len(trips_with_visited_stops)
-        print "trips_with_visited_stops_filtered_by_costops =", len(trips_with_visited_stops_filtered_by_costops)
     # filter by stop order and at least two detected stops:
     trip_in_right_direction = []
     for i, t in enumerate(trips_filtered_by_stops_and_times):
@@ -99,8 +96,6 @@ def get_matched_trips(tracker_id, detected_stop_times,\
     # trips_filtered_by_stops_and_times to trip_ids
     #trips_filtered_by_stops_and_times = [x.trip_id for x in trips_filtered_by_stops_and_times]
     arrival_delta_abs_sums_seconds = [y for (y,x) in sorted_trips]
-    if print_debug_info:
-        print "arrival_delta_abs_sums_seconds =", arrival_delta_abs_sums_seconds
     return trips_filtered_by_stops_and_times, arrival_delta_abs_sums_seconds
 
 cl = get_redis_client()
