@@ -24,7 +24,7 @@ def restore_reports(filename,clean=True):
     
 def backup_reports(filename,days):
     import datetime
-    chunk = 100
+    chunk = 30
     index = 0
     from_ts = None
     if days > 0:
