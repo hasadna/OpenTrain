@@ -21,6 +21,7 @@ from redis_intf.client import (get_redis_pipeline,
                                save_by_key)
 from utils import enum
 from redis import WatchError
+from alg_logger import logger
 
 HISTORY_LENGTH = 100000
 
