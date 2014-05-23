@@ -8,6 +8,7 @@ import gtfs.models
 import analysis.models
 import numpy as np
 from scipy import spatial
+from alg_logger import logger
 try:
     import matplotlib.pyplot as plt
 except ImportError:
@@ -47,9 +48,9 @@ class train_tracker_test(TestCase):
             if i % fps_period_length == 0:
                 elapsed = (time.clock() - fps_period_start)
                 if elapsed > 0:
-                    print('%d\t%.1f qps' % (i, fps_period_length/elapsed))
+                    logger.debug('%d\t%.1f qps' % (i, fps_period_length/elapsed))
                 else:
-                    print('Elapsed time should be positive but is %d' % (elapsed))
+                    logger.debug('Elapsed time should be positive but is %d' % (elapsed))
                 fps_period_start = time.clock()                
             
             if i % 900 == 0:

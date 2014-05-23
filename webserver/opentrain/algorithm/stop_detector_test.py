@@ -21,7 +21,7 @@ import time
 from display_utils import *
 from export_utils import *
 from train_tracker import print_trips, get_trips, get_trusted_trip_or_none
-
+from alg_logger import logger
 import stops
 from common.mock_reports_generator import generate_mock_reports
 from analysis.models import SingleWifiReport
@@ -71,11 +71,20 @@ class stop_detector_test(TestCase):
         remove_from_redis([device_id])
         print 'done'
 
-    def test_stop_detector_on_real_trip(self, device_id = '1cb87f1e', trip_id = '010414_00168', do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=True):
+    def _stop_detector_on_real_trip(self, device_id = '1cb87f1e', trip_id = '010414_00168', do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=True, do_show_fig=True):
         remove_from_redis([device_id])
         now = ot_utils.get_localtime_now()
         reports_queryset = get_device_id_reports(device_id)
         tracker_id = device_id
+        stops.all_stops.clear
+        if do_show_fig:
+            for stop in stops.all_stops.values():
+                plt.text(stop.coords[0], stop.coords[1], stop.name)
+                plt.scatter(stop.coords[0], stop.coords[1], color='red')
+                plt.ion()
+                plt.show()
+                plt.xlim((31.5,32.5))
+                plt.ylim((34.7,35))
         
         fps_period_start = time.clock()
         fps_period_length = 100
@@ -104,17 +113,20 @@ class stop_detector_test(TestCase):
                 report.timestamp = report.timestamp.replace(year=day.year, month=day.month, day=day.day)
                 dst_after = report.get_timestamp_israel_time().dst()
                 report.timestamp -= dst_after-dst_before
-                
-            add_report(tracker_id, report)
+            if do_show_fig:
+                plt.scatter(report.my_loc.lat, report.my_loc.lon)
+                plt.show()
+            stop_times, is_stops_updated = add_report(tracker_id, report)
+            if is_stops_updated:
+                logger.debug(str(stop_times[-1]))
             
    
-        #tracker.print_tracked_stop_times()
-        #tracker.print_possible_trips()
         trips, time_deviation_in_seconds = get_trips(tracker_id)
         trip = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
-        return tracker_id, [trip]
+        
         remove_from_redis([device_id])
         print 'done'
+        return tracker_id, [trip]
 
     def evaluate_detected_stop_times(self, device_id, trip_id):
         detected_stop_times = stop_detector.get_detected_stop_times(tracker_id=device_id)
@@ -133,7 +145,9 @@ class stop_detector_test(TestCase):
                 detected_departure = ot_utils.datetime_to_db_time(detected_stop_time.departure)
                 self.assertAlmostEquals(detected_departure, gtfs_departure, msg=msg, delta=acceptible_time_delta)
 
-   
+    def test_stop_detector_on_real_trips(self):
+        #self._stop_detector_on_real_trip(device_id = '2ef1b758', trip_id = '010414_00168')
+        self._stop_detector_on_real_trip(device_id = '1cb87f1e', trip_id = '010414_00168')
             
 if __name__ == '__main__':
     unittest.main()

@@ -20,16 +20,11 @@ class Stop(object):
 
 class StopList(dict):
 
-    def __init__(self, django_stop_list) :
+    def __init__(self) :
         super(StopList, self).__init__()
         
-        stops = gtfs.models.Stop.objects.all();
+        stops = gtfs.models.Stop.objects.all().order_by('stop_id')
         stops = list(stops)
-        
-        #stop_ids = [x[0] for x in list(stops.all().values_list('stop_id'))]
-        #stop_names = [x[0] for x in list(stops.all().values_list('stop_name'))]
-        #lat_list = [float(x[0]) for x in list(stops.all().values_list('stop_lat'))]
-        #lon_list = [float(x[0]) for x in list(stops.all().values_list('stop_lon'))] 
         
         self.id_list = []
         stop_coords = []
@@ -65,14 +60,7 @@ class StopList(dict):
 
 
 def get_all_stops():
-
-    #if not datafile.has_key('stopList'):
-    gtfs_stops_data = gtfs.models.Stop.objects.all().values_list('stop_id', 'stop_name', 'stop_lat', 'stop_lon').order_by('stop_id')
-    all_stops = StopList(gtfs_stops_data)
-    #all_stops = datafile['stopList']
-    
-    #datafile.close() 
-    
+    all_stops = StopList()    
     return all_stops
 
 all_stops = get_all_stops()
