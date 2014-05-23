@@ -39,16 +39,17 @@ def backup_reports(filename,days):
         else:
             all_reports = models.RawReport.objects.all()
         all_reports = all_reports.order_by('id')
+        total_count = all_reports.count() 
         while True:
             reports = all_reports[index:index+chunk]
             reports_len = reports.count()
-            print reports_len
             if reports_len == 0:
                 break
             for rr in reports:
                 fh.write(json.dumps(rr.to_json()))
                 fh.write("\n")
             index += reports_len
+            print 'so far %s / %s' % (index,total_count)
     print 'Backup %s reports to %s' % (index,filename)
             
 
