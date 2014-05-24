@@ -39,7 +39,7 @@ def dump_item(item):
     report_dt = common.ot_utils.get_utc_time_from_timestamp(float(item['time'])/1000)
     m = models.Report(device_id=item['device_id'],timestamp=report_dt)
     if models.Report.objects.filter(device_id=item['device_id'],timestamp=report_dt).exists():
-        print 'Repeated report - skipping'
+        #print 'Repeated report - skipping'
         return None
     m.save()
     item_loc = item.get('location_api')
@@ -80,7 +80,7 @@ def analyze_single_raw_report(rr):
     items = json.loads(rr.text)['items']
     reports = []
     for item in items:
-        report = dump_item(items)
+        report = dump_item(item)
         if report:
             reports.append(report)
     for report in reports: 
