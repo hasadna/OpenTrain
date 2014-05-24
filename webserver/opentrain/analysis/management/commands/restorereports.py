@@ -11,7 +11,7 @@ class Command(BaseCommand):
             dest='analyze_only',
             action='store_true',
             default=False,
-            help='donot read file, just analyze'
+            help='donot read file, just analyze')
         )
         
     help = 'Restore reports from file'
