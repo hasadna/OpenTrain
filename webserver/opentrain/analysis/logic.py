@@ -62,8 +62,7 @@ def dump_items(items):
         res = dump_item(item)
         if res is not None:
             result.append(res)
-        if idx % 10 == 0:
-            print '%d/%d' % (idx,len(items))
+    print 'dumped %s items' % (len(items))
     return result
 
 def delete_all_reports():
