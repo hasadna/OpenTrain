@@ -32,7 +32,7 @@ def dump_items(items):
     wifis = []
     locs = []
     for (idx,item) in enumerate(items):
-        if idx % 100 == 0:
+        if idx % 10 == 0:
             print '%d/%d' % (idx,len(items))
         if 'wifi' in item.keys():
             report_dt = common.ot_utils.get_utc_time_from_timestamp(float(item['time'])/1000)
@@ -57,9 +57,11 @@ def dump_items(items):
                                  frequency=wifi['frequency'],
                                  key=wifi['key'],
                                  report=m))
-    print 'Saving all dependant objects'
-    models.SingleWifiReport.objects.bulk_create(wifis)
-    models.LocationInfo.objects.bulk_create(locs)
+        print 'Saving all dependant objects'
+        models.SingleWifiReport.objects.bulk_create(wifis)
+        models.LocationInfo.objects.bulk_create(locs)
+        wifis = []
+        locs = []
     return result
 
 def delete_all_reports():
