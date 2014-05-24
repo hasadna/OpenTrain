@@ -13,6 +13,10 @@ def analyze_raw_reports(clean=True):
     while True:
         cont = analyze_raw_reports_subset(offset,COUNT)
         offset += COUNT
+        if offset % 100 == 0:
+            print 'Running GC'
+            import gc
+            gc.collect()
         if not cont:
             return 
         
