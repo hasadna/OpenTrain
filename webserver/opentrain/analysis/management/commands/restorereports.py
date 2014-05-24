@@ -19,7 +19,7 @@ class Command(BaseCommand):
         import reports.logic
         import analysis.logic
         self.stdout.write('analyze_only = %s' % (options['analyze_only']))
-        self.stdout.write('file = %s' % (options['file'])
+        self.stdout.write('file = %s' % (options['file']))
         if not options['analyze_only']:
             reports.logic.restore_reports(options['file'])
         analysis.logic.analyze_raw_reports()
