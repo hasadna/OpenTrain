@@ -38,6 +38,7 @@ class TripDatastore():
   def GetImpossibleCostops(self, stop_inds):
       # we multiply AND rows so that any 0 will invalidate the stop - all stops
       # need to agree that this is a legal stop    
+      # TODO(oferb): Don't need to explicitely compute possible_costops_ids if it saves time
       possible_costops_inds = (self.costop_matrix[stop_inds,:].sum(axis=0) == len(stop_inds)).astype(int)
       possible_costops_inds = possible_costops_inds.ravel().nonzero()[0]
       possible_costops_ids = [all_stops.id_list[x] for x in possible_costops_inds]

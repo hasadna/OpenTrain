@@ -38,7 +38,7 @@ class trip_matcher_test(TestCase):
         detected_stop_times_gtfs, relevant_service_ids, day = self.load_trip_info_for_matcher(trip_id)
             
         trips, time_deviation_in_seconds = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs,\
-                               relevant_service_ids, day, print_debug_info=True)
+                               relevant_service_ids, day)
         matched_trip_id = get_trusted_trip_or_none(trips, time_deviation_in_seconds)        
         self.assertEquals(matched_trip_id, trip_id)
         
@@ -51,7 +51,7 @@ class trip_matcher_test(TestCase):
                 subset_inds = sorted(random.sample(xrange(0,len(detected_stop_times_gtfs)),stop_count))
                 detected_stop_times_gtfs_subset = [detected_stop_times_gtfs[i] for i in subset_inds]
                 trips, time_deviation_in_seconds = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs,\
-                                       relevant_service_ids, day, print_debug_info=True)
+                                       relevant_service_ids, day)
 
                 matched_trip_id = get_trusted_trip_or_none(trips, time_deviation_in_seconds)        
                 self.assertEquals(matched_trip_id, unicode(trip_id))
