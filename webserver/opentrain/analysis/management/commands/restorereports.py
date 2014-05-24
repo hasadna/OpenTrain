@@ -10,7 +10,7 @@ class Command(BaseCommand):
         make_option('--analyze_only',
             dest='analyze_only',
             action='store_true',
-            default=False,,
+            default=False,
             help='donot read file, just analyze'
         )
         
