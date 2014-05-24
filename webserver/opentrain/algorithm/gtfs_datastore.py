@@ -26,6 +26,33 @@ GTFS_TRIP_DATA_KEY = 'gtfs:trip_data'
 GTFS_TRIP_STOP_MATRIX_KEY = 'gtfs:trip_stop_matrix'
 GTFS_TRIP_STOP_MATRIX_TRIP_IDS_INDS_KEY = 'gtfs:trip_stop_matrix:trip_ids_inds'
 
+all_stops = stops.all_stops
+
+class TripDatastore():
+  def __init__(self, day):
+        
+    self.trip_datastore = GetTripData(day)
+    self.trip_stop_matrix, self.trip_stop_matrix_trip_ids_inds = GetTripStopMatrix(day)
+    self.costop_matrix = GetCostopMatrix(day)
+    
+  def GetImpossibleCostops(self, stop_inds):
+      # we multiply AND rows so that any 0 will invalidate the stop - all stops
+      # need to agree that this is a legal stop    
+      possible_costops_inds = (self.costop_matrix[stop_inds,:].sum(axis=0) == len(stop_inds)).astype(int)
+      possible_costops_inds = possible_costops_inds.ravel().nonzero()[0]
+      possible_costops_ids = [all_stops.id_list[x] for x in possible_costops_inds]
+      impossible_costops_ids = [x for x in all_stops if x not in possible_costops_ids]
+      impossible_costops_ind_ids = [all_stops.id_list.index(x) for x in impossible_costops_ids]
+      return impossible_costops_ind_ids  
+    
+  def GetTripsByStops(self, stop_inds):
+      trips_with_visited_stops = self.trip_stop_matrix[:,stop_inds]
+      trips_with_visited_stops = (trips_with_visited_stops == 1).astype(int)
+      trips_with_visited_stops = trips_with_visited_stops.sum(axis=1).nonzero()[0]
+      inv_map = {v:k for k, v in self.trip_stop_matrix_trip_ids_inds.items()}
+      trips_with_visited_stops = [inv_map[x] for x in trips_with_visited_stops]
+      return trips_with_visited_stops    
+
 def GenerateCostopMatrix(day, trip_data):
   costops = np.zeros((len(stops.all_stops), len(stops.all_stops)))
   for trip in trip_data:
@@ -91,7 +118,6 @@ def GetRedisData(redis_key, day=None):
 
 def GetCostopMatrix(day):
   costops = GetRedisData(GTFS_COSTOP_MATRIX_KEY, day)
-  #plt.imshow(np.array(costops_loaded))
   costops = np.array(costops)  
   return costops
 
@@ -141,13 +167,6 @@ def _GTFSDayStrToDay(day):
 
 def _AddDayToKey(key, day):
   return key + ":" + _DayToDayStr(day)
-
-class TripDatastore():
-  def __init__(self, day):
-        
-    self.trip_datastore = GetTripData(day)
-    self.trip_stop_matrix, self.trip_stop_matrix_trip_ids_inds = GetTripStopMatrix(day)
-    self.costop_matrix = GetCostopMatrix(day)
 
 def daterange(start_date, end_date):
   for n in range(int ((end_date - start_date).days)):
