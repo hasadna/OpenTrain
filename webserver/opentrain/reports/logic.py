@@ -17,14 +17,21 @@ def restore_reports(filename,clean=True):
             item = json.loads(line)
             rr = models.RawReport(text=item['text'])
             rrs.append(rr)
-    print 'Read %d raw reports from %s- saving to DB' % (len(rrs),filename)
-    models.RawReport.objects.bulk_create(rrs)
-    print 'Saved to DB. # of items in DB = %s' % (models.RawReport.objects.count())
+            if len(rrs) >= 1000:
+                print 'Read %d raw reports from %s- saving to DB' % (len(rrs),filename)
+                models.RawReport.objects.bulk_create(rrs)
+                print 'Saved to DB. # of items in DB = %s' % (models.RawReport.objects.count())
+                rrs = []
+        print 'Read %d raw reports from %s- saving to DB' % (len(rrs),filename)
+        models.RawReport.objects.bulk_create(rrs)
+        print 'Saved to DB. # of items in DB = %s' % (models.RawReport.objects.count())
+        rrs = []
+            
 
     
 def backup_reports(filename,days):
     import datetime
-    chunk = 100
+    chunk = 30
     index = 0
     from_ts = None
     if days > 0:
@@ -39,6 +46,7 @@ def backup_reports(filename,days):
         else:
             all_reports = models.RawReport.objects.all()
         all_reports = all_reports.order_by('id')
+        total_count = all_reports.count() 
         while True:
             reports = all_reports[index:index+chunk]
             reports_len = reports.count()
@@ -48,6 +56,7 @@ def backup_reports(filename,days):
                 fh.write(json.dumps(rr.to_json()))
                 fh.write("\n")
             index += reports_len
+            print 'so far %s / %s' % (index,total_count)
     print 'Backup %s reports to %s' % (index,filename)
             
 
