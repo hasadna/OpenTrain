@@ -19,10 +19,8 @@ from redis_intf.client import (get_redis_pipeline,
 import json
 from stop_detector import DetectedStopTime
 from ot_profiler import do_profile
-import redis_data
 from gtfs_datastore import TripDatastore
 
-trip_data_store = redis_data.trip_data_store
 all_stops = stops.all_stops
 
 
@@ -65,7 +63,7 @@ def get_matched_trips(tracker_id, detected_stop_times,\
     trip_in_right_direction = []
     for i, t in enumerate(trips_filtered_by_stops_and_times):
         detected_stop_ids = [x.stop_id for x in detected_stop_times]   
-        stops = trip_data_store[t]['stops']
+        stops = trip_datastore.trip_datastore[t]['stops']
         trip_stop_times = [stops[x] for x in detected_stop_ids if x in stops]
         if len(trip_stop_times) >= 2:
             gtfs_arrival_of_detected_stops = [x[0] for x in trip_stop_times]
@@ -77,7 +75,7 @@ def get_matched_trips(tracker_id, detected_stop_times,\
     arrival_delta_abs_sums_seconds = []
     #departure_delta_abs_sums = []
     for t in trips_filtered_by_stops_and_times:
-        stop_times_gtfs = trip_data_store[t]['stops']
+        stop_times_gtfs = trip_datastore.trip_datastore[t]['stops']
         arrival_delta_abs_sum = 0
         #departure_delta_abs_sum = 0
         for detected_stop_time in detected_stop_times:

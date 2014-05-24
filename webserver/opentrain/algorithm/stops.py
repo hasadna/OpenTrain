@@ -17,6 +17,9 @@ class Stop(object):
         self.id = id_
         self.name = name
         self.coords = coords
+        
+    def __str__(self):
+        return str(self.id) + ' ' + self.name
 
 class StopList(dict):
 

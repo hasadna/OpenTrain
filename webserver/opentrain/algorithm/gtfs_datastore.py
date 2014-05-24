@@ -95,7 +95,7 @@ def GetCostopMatrix(day):
   costops = np.array(costops)  
   return costops
 
-def GetTripStopMartix(day):
+def GetTripStopMatrix(day):
   trip_stop_matrix = GetRedisData(GTFS_TRIP_STOP_MATRIX_KEY, day)
   trip_ids_inds_dict = GetRedisData(GTFS_TRIP_STOP_MATRIX_TRIP_IDS_INDS_KEY, day)   
   trip_stop_matrix = np.array(trip_stop_matrix)  
@@ -145,8 +145,8 @@ def _AddDayToKey(key, day):
 class TripDatastore():
   def __init__(self, day):
         
-    self.trip_data_store = GetTripData(day)
-    self.trip_stop_matrix, self.trip_stop_matrix_trip_ids_inds = GetTripStopMartix(day)
+    self.trip_datastore = GetTripData(day)
+    self.trip_stop_matrix, self.trip_stop_matrix_trip_ids_inds = GetTripStopMatrix(day)
     self.costop_matrix = GetCostopMatrix(day)
 
 def daterange(start_date, end_date):
