@@ -57,7 +57,7 @@ def dump_items(items):
                                  frequency=wifi['frequency'],
                                  key=wifi['key'],
                                  report=m))
-        print 'Saving all dependant objects'
+        #print 'Saving all dependant objects'
         models.SingleWifiReport.objects.bulk_create(wifis)
         models.LocationInfo.objects.bulk_create(locs)
         wifis = []
