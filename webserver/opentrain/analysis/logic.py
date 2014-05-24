@@ -27,39 +27,42 @@ def analyze_raw_reports_subset(offset,count):
 from django.db import transaction
 
 @transaction.atomic
-def dump_items(items):
-    result = []
+def dump_item(item):
+    if 'wifi' not in item.keys():
+        return None
     wifis = []
     locs = []
-    for (idx,item) in enumerate(items):
-        if idx % 100 == 0:
-            print '%d/%d' % (idx,len(items))
-        if 'wifi' in item.keys():
-            report_dt = common.ot_utils.get_utc_time_from_timestamp(float(item['time'])/1000)
-            m = models.Report(device_id=item['device_id'],timestamp=report_dt)
-            if models.Report.objects.filter(device_id=item['device_id'],timestamp=report_dt).exists():
-                print 'Repeated report - skipping'
-                continue
-            m.save()
-            result.append(m)
-            item_loc = item.get('location_api')
-            if item_loc:
-                loc = models.LocationInfo(report=m,
-                                          lat=item_loc['lat'],
-                                          lon=item_loc['long'],
-                                          provider=item_loc['provider'],
-                                          timestamp = common.ot_utils.get_utc_time_from_timestamp(float(item_loc['time'])/1000),
-                                          accuracy = item_loc['accuracy'])
-                locs.append(loc)
-            for wifi in item['wifi']:
-                wifis.append(models.SingleWifiReport(SSID=wifi['SSID'],
-                                 signal=wifi['signal'],
-                                 frequency=wifi['frequency'],
-                                 key=wifi['key'],
-                                 report=m))
-    print 'Saving all dependant objects'
+    report_dt = common.ot_utils.get_utc_time_from_timestamp(float(item['time'])/1000)
+    m = models.Report(device_id=item['device_id'],timestamp=report_dt)
+    if models.Report.objects.filter(device_id=item['device_id'],timestamp=report_dt).exists():
+        print 'Repeated report - skipping'
+        return None
+    m.save()
+    item_loc = item.get('location_api')
+    if item_loc:
+        loc = models.LocationInfo(report=m,
+                                  lat=item_loc['lat'],
+                                  lon=item_loc['long'],
+                                  provider=item_loc['provider'],
+                                  timestamp = common.ot_utils.get_utc_time_from_timestamp(float(item_loc['time'])/1000),
+                                  accuracy = item_loc['accuracy'])
+        locs.append(loc)
+    for wifi in item['wifi']:
+        wifis.append(models.SingleWifiReport(SSID=wifi['SSID'],
+                                             signal=wifi['signal'],
+                                             frequency=wifi['frequency'],
+                                             key=wifi['key'],
+                                             report=m))
     models.SingleWifiReport.objects.bulk_create(wifis)
     models.LocationInfo.objects.bulk_create(locs)
+
+def dump_items(items):
+    result = []
+    for (idx,item) in enumerate(items):
+        res = dump_item(item)
+        if res is not None:
+            result.append(res)
+    print 'dumped %s items' % (len(items))
     return result
 
 def delete_all_reports():
