@@ -2,5 +2,6 @@
 import gtfs_datastore
 import bssid_tracker
 
-bssid_tracker.calc_tracker()
-gtfs_datastore.ReloadRedisGTFSData()
+def load():
+    bssid_tracker.calc_tracker()
+    gtfs_datastore.ReloadRedisGTFSData()
