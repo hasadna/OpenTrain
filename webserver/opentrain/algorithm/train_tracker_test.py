@@ -114,10 +114,14 @@ class train_tracker_test(TestCase):
         trip_suffixes_list = []
         device_ids.append('1cb87f1e')# Udi's trip  
         trip_suffixes_list.append(['_00073'])
-        device_ids.append('02090d12')# Eran's trip
-        trip_suffixes_list.append(['_00077'])
-        device_ids.append('f752c40d')# Ofer's trip
-        trip_suffixes_list.append(['_00283'])
+        #device_ids.append('02090d12')# Eran's trip
+        #trip_suffixes_list.append(['_00077'])
+        #device_ids.append('f752c40d')# Ofer's trip
+        #trip_suffixes_list.append(['_00283'])
+        device_ids.append('91b251f8')
+        trip_suffixes_list.append(['_00152'])        
+        device_ids.append('eran_ec8d0d5fd1a16aed')
+        trip_suffixes_list.append(['_00046'])              
 
         stop_detector_test.remove_from_redis(device_ids)
         
