@@ -15,12 +15,12 @@ def analyze_raw_reports(clean=True):
         offset += COUNT
         if not cont:
             return 
-        print 'Analyzed %s reports' % (offset)
-
+        
 def analyze_raw_reports_subset(offset,count):
     items = _collect_items(offset,count)
     if items:
-        dump_items(items)
+        for item in items:
+            dump_item(item)
         return True
     return False
 
@@ -28,14 +28,14 @@ from django.db import transaction
 
 @transaction.atomic
 def dump_item(item):
-    if 'wifi' not in item.keys():
+    if 'wifi' not in item:
         return None
     wifis = []
     locs = []
     report_dt = common.ot_utils.get_utc_time_from_timestamp(float(item['time'])/1000)
     m = models.Report(device_id=item['device_id'],timestamp=report_dt)
     if models.Report.objects.filter(device_id=item['device_id'],timestamp=report_dt).exists():
-        print 'Repeated report - skipping'
+        #print 'Repeated report - skipping'
         return None
     m.save()
     item_loc = item.get('location_api')
@@ -56,15 +56,6 @@ def dump_item(item):
     models.SingleWifiReport.objects.bulk_create(wifis)
     models.LocationInfo.objects.bulk_create(locs)
 
-def dump_items(items):
-    result = []
-    for (idx,item) in enumerate(items):
-        res = dump_item(item)
-        if res is not None:
-            result.append(res)
-    print 'dumped %s items' % (len(items))
-    return result
-
 def delete_all_reports():
     common.ot_utils.delete_from_model(models.SingleWifiReport)
     common.ot_utils.delete_from_model(models.LocationInfo)
@@ -83,7 +74,11 @@ def _collect_items(offset,count):
 def analyze_single_raw_report(rr):
     import algorithm.train_tracker 
     items = json.loads(rr.text)['items']
-    reports = dump_items(items)
+    reports = []
+    for item in items:
+        report = dump_item(item)
+        if report:
+            reports.append(report)
     for report in reports: 
         algorithm.train_tracker.add_report(report) 
     
