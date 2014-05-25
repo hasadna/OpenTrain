@@ -121,7 +121,7 @@ class Devices(ApiView):
 
 class DeviceReports(ApiView):
     """ Return reports for given device with id device_id"""
-    api_url = r'^devices/(?P<device_id>\w+)/reports/'
+    api_url = r'^devices/(?P<device_id>[\w ]+)/reports/'
     def get(self,request,device_id):
         import analysis.logic
         info = dict()
