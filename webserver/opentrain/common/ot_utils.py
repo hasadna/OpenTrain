@@ -75,6 +75,23 @@ def benchit(func):
         return res
     return wrap
 
+def benchit_and_db(func):
+    def wrap(*args,**kwargs):
+        from django.db import connection
+        q1 = len(connection.queries)
+        time_start = time.time()
+        res = func(*args,**kwargs)
+        time_end = time.time()
+        delta = time_end - time_start
+        q2 = len(connection.queries)
+        print('Function %s took %.2f seconds %s DB calls' % (func.__name__,delta,q2-q1))
+        for idx in xrange(q1,q2):
+            print connection.queries[idx]
+        return res
+    return wrap
+
+
+
 def parse_form_date(dt_str):
     """ parse the datetime string as returned from the form """
     import dateutil.parser

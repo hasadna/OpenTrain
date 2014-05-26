@@ -95,7 +95,10 @@ def GenerateTripData(day):
     result[trip.trip_id]['trip_id'] = trip.trip_id
     result[trip.trip_id]['stops'] = {}
     result[trip.trip_id]['stop_inds'] = []
-    stop_times = trip.get_stop_times()
+    # eran: sort locally to avoid DB access
+    #stop_times = trip.get_stop_times()
+    stop_times = list(trip.stoptime_set.all())
+    stop_times.sort(key=lambda x : x.stop_sequence)
     for stop_time in stop_times:
       result[trip.trip_id]['stops'][str(stop_time.stop.stop_id)] = (stop_time.stop_sequence, stop_time.arrival_time, stop_time.departure_time)
       result[trip.trip_id]['stop_inds'].append(stops.all_stops.id_list.index(stop_time.stop.stop_id))
@@ -107,7 +110,8 @@ def GetTripsByDay(day):
   day_str = _DayToDayStr(day)
   relevant_services = gtfs.models.Service.objects.filter(start_date = day_str)
   relevant_service_ids = [x[0] for x in relevant_services.all().values_list('service_id')]
-  trips = gtfs.models.Trip.objects.filter(service__in=relevant_service_ids).order_by('trip_id')
+  # eran: do prefetch related
+  trips = gtfs.models.Trip.objects.filter(service__in=relevant_service_ids).order_by('trip_id').prefetch_related('stoptime_set','stoptime_set__stop')
   return trips
 
 def GetRedisData(redis_key, day=None):
