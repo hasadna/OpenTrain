@@ -164,7 +164,7 @@ def _DayToDayStr(day):
   return day.strftime("%Y-%m-%d")
 
 def _GTFSDayStrToDay(day):
-  return datetime.datetime.strptime('010414', "%d%m%y").date()
+  return datetime.datetime.strptime(day, "%d%m%y").date()
 
 def _AddDayToKey(key, day):
   return key + ":" + _DayToDayStr(day)
