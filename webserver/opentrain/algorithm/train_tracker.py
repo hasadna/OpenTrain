@@ -94,6 +94,10 @@ def add_report_to_tracker(tracker_id, report):
     
     if is_stops_updated:
         trips, time_deviation_in_seconds = update_trips(tracker_id, day, stop_times)
+        if len(stop_times) == 2:  # Need to add the first station
+            logger.debug(stop_times[-2])
+            save_stop_times_to_db(tracker_id, stop_times[-2], trips,\
+                                  time_deviation_in_seconds)        
         logger.debug(stop_times[-1])
         save_stop_times_to_db(tracker_id, stop_times[-1], trips,\
                               time_deviation_in_seconds)

@@ -168,7 +168,7 @@ def _DayToDayStr(day):
   return day.strftime("%Y-%m-%d")
 
 def _GTFSDayStrToDay(day):
-  return datetime.datetime.strptime('010414', "%d%m%y").date()
+  return datetime.datetime.strptime(day, "%d%m%y").date()
 
 def _AddDayToKey(key, day):
   return key + ":" + _DayToDayStr(day)
@@ -178,12 +178,12 @@ def daterange(start_date, end_date):
     yield start_date + datetime.timedelta(n)
 
 def ReloadRedisGTFSData():
-  #days = gtfs.models.Service.objects.all().values_list('start_date', flat=True)
-  #days = sorted(list(set(days)))
-  days_begin_end = [_GTFSDayStrToDay('010414'), datetime.date.today()+datetime.timedelta(1)] # add 
-  days = daterange(days_begin_end[0], days_begin_end[1])
+  days = gtfs.models.Service.objects.all().values_list('start_date', flat=True)
+  days = sorted(list(set(days)))
+  #days_begin_end = [_GTFSDayStrToDay('010414'), datetime.date.today()+datetime.timedelta(1)]
+  #days = daterange(days_begin_end[0], days_begin_end[1])
   #days = days_begin_end
-  days = sorted([x for x in days])
+  #days = sorted([x for x in days])
   #days = [days[0]]
   for i, day in enumerate(days):
     print i, ' of ', len(days)
