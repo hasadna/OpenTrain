@@ -20,7 +20,6 @@ import unittest
 import time
 from display_utils import *
 from export_utils import *
-from train_tracker import print_trips, get_trips, get_trusted_trip_or_none
 from alg_logger import logger
 import stops
 from common.mock_reports_generator import generate_mock_reports
@@ -71,7 +70,7 @@ class stop_detector_test(TestCase):
         remove_from_redis([device_id])
         print 'done'
 
-    def _stop_detector_on_real_trip(self, device_id = '1cb87f1e', trip_id = '010414_00168', do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=True, do_show_fig=True):
+    def _stop_detector_on_real_trip(self, device_id = '1cb87f1e', trip_id = '010414_00168', do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=True, do_show_fig=False):
         remove_from_redis([device_id])
         now = ot_utils.get_localtime_now()
         reports_queryset = get_device_id_reports(device_id)
@@ -100,8 +99,6 @@ class stop_detector_test(TestCase):
                     print('Elapsed time should be positive but is %d' % (elapsed))
                 fps_period_start = time.clock()                
             
-            if i % 900 == 0:
-                trips = get_trips(tracker_id)
             report = reports_queryset[i]
             
             if set_reports_to_same_weekday_last_week:
@@ -120,13 +117,9 @@ class stop_detector_test(TestCase):
             if is_stops_updated:
                 logger.debug(str(stop_times[-1]))
             
-   
-        trips, time_deviation_in_seconds = get_trips(tracker_id)
-        trip = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
-        
         remove_from_redis([device_id])
         print 'done'
-        return tracker_id, [trip]
+        return tracker_id
 
     def evaluate_detected_stop_times(self, device_id, trip_id):
         detected_stop_times = stop_detector.get_detected_stop_times(tracker_id=device_id)

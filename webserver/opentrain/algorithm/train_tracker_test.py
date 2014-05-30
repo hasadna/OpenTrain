@@ -23,12 +23,14 @@ import time
 from display_utils import *
 from export_utils import *
 import shapes
-from train_tracker import add_report, print_trips, get_trips, get_trusted_trip_or_none
-
+from train_tracker import add_report, print_trips, get_trusted_trips, get_train_tracker_trip_delays_ids_list_of_lists_key
 import stops
 from common.mock_reports_generator import generate_mock_reports
 from analysis.models import SingleWifiReport
-from redis_intf.client import get_redis_pipeline, get_redis_client
+from redis_intf.client import (get_redis_pipeline, 
+                               get_redis_client,
+                               load_by_key, 
+                               save_by_key)
 import stop_detector_test
 
 class train_tracker_test(TestCase):
@@ -53,8 +55,6 @@ class train_tracker_test(TestCase):
                     logger.debug('Elapsed time should be positive but is %d' % (elapsed))
                 fps_period_start = time.clock()                
             
-            if i % 900 == 0:
-                trips = get_trips(tracker_id)
             report = reports_queryset[i]
             
             if set_reports_to_same_weekday_last_week:
@@ -72,19 +72,19 @@ class train_tracker_test(TestCase):
 
         #tracker.print_tracked_stop_times()
         #tracker.print_possible_trips()
-        trips, time_deviation_in_seconds = get_trips(tracker_id)
-        trip = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
-        return tracker_id, [trip]
+        trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id))
+        trips = get_trusted_trips(trip_delays_ids_list_of_lists)
+        return tracker_id, trips
         
   
     def track_mock_reports(self, reports, tracker_id):
         for i, report in enumerate(reports):
             add_report(report)
-        trips, time_deviation_in_seconds = get_trips(tracker_id)
-        trip = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
-        return trip
+        trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id))
+        trips = get_trusted_trips(trip_delays_ids_list_of_lists)
+        return trips
     
-    def teXXXst_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010314_07117','010314_07117'], remove_some_locations=True):
+    def test_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010414_00100', '010414_00168'], remove_some_locations=True):
         self.test_tracker_on_mock_device(device_id, trip_ids, remove_some_locations)
         
     def test_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010414_00168'], remove_some_locations=True):
@@ -103,10 +103,11 @@ class train_tracker_test(TestCase):
         for report in reports[::2]:
             del report.my_loc_mock
         
-        matched_trip = self.track_mock_reports(reports, tracker_id)
-        if matched_trip:
+        matched_trips = self.track_mock_reports(reports, tracker_id)
+        for matched_trip in matched_trips:
             gtfs.models.Trip.objects.filter(trip_id = matched_trip)[0].print_stoptimes()
-        self.assertEquals(matched_trip, trip_id)
+        self.assertEquals(len(matched_trips), len(trip_ids))        
+        self.assertEquals(sorted(matched_trips), sorted(trip_ids))
         stop_detector_test.remove_from_redis(tracker_id)        
         
     def test_tracker_on_real_devices(self):    

@@ -20,7 +20,7 @@ import unittest
 import time
 from display_utils import *
 from export_utils import *
-from train_tracker import add_report, print_trips, get_trips, get_trusted_trip_or_none
+from train_tracker import add_report, print_trips, get_trusted_trips
 
 import stops
 from common.mock_reports_generator import generate_mock_reports
@@ -37,10 +37,25 @@ class trip_matcher_test(TestCase):
     def test_matcher_on_full_trip(self, trip_id = '010414_00168'):
         detected_stop_times_gtfs, relevant_service_ids, day = self.load_trip_info_for_matcher(trip_id)
             
-        trips, time_deviation_in_seconds = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs,\
+        trip_delays_ids_list_of_lists = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs,\
                                relevant_service_ids, day)
-        matched_trip_id = get_trusted_trip_or_none(trips, time_deviation_in_seconds)        
-        self.assertEquals(matched_trip_id, trip_id)
+        self.assertEquals(len(trip_delays_ids_list_of_lists), 1)        
+        matched_trip_ids = get_trusted_trips(trip_delays_ids_list_of_lists)
+        self.assertEquals(matched_trip_ids[0], trip_id)
+
+    def test_matcher_on_trip_set(self, trip_ids = ['010414_00100', '010414_00168']):
+        detected_stop_times_gtfs_all = []
+        for trip_id in trip_ids:
+            detected_stop_times_gtfs, relevant_service_ids, day = self.load_trip_info_for_matcher(trip_id)
+            detected_stop_times_gtfs_all += detected_stop_times_gtfs
+            
+        trip_delays_ids_list_of_lists = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs_all,\
+                               relevant_service_ids, day)
+        
+        self.assertEquals(len(trip_delays_ids_list_of_lists), 2)        
+        matched_trip_ids = sorted(get_trusted_trips(trip_delays_ids_list_of_lists))
+        self.assertEquals(matched_trip_ids, sorted(trip_ids))
+        
         
     def test_matcher_on_partial_random_trip(self, trip_id = '010414_00168', seeds=[0,1,2,3], stop_counts=[3,4,5]):
         for seed in seeds:
@@ -50,13 +65,13 @@ class trip_matcher_test(TestCase):
                 random.seed(seed)
                 subset_inds = sorted(random.sample(xrange(0,len(detected_stop_times_gtfs)),stop_count))
                 detected_stop_times_gtfs_subset = [detected_stop_times_gtfs[i] for i in subset_inds]
-                trips, time_deviation_in_seconds = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs,\
+                trip_delays_ids_list_of_lists = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs,\
                                        relevant_service_ids, day)
 
-                matched_trip_id = get_trusted_trip_or_none(trips, time_deviation_in_seconds)        
-                self.assertEquals(matched_trip_id, unicode(trip_id))
 
-    
+                self.assertEquals(len(trip_delays_ids_list_of_lists), 1)        
+                matched_trip_ids = get_trusted_trips(trip_delays_ids_list_of_lists)
+                self.assertEquals(matched_trip_ids[0], unicode(trip_id))
 
     def load_trip_info_for_matcher(self, trip_id):
         day = datetime.datetime.strptime(trip_id.split('_')[0], '%d%m%y').date()
