@@ -29,3 +29,17 @@ def get_reports(device_id):
     result = list(models.Report.objects.filter(device_id=device_id).order_by('timestamp'))
     return result
 
+def analyze_bssid(bssid):
+    from models import SingleWifiReport,Report,LocationInfo
+    wifi_reports = SingleWifiReport.objects.filter(key=bssid)
+    print 'Number of wifi reports = %d' % wifi_reports.count()
+    reports = Report.objects.filter(id__in=wifi_reports.values_list('report'))
+    print 'Number of reports = %s' % reports.count()
+    locs = LocationInfo.objects.filter(id__in=reports.values_list('my_loc'))
+    print 'Number of locations = %s' % (locs.count())
+    min_lat = min(locs.values_list('lat',flat=True))
+    max_lat = max(locs.values_list('lat',flat=True))
+    min_lon = min(locs.values_list('lon',flat=True))
+    max_lon = max(locs.values_list('lon',flat=True))
+    max_dist = common.ot_utils.latlon_to_meters(min_lat,min_lon,max_lat,max_lon)
+    print 'Maximal distance = %.2f' % (max_dist)
