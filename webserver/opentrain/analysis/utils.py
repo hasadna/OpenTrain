@@ -33,7 +33,7 @@ def analyze_bssid(bssid):
     from models import SingleWifiReport,Report,LocationInfo
     wifi_reports = SingleWifiReport.objects.filter(key=bssid)
     print 'Number of wifi reports = %d' % wifi_reports.count()
-    names = wifi_reports.values_list('SSID').distinct()
+    names = wifi_reports.values_list('SSID',flat=True).distinct()
     print 'Names = %s' % (','.join(names))
     reports = Report.objects.filter(id__in=wifi_reports.values_list('report'))
     print 'Number of reports = %s' % reports.count()
