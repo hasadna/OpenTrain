@@ -36,6 +36,7 @@ def analyze_bssid(bssid):
     reports = Report.objects.filter(id__in=wifi_reports.values_list('report'))
     print 'Number of reports = %s' % reports.count()
     locs = LocationInfo.objects.filter(id__in=reports.values_list('my_loc'))
+    names = wifi_reports.values_list('SSID').distinct()
     print 'Number of locations = %s' % (locs.count())
     min_lat = min(locs.values_list('lat',flat=True))
     max_lat = max(locs.values_list('lat',flat=True))
