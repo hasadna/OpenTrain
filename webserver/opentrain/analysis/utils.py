@@ -50,18 +50,37 @@ def analyze_bssid(bssid):
         loc_next = locs[idx+1]
         dist_next = locs_dist(loc,loc_next)
         time_diff = int((loc_next.timestamp - loc.timestamp).total_seconds())
-        is_same_device = loc.report.device_id == loc_next.report.device_id
-        if is_same_device:
-            device_status = 'SAME DEVICE %s' % (loc.report.device_id)
-        else:
-            device_status = '%s %s' % (loc.report.device_id,loc_next.report.device_id)
         if dist_next > 100:
-            print '=' * 30
-            print '''%3s: Distance: %8.2f 
-%s %s
-%s %s Time difference: %s
-%s 
-''' % (idx,dist_next,loc.report.id,loc_next.report.id,loc.timestamp.replace(microsecond=0),loc_next.timestamp.replace(microsecond=0),time_diff,device_status)
+            data = dict()
+            is_same_device = loc.report.device_id == loc_next.report.device_id
+            if is_same_device:
+                device_status = 'SAME DEVICE %s' % (loc.report.device_id)
+            else:
+                device_status = '%s %s' % (loc.report.device_id,loc_next.report.device_id)
+            data['title_cur'] = 'CUR'
+            data['title_next'] = 'NEXT'
+            data['title_delta'] = 'DELTA'
+            data['id_cur'] = loc.report.id
+            data['id_next'] = loc_next.report.id
+            data['gpsts_cur'] = loc.timestamp.replace(microsecond=0).isoformat().replace('+00:00','')
+            data['gpsts_next'] = loc_next.timestamp.replace(microsecond=0).isoformat().replace('+00:00','')
+            data['repts_cur'] = loc.report.timestamp.replace(microsecond=0).isoformat().replace('+00:00','')
+            data['repts_next'] = loc_next.report.timestamp.replace(microsecond=0).isoformat().replace('+00:00','')
+            data['dev_cur'] = loc.report.device_id
+            data['dev_next'] = loc_next.report.device_id
+            data['total_dist'] = dist_next
+            data['idx'] = idx
+            data['repts_delta'] = int((loc_next.report.timestamp - loc.report.timestamp).total_seconds())
+            data['gpsts_delta'] = int((loc_next.timestamp - loc.timestamp).total_seconds())
+            data['dev_delta'] = 'SAME' if loc.report.device_id == loc_next.report.device_id else ''
+            print '=' * 60
+            print '''%(idx)3s: Distance: %(total_dist)8.2f 
+                  %(title_cur)20s %(title_next)20s %(title_delta)10s
+REPORT ID:        %(id_cur)20s %(id_next)20s 
+GPS TIMESTAMP:    %(gpsts_cur)20s %(gpsts_next)20s %(gpsts_delta)10s
+REPROT TIMESTAMP: %(repts_cur)20s %(repts_next)20s %(repts_delta)10s
+DEVICE:           %(dev_cur)20s %(dev_next)20s %(dev_delta)10s
+''' % data
             
 def locs_dist(loc1,loc2):
     return common.ot_utils.latlon_to_meters(loc1.lat,loc1.lon,loc2.lat,loc2.lon)
