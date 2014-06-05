@@ -50,7 +50,7 @@ def analyze_bssid(bssid):
         loc_next = locs[idx+1]
         dist_next = locs_dist(loc,loc_next)
         time_diff = int((loc_next.timestamp - loc.timestamp).total_seconds())
-        if dist_next > 100:
+        if dist_next > 500:
             data = dict()
             is_same_device = loc.report.device_id == loc_next.report.device_id
             if is_same_device:
