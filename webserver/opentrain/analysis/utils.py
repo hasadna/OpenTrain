@@ -31,17 +31,37 @@ def get_reports(device_id):
 
 def analyze_bssid(bssid):
     from models import SingleWifiReport,Report,LocationInfo
-    wifi_reports = SingleWifiReport.objects.filter(key=bssid)
+    wifi_reports = SingleWifiReport.objects.filter(key=bssid).order_by('report__timestamp')
     print 'Number of wifi reports = %d' % wifi_reports.count()
-    names = wifi_reports.values_list('SSID',flat=True).distinct()
+    names = SingleWifiReport.objects.filter(key=bssid).values_list('SSID',flat=True).distinct() 
     print 'Names = %s' % (','.join(names))
-    reports = Report.objects.filter(id__in=wifi_reports.values_list('report'))
+    reports = Report.objects.filter(id__in=wifi_reports.values_list('report')).order_by('timestamp')
     print 'Number of reports = %s' % reports.count()
-    locs = LocationInfo.objects.filter(id__in=reports.values_list('my_loc'))
-    print 'Number of locations = %s' % (locs.count())
-    min_lat = min(locs.values_list('lat',flat=True))
-    max_lat = max(locs.values_list('lat',flat=True))
-    min_lon = min(locs.values_list('lon',flat=True))
-    max_lon = max(locs.values_list('lon',flat=True))
+    locs = list(LocationInfo.objects.filter(id__in=reports.values_list('my_loc')).order_by('timestamp'))
+    print 'Number of locations = %s' % (len(locs))
+    min_lat = min(loc.lat for loc in locs)
+    max_lat = max(loc.lat for loc in locs)
+    min_lon = min(loc.lon for loc in locs)
+    max_lon = max(loc.lon for loc in locs)
     max_dist = common.ot_utils.latlon_to_meters(min_lat,min_lon,max_lat,max_lon)
     print 'Maximal distance = %.2f' % (max_dist)
+
+    for idx,loc in enumerate(locs[0:-1]):
+        loc_next = locs[idx+1]
+        dist_next = locs_dist(loc,loc_next)
+        time_diff = int((loc_next.timestamp - loc.timestamp).total_seconds())
+        is_same_device = loc.report.device_id == loc_next.report.device_id
+        if is_same_device:
+            device_status = 'SAME DEVICE %s' % (loc.report.device_id)
+        else:
+            device_status = '%s %s' % (loc.report.device_id,loc_next.report.device_id)
+        if dist_next > 100:
+            print '=' * 30
+            print '''%3s: Distance: %8.2f 
+%s %s Time difference: %s
+%s 
+''' % (idx,dist_next,loc.timestamp.replace(microsecond=0),loc_next.timestamp.replace(microsecond=0),time_diff,device_status)
+            
+def locs_dist(loc1,loc2):
+    return common.ot_utils.latlon_to_meters(loc1.lat,loc1.lon,loc2.lat,loc2.lon)
+        

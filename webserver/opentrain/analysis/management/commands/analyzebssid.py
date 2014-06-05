@@ -6,6 +6,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         import analysis.utils
         analysis.utils.analyze_bssid(args[0])
+        
 
 
 
