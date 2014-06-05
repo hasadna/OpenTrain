@@ -58,9 +58,10 @@ def analyze_bssid(bssid):
         if dist_next > 100:
             print '=' * 30
             print '''%3s: Distance: %8.2f 
+%s %s
 %s %s Time difference: %s
 %s 
-''' % (idx,dist_next,loc.timestamp.replace(microsecond=0),loc_next.timestamp.replace(microsecond=0),time_diff,device_status)
+''' % (idx,dist_next,loc.report.id,loc_next.report.id,loc.timestamp.replace(microsecond=0),loc_next.timestamp.replace(microsecond=0),time_diff,device_status)
             
 def locs_dist(loc1,loc2):
     return common.ot_utils.latlon_to_meters(loc1.lat,loc1.lon,loc2.lat,loc2.lon)
