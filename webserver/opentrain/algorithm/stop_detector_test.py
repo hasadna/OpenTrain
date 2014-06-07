@@ -31,6 +31,7 @@ import random
 import cProfile
 from stop_detector import add_report
 import stop_detector
+import display_utils
 
 def remove_from_redis(device_ids):
     if isinstance(device_ids, basestring):
@@ -77,13 +78,7 @@ class stop_detector_test(TestCase):
         tracker_id = device_id
         stops.all_stops.clear
         if do_show_fig:
-            for stop in stops.all_stops.values():
-                plt.text(stop.coords[0], stop.coords[1], stop.name)
-                plt.scatter(stop.coords[0], stop.coords[1], color='red')
-                plt.ion()
-                plt.show()
-                plt.xlim((31.5,32.5))
-                plt.ylim((34.7,35))
+            display_utils.draw_map()
         
         fps_period_start = time.clock()
         fps_period_length = 100

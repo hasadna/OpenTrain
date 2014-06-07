@@ -60,6 +60,16 @@ def plot_and_save_shape_matches(shape_point_tree, sampled_all_routes_tree, shape
         plt.savefig(os.path.join(config.output_data, 'shape_%d.png' % (shape_id)), bbox_inches=0)
         plt.close('all')
         
+def draw_map():
+    import stops
+    for stop in stops.all_stops.values():
+        plt.text(stop.coords[1], stop.coords[0], stop.name)
+        plt.scatter(stop.coords[1], stop.coords[0], color='red')
+        plt.ion()
+        plt.show()
+        plt.ylim((31.5,32.5))
+        plt.xlim((34.7,35))
+
 
 if __name__ == "__main__":
     trips = gtfs.models.Trip.objects.filter(trip_id='170214_00517')

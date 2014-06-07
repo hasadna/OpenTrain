@@ -7,7 +7,11 @@ from django.utils import timezone
 import pytz
 
 def datetime_to_db_time(adatetime):
-    return adatetime.hour * 3600 + 60 * adatetime.minute + adatetime.second
+    if adatetime.hour < 3: # if it's a night train, add 24 hours:
+        added_time = 24 * 3600
+    else:
+        added_time = 0
+    return adatetime.hour * 3600 + 60 * adatetime.minute + adatetime.second + added_time
 
 def datetime_range_to_db_time(datetime1, datetime2):
     d1 = datetime_to_db_time(datetime1)

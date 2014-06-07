@@ -106,6 +106,9 @@ def setup_hmm():
     return hmm, hmm_non_stop_component_num        
 
 def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp2=None, stop_id_and_departure_time2=None):
+    stop_times = get_detected_stop_times(tracker_id)
+    if len(stop_times) > 0 and stop_times[-1].stop_id == int(stop_id_and_departure_time.split('_')[0]): # if last station is same station
+        arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(stop_times[-1].arrival)
     prev_stops_counter_key = get_train_tracker_tracked_stops_prev_stops_counter_key(tracker_id)
     done = False
     # we try to update a stop_time only if no stop_time was updated since we started the report processing. If one was updated, we don't update at all:
@@ -171,6 +174,7 @@ def try_get_stop_id(report):
         if len(wifi_stops_ids) > 0 and np.all(wifi_stops_ids == wifi_stops_ids[0]):
             stop_id = wifi_stops_ids[0]
         else:
+            logger.debug('No stop for bssids: %s' % ','.join([x.key for x in wifis]))
             stop_id = None          
     else:
         stop_id = nostop_id
@@ -217,10 +221,12 @@ def add_report(tracker_id, report):
         prev_stops_and_timestamps = [x for (y,x) in sorted(zip(prev_stop_ids_order,prev_stops_and_timestamps))]
         
         prev_stop_ids = [int(x[0].split("_")[1]) for x in prev_stops_and_timestamps]
-        
+
         prev_stop_int_ids = np.array([stops.all_stops.id_list.index(x) for x in prev_stop_ids])
-        #assert np.array_equal(prev_stop_int_ids, np.array(self.prev_stops))
-        prev_stop_hmm_logprob, prev_stop_int_ids_by_hmm = hmm.decode(prev_stop_int_ids)
+
+        # turning off hmm for now, as it might make us miss some stations, and right now it's not really needed:
+        #prev_stop_hmm_logprob, prev_stop_int_ids_by_hmm = hmm.decode(prev_stop_int_ids)
+        prev_stop_int_ids_by_hmm = prev_stop_int_ids
         prev_stop_int_ids_by_hmm_for_debug = prev_stop_int_ids_by_hmm
         
         # update current_stop_id_by_hmm and current_state by hmm:        

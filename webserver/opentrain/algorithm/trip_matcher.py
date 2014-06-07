@@ -25,6 +25,12 @@ from gtfs_datastore import TripDatastore
 all_stops = stops.all_stops
 
 
+def print_trip(trip_id):
+    trips = gtfs.models.Trip.objects.filter(trip_id=trip_id)
+    print('')
+    trips[0].print_stoptimes()
+    print('')    
+
 # None means we cannot find a reasonable trip list
 # empty list means there are no trips that fit this tracker
 #@do_profile(follow=[])
@@ -51,12 +57,12 @@ def get_matched_trips(tracker_id, detected_stop_times, relevant_service_ids, day
     for i, t in enumerate(trips_with_visited_stops):
         stops_dict = trip_datastore.trip_datastore[t]['stops']
 
-        start_time = ot_utils.db_time_to_datetime(trip_datastore.trip_datastore[t]['start_time'])
-        end_time = ot_utils.db_time_to_datetime(trip_datastore.trip_datastore[t]['end_time'])
+        start_time = trip_datastore.trip_datastore[t]['start_time']
+        end_time = trip_datastore.trip_datastore[t]['end_time']
 
         detected_stop_times_in_time_range = []
         for i, x in enumerate(detected_stop_times):
-            arrival = x.arrival.time()
+            arrival = ot_utils.datetime_to_db_time(x.arrival.time())
             if start_time <= arrival and arrival <= end_time:
                 detected_stop_times_in_time_range.append(x)
         filtered_detected_stop_times_stop_inds = [all_stops.id_list.index(x.stop_id) for x in detected_stop_times_in_time_range]
@@ -73,7 +79,7 @@ def get_matched_trips(tracker_id, detected_stop_times, relevant_service_ids, day
             # if checks for:
             # - stops that are detected and are in trip:
             # - stops that are in trip time range:
-            arrival = x.arrival.time()
+            arrival = ot_utils.datetime_to_db_time(x.arrival.time())
             if x.stop_id in stops_dict and start_time <= arrival and arrival <= end_time:
                 trip_stop_tuples.append(stops_dict[x.stop_id])
                 filtered_detected_stop_times.append(x)

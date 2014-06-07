@@ -32,6 +32,8 @@ from redis_intf.client import (get_redis_pipeline,
                                load_by_key, 
                                save_by_key)
 import stop_detector_test
+import stop_detector
+import trip_matcher
 
 class train_tracker_test(TestCase):
 
@@ -84,10 +86,10 @@ class train_tracker_test(TestCase):
         trips = get_trusted_trips(trip_delays_ids_list_of_lists)
         return trips
     
-    def test_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010414_00100', '010414_00168'], remove_some_locations=True):
+    def teXXXst_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010414_00100', '010414_00168'], remove_some_locations=True):
         self.test_tracker_on_mock_device(device_id, trip_ids, remove_some_locations)
         
-    def test_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010414_00168'], remove_some_locations=True):
+    def teXXXst_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010414_00168'], remove_some_locations=True):
         if not isinstance(trip_ids, list):
             trip_ids = [trip_ids]
         tracker_id = device_id
@@ -115,22 +117,74 @@ class train_tracker_test(TestCase):
         trip_suffixes_list = []
         device_ids.append('1cb87f1e')# Udi's trip  
         trip_suffixes_list.append(['_00073'])
-        #device_ids.append('02090d12')# Eran's trip
-        #trip_suffixes_list.append(['_00077'])
-        #device_ids.append('f752c40d')# Ofer's trip
-        #trip_suffixes_list.append(['_00283'])
         device_ids.append('91b251f8')
         trip_suffixes_list.append(['_00152'])        
         device_ids.append('eran_ec8d0d5fd1a16aed')
         trip_suffixes_list.append(['_00046'])              
+        device_ids.append('ofer_57656382027dc9c8')
+        trip_suffixes_list.append(['_00281'])
+        device_ids.append('eran_63479c43eb54ff1f')
+        trip_suffixes_list.append(['_00050'])
+        #device_ids.append('ed918429baaf8ab8')
+        #trip_suffixes_list.append(['_00086'])
+        device_ids.append('5dc40476ad438414')
+        trip_suffixes_list.append(['_00164'])
 
+        #device_ids.append('2dfc74b71c91677b')
+        #trip_suffixes_list.append(['_00956']) # wrongly takes _00685 as second trip. What is correct trip?
+        #device_ids.append('iocean_323b5911306012a9')
+        #trip_suffixes_list.append(['_00124'])        
+
+        device_ids.append('eran_b7fa2ccec8c127d2')        
+        trip_suffixes_list.append(['_00050'])
+        #device_ids.append('3c70f9b11f28734b')        
+        #trip_suffixes_list.append(['_00956', '_00279'])
+
+        #device_ids.append('0c89639c69c4caf1') # this one can't find the evening trip
+        #trip_suffixes_list.append(['_00956', '_00279'])
+        ##device_ids.append('0756bb390dabe025') # this one merges stops from different trips        
+        ##trip_suffixes_list.append(['_00956', '_00227'])
+
+        device_ids.append('eran_ec8d0d5fd1a16aed')        
+        trip_suffixes_list.append(['_00046'])        
+        #device_ids.append('0297cb91eaf724cd')        
+        #trip_suffixes_list.append(['_00956'])        
+
+        ##device_ids.append('d9e77fb9c6c851f4') # only tel aviv stations detected, but by map should be more     
+        ##trip_suffixes_list.append(['_00956'])
+        ##device_ids.append('871d8773d36a2b8f') # only tel aviv stations detected, but by map should be more     
+        ##trip_suffixes_list.append(['_00956'])
+
+        #device_ids.append('eran_63479c43eb54ff1f')        
+        #trip_suffixes_list.append(['_00050'])
+        #device_ids.append('ofer_57656382027dc9c8')        
+        #trip_suffixes_list.append(['_00281'])
+
+        ##device_ids.append('ofer_a7700dd1b90dea4c') # download db
+        ##trip_suffixes_list.append(['_00281'])
+        ##device_ids.append('Amit_81db2ecaa94d5377') # download db
+        ##trip_suffixes_list.append(['_00281'])  
+        ##device_ids.append('eran_5060bdab5d871850') # download db
+        ##trip_suffixes_list.append(['_00281']) 
+        ##device_ids.append('ofer_9d7d84b96a97b156') # download db
+        ##trip_suffixes_list.append(['_00281'])        
+        ##device_ids.append('eran_d57316d7c8610535') # download db
+        ##trip_suffixes_list.append(['_00281'])
+        ##device_ids.append('ofer_e402a16800ea3cc9') # download db
+        ##trip_suffixes_list.append(['_00281'])
+
+
+        
         stop_detector_test.remove_from_redis(device_ids)
         
         for i in xrange(len(device_ids)):
             device_id = device_ids[i] 
             trip_suffixes = trip_suffixes_list[i]
             tracker_id, trips = self.track_device(device_id, do_preload_reports=True)
-            print trips
+            for trip_id in trips:
+                trip_matcher.print_trip(trip_id)
+            stop_detector.print_tracked_stop_times(device_id)
+            
             self.assertEquals(len(trips), len(trip_suffixes))
             for trip_suffix in trip_suffixes:
                 self.assertTrue(self.is_trip_in_list(trips, trip_suffix))
