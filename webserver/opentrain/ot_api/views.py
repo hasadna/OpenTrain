@@ -128,6 +128,7 @@ class DeviceReports(ApiView):
         info['since_id'] = int(request.GET.get('since_id',0))
         info['limit'] = int(request.GET.get('limit',200))
         info['offset'] = int(request.GET.get('offset',0))
+        info['stops_only'] = bool(int(request.GET.get('stops_only',0)))
         reports = analysis.logic.get_device_reports(device_id,info)
         return self._prepare_list_resp(request,reports,info)
 
