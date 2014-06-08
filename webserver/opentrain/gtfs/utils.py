@@ -19,6 +19,7 @@ def download_gtfs_file(download_only=False):
         basedir = GTFS_ZIP_DIR
 
     local_dir = os.path.join(basedir,time_suffix)
+    ot_utils.mkdir_p(local_dir)
     tmp_file = '/tmp/%s_tmp.zip' % (time_suffix)     
     ot_utils.ftp_get_file(MOT_FTP,FILE_NAME,tmp_file)
     tmp_md5 = ot_utils.md5_for_file(tmp_file)
