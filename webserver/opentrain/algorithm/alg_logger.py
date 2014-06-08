@@ -1,13 +1,20 @@
 import logging
 
-class MessageFilter(logging.Filter):
+class MessageExcludeFilter(logging.Filter):
   def __init__(self, param):
     self.param = param
     
   def filter(self, record):
     return self.param not in str(record.msg)
 
-class FilenameLineNumberFilter(logging.Filter):
+class MessageIncludeFilter(logging.Filter):
+  def __init__(self, param):
+    self.param = param
+    
+  def filter(self, record):
+    return self.param in str(record.msg)
+
+class FilenameLineNumberExcludeFilter(logging.Filter):
   def __init__(self, filename, lineno=None):
     self.filename = filename
     self.lineno = lineno
@@ -33,13 +40,16 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 # example usage:
-logger.addFilter(FilenameLineNumberFilter('alg', 40))
-logger.addFilter(MessageFilter('aaa'))
+logger.addFilter(FilenameLineNumberExcludeFilter('alg', 40))
+logger.addFilter(MessageExcludeFilter('aaa'))
 # this will get filtered out by both rules:
 logger.debug('aaa')
 
 
-logger.addFilter(MessageFilter('qps'))
+logger.addFilter(MessageExcludeFilter('qps'))
+logger.addFilter(MessageExcludeFilter('skipped because of large loc_ts_delta'))
+
+#logger.addFilter(MessageIncludeFilter('No stop for bssids'))
 
 
 

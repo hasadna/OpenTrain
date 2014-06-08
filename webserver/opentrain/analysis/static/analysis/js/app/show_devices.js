@@ -15,9 +15,11 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 	};
 	$scope.initReport = function() {
 		var device_id = $scope.getParameterByName('device_id');
+	    var stops_only = $scope.getParameterByName('stops_only');
 		$scope.devices = [];
 		$scope.reportsStatus = 'none';
 		$scope.liveMode = false;
+	    $scope.stopsOnly = stops_only == '1';
 		$scope.loadDeviceList(device_id);
 	};
 	$scope.intervalPromise = undefined;
@@ -34,6 +36,11 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 			$scope.intervalPromise = undefined;
 		}
 	};
+
+    $scope.setStopsOnly = function(val) {
+	$scope.stopsOnly = val;
+	$scope.redirectToReports();
+    }
 
 	$scope.updateDevice = function() {
 		$scope.loadLiveReports();
@@ -63,12 +70,17 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 		});
 	};
 	$scope.redirectToReports = function() {
-		window.location.href = '/analysis/device-reports/?device_id=' + $scope.input.selectedDevice.device_id;
+	   var url =  '/analysis/device-reports/?device_id=' + $scope.input.selectedDevice.device_id;
+	    if ($scope.stopsOnly) {
+		url += '&stops_only=1';
+	    }
+	    window.location.href = url;
 	};
 	$scope.loadLiveReports = function() {
 		var curId = $scope.input.selectedDevice.device_id;
+	    var stopsOnly = $scope.stopsOnly ? '1' : '0';
 		var last_report_id = $scope.reports.length > 0 ? $scope.reports[$scope.reports.length - 1].id : 0;
-		var url = '/api/1/devices/' + curId + '/reports/' + '?limit=200&since_id=' + last_report_id;
+		var url = '/api/1/devices/' + curId + '/reports/' + '?limit=200&since_id=' + last_report_id+'&stops_only=' + stopsOnly;
 		$scope.appendReportsRec(url);
 	};
 	$scope.loadReports = function() {
@@ -77,6 +89,8 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 		$scope.reports = [];
 		$scope.lastShownReportIndex = -1;
 		var url = '/api/1/devices/' + curId + '/reports/?limit=200';
+	    var stopsOnly = $scope.stopsOnly ? '1' : '0';
+	    url += '&stops_only=' + stopsOnly;
 		$scope.appendReportsRec(url);
 	};
 

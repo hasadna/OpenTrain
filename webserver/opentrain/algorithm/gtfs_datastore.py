@@ -52,7 +52,18 @@ class TripDatastore():
       trips_with_visited_stops = trips_with_visited_stops.sum(axis=1).nonzero()[0]
       inv_map = {v:k for k, v in self.trip_stop_matrix_trip_ids_inds.items()}
       trips_with_visited_stops = [inv_map[x] for x in trips_with_visited_stops]
-      return trips_with_visited_stops    
+      return trips_with_visited_stops
+    
+  def DoTripsIntersect(self, trip_id1, trip_id2):
+    start1 = self.trip_datastore[trip_id1]['start_time']
+    end1 = self.trip_datastore[trip_id1]['end_time']
+    start2 = self.trip_datastore[trip_id2]['start_time']
+    end2 = self.trip_datastore[trip_id2]['end_time']
+    return ((start1 <= start2 and start2 <= end1) or 
+            (start1 <= end2 and end2 <= end1) or 
+            (start1 <= start2 and end2 <= end1) or 
+            (start2 <= start1 and end1 <= end2))
+     
 
 def GenerateCostopMatrix(day, trip_data):
   costops = np.zeros((len(stops.all_stops), len(stops.all_stops)))

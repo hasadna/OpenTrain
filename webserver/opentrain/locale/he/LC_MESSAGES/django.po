@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-04-08 09:15+0300\n"
+"POT-Creation-Date: 2014-06-06 00:07+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -408,7 +408,7 @@ msgstr "אין נסיעות כרגע"
 msgid "Current Trains List"
 msgstr "רשימת רכבות לזמן נוכחי"
 
-#: common/static/common/ot_i18n.py:95 common/static/common/ot_i18n.py:104
+#: common/static/common/ot_i18n.py:95 common/static/common/ot_i18n.py:106
 msgid "Total # of reports (with loc)"
 msgstr "מספר דיווחים (עם מיקום)"
 
@@ -432,25 +432,33 @@ msgstr "מעקב זמן אמת"
 msgid "Stop Live"
 msgstr "הפסק מעקב זמן אמת"
 
-#: common/static/common/ot_i18n.py:101
-msgid "auto zoom"
-msgstr "אוטו-זום"
-
 #: common/static/common/ot_i18n.py:102
+msgid "Stops Only"
+msgstr "תחנות בלבד"
+
+#: common/static/common/ot_i18n.py:103
+msgid "All Reports"
+msgstr "כל הדיווחים"
+
+#: common/static/common/ot_i18n.py:104
 msgid "Please wait. Loading Reports, will take some time..."
 msgstr "נא המתן. טוען דיווחים, עשוי לקחת זמן מה..."
 
-#: common/static/common/ot_i18n.py:103
+#: common/static/common/ot_i18n.py:105
 msgid "Map for device id"
 msgstr "מפה עבור מזהה התקן"
 
-#: common/static/common/ot_i18n.py:106
+#: common/static/common/ot_i18n.py:108
 msgid "cur"
 msgstr "נוכחי"
 
-#: common/static/common/ot_i18n.py:107
+#: common/static/common/ot_i18n.py:109
 msgid "exp"
 msgstr "צפוי"
+
+#: common/static/common/ot_i18n.py:101
+msgid "auto zoom"
+msgstr "אוטו-זום"
 
 #: common/templates/common/base.html:44
 msgid "Open Train"

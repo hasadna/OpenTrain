@@ -50,4 +50,6 @@ webserver/opentrain/static
 a.log*
 
 webserver/opentrain/tmp-trans
+\#*
+\.#*
 

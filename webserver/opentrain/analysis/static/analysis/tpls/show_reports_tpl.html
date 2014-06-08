@@ -18,6 +18,12 @@
 	  {{ 'auto zoom' | trans }}
 	</label>
       </span>
+      <button type="button" ng-show="reportsStatus == 'done' && !stopsOnly" class="btn btn-success btn-sm" ng-click="setStopsOnly(true)">
+	{{ 'Stops Only' | trans }}
+      </button>
+      <button type="button" ng-show="reportsStatus == 'done' && stopsOnly" class="btn btn-success btn-sm" ng-click="setStopsOnly(false)">
+	{{ 'All Reports' | trans }}
+      </button>
     </form>
     <br/>
     <div class="well" ng-show="reportsStatus == 'wip'">

@@ -44,11 +44,8 @@ def get_train_tracker_day_key(tracker_id):
 def get_train_tracker_relevant_services_key(tracker_id):
     return "train_tracker:%s:relevant_services" % (tracker_id)
 
-def get_train_tracker_trip_ids_deviation_seconds_key(tracker_id):
-    return "train_tracker:%s:trip_ids_deviation_seconds" % (tracker_id)
-
-def get_train_tracker_trip_ids_key(tracker_id):
-    return "train_tracker:%s:trip_ids" % (tracker_id)
+def get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id):
+    return "train_tracker:%s:trip_delays_ids_list_of_lists" % (tracker_id)
 
 def get_current_trip_id_coords_key(trip_id):
     return 'current_trip_id:coords:%s' % (trip_id)
@@ -93,34 +90,38 @@ def add_report_to_tracker(tracker_id, report):
                                                               report)
     
     if is_stops_updated:
-        trips, time_deviation_in_seconds = update_trips(tracker_id, day, stop_times)
-        if len(stop_times) == 2:  # Need to add the first station
-            logger.debug(stop_times[-2])
-            save_stop_times_to_db(tracker_id, stop_times[-2], trips,\
-                                  time_deviation_in_seconds)        
-        logger.debug(stop_times[-1])
-        save_stop_times_to_db(tracker_id, stop_times[-1], trips,\
-                              time_deviation_in_seconds)
+        trip_delays_ids_list_of_lists = update_trips(tracker_id, day, stop_times)
+        trip_ids = get_trusted_trips(trip_delays_ids_list_of_lists)
+        for trip_id in trip_ids:
+            trip_delays_ids_list = [x for x in trip_delays_ids_list_of_lists if x[0][1] == trip_id][0]
+            if (len(stop_times)-1) in trip_delays_ids_list[0][2]:
+                if len(trip_delays_ids_list[0][2]) == 2:  # Need to add the first station
+                    if (len(stop_times)-2) in trip_delays_ids_list[0][2]:
+                        stop_time = stop_times[trip_delays_ids_list[0][2][-2]]
+                        logger.debug(stop_time)
+                        save_stop_times_to_db(tracker_id, stop_time, trip_id) 
+                    else:
+                        logger.error('Two stops were detected for trip, last detected stop for tracker belongs to trip, but one before last does not, while it most probably should.')
+                stop_time = stop_times[trip_delays_ids_list[0][2][-1]]
+                logger.debug(stop_time)
+                save_stop_times_to_db(tracker_id, stop_time, trip_id)
 
-def save_stop_times_to_db(tracker_id, detected_stop_time, trips,\
-                          time_deviation_in_seconds):
+def save_stop_times_to_db(tracker_id, detected_stop_time, trip_id):
     stop_id = detected_stop_time.stop_id
     departure_time = detected_stop_time.departure
     arrival_time = detected_stop_time.arrival
-    trip_id = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
-    if trip_id:
-        from analysis.models import RealTimeStop
-        try:
-            rs = RealTimeStop.objects.get(tracker_id=tracker_id,stop_id=stop_id,trip_id=trip_id)
-        except RealTimeStop.DoesNotExist:
-            rs = RealTimeStop()
-        rs.tracker_id = tracker_id
-        rs.trip_id = trip_id
-        rs.stop_id = stop_id
-        rs.arrival_time = arrival_time
-        rs.departure_time = departure_time
-        rs.save() 
-        logger.debug(str(rs))  
+    from analysis.models import RealTimeStop
+    try:
+        rs = RealTimeStop.objects.get(tracker_id=tracker_id,stop_id=stop_id,trip_id=trip_id)
+    except RealTimeStop.DoesNotExist:
+        rs = RealTimeStop()
+    rs.tracker_id = tracker_id
+    rs.trip_id = trip_id
+    rs.stop_id = stop_id
+    rs.arrival_time = arrival_time
+    rs.departure_time = departure_time
+    rs.save() 
+    logger.debug(str(rs))  
 
 def update_coords(report, tracker_id):
     loc = report.get_my_loc()
@@ -129,10 +130,10 @@ def update_coords(report, tracker_id):
      
     added_count = cl.sadd(get_train_tracker_visited_shape_sampled_point_ids_key(tracker_id), res_shape_sampled_point_ids)
 
-    trips, time_deviation_in_seconds = get_trips(tracker_id)
-    trip = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
+    trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id))
+    trips = get_trusted_trips(trip_delays_ids_list_of_lists)
 
-    if trip:
+    for trip in trips:
         cl.setex(get_current_trip_id_report_timestamp_key(trip), TRACKER_TTL, ot_utils.dt_time_to_unix_time(report.timestamp))
         if added_count > 0:
             save_by_key(get_current_trip_id_coords_key(trip),\
@@ -148,18 +149,12 @@ def update_coords(report, tracker_id):
 
 def update_trips(tracker_id, day, detected_stop_times):
     relevant_service_ids = get_relevant_service_ids(tracker_id)
-    trips, time_deviation_in_seconds = trip_matcher.get_matched_trips(tracker_id, detected_stop_times, relevant_service_ids, day)
-    save_by_key(get_train_tracker_trip_ids_key(tracker_id), trips)
-    save_by_key(get_train_tracker_trip_ids_deviation_seconds_key(tracker_id), time_deviation_in_seconds)
-    return trips, time_deviation_in_seconds
-        
-def get_trips(tracker_id):
-    trips = load_by_key(get_train_tracker_trip_ids_key(tracker_id))
-    time_deviation_in_seconds = load_by_key(get_train_tracker_trip_ids_deviation_seconds_key(tracker_id))    
-    return trips, time_deviation_in_seconds
+    trip_delays_ids_list_of_lists = trip_matcher.get_matched_trips(tracker_id, detected_stop_times, relevant_service_ids, day)
+    save_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id), trip_delays_ids_list_of_lists)
+    return trip_delays_ids_list_of_lists
 
 def print_trips(tracker_id):
-    trips, arrival_delta_abs_sums_seconds = get_trips(tracker_id)
+    trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id))
     print 'Trip count = %d' %(len(trips))
     for trip in trips:
         print "trip id: %s" % (trip)        
@@ -167,6 +162,19 @@ def print_trips(tracker_id):
         for x in trip_stop_times:
             print db_time_to_datetime(x.arrival_time), db_time_to_datetime(x.departure_time), x.stop
         print
+
+def get_trusted_trips(trip_delays_ids_list_of_lists):
+    trip_ids = []
+    if not trip_delays_ids_list_of_lists:
+        return trip_ids
+    for trip_delays_ids_list in trip_delays_ids_list_of_lists:
+        trips = [x[1] for x in trip_delays_ids_list]
+        time_deviation_in_seconds = [x[0] for x in trip_delays_ids_list]
+        trip_id = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
+        if trip_id:
+            trip_ids.append(trip_id)
+            
+    return trip_ids
 
 def get_trusted_trip_or_none(trips, time_deviation_in_seconds):
     # some heuristics to evaluate if we already have a trip we trust
