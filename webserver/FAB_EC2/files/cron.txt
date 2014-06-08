@@ -1,0 +1,1 @@
+0 * * * * cd /home/opentrain/work/OpenTrain/webserver/opentrain ; python manage.py downloadgtfs >> /var/log/opentrain/cron.log 2>&1
