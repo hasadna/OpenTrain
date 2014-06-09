@@ -42,7 +42,6 @@ def download_gtfs_file(download_only=False):
     
     if not download_only:
         ot_utils.unzip_file(local_file,local_dir)   
-    
         
 def find_gtfs_data_dir():
     """ returns the lastest subfolder in DATA_DIR """

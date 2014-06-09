@@ -114,7 +114,7 @@ def get_device_reports(device_id,info):
     qs = qs[info['offset']:info['offset'] + info['limit']]
     result = []
     for obj in qs:
-        result.append(obj.to_api_dict())
+        result.append(obj.to_api_dict(full=info['full']))
     return result
 
 ## CUR TRIPS #

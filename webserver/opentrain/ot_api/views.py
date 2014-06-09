@@ -120,7 +120,9 @@ class Devices(ApiView):
         return self._prepare_list_resp(request,devices)
 
 class DeviceReports(ApiView):
-    """ Return reports for given device with id device_id"""
+    """ Return reports for given device with id device_id
+    use stops_only=1 to get only stops
+    use full=1 to get also wifis"""
     api_url = r'^devices/(?P<device_id>[\w ]+)/reports/'
     def get(self,request,device_id):
         import analysis.logic
@@ -129,6 +131,7 @@ class DeviceReports(ApiView):
         info['limit'] = int(request.GET.get('limit',200))
         info['offset'] = int(request.GET.get('offset',0))
         info['stops_only'] = bool(int(request.GET.get('stops_only',0)))
+        info['full'] = bool(int(request.GET.get('full',0)))
         reports = analysis.logic.get_device_reports(device_id,info)
         return self._prepare_list_resp(request,reports,info)
 

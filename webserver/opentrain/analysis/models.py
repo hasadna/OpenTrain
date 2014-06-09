@@ -28,7 +28,7 @@ class Report(models.Model):
         timestamp = timestamp.replace(microsecond=0)
         return timestamp
     
-    def to_api_dict(self):
+    def to_api_dict(self,full=False):
         result = dict()
         result['created'] = self.created.isoformat()
         result['timestamp'] = self.timestamp.isoformat()
@@ -37,6 +37,9 @@ class Report(models.Model):
         result['is_station'] = self.is_station()
         if self.my_loc:
             result['loc'] = self.my_loc.to_api_dict()
+        if full:
+            wifis = list(self.wifi_set.all())
+            result['wifis'] = [w.to_api_dict() for w in wifis]
         return result
   
     def get_my_loc(self):
@@ -82,6 +85,9 @@ class SingleWifiReport(models.Model):
     signal = models.IntegerField()
     def __unicode__(self):
         return self.SSID
+    
+    def to_api_dict(self):
+        return dict(SSID=self.SSID,key=self.key,frequency=self.frequency,signal=self.signal)
  
 class RealTimeStop(models.Model):
     tracker_id = models.CharField(max_length=40,db_index=True)
