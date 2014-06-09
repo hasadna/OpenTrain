@@ -16,6 +16,7 @@ import display_utils
 from export_utils import *
 from alg_logger import logger
 import json
+from django.conf import settings
 
 USE_FILE = True
 
@@ -220,7 +221,8 @@ def print_bssids_by_stop(bssids_lowconf):
 
 def load_bssids_from_file():
     import json
-    with open('stop_data.json', 'r') as f:
+    
+    with open(os.path.join(settings.BASE_DIR, 'algorithm', 'stop_data.json'), 'r') as f:
         stop_data = json.load(f)
    
     del stop_data['netid']    
@@ -238,7 +240,7 @@ def load_bssids_from_file():
     #for item in sorted(data):
         #print '%s\t%d\t%s' % (item[0], item[1], item[2])
     bssids = [x[2] for x in data]
-    with open('tracker_stop_data.json', 'r') as f:
+    with open(os.path.join(settings.BASE_DIR, 'algorithm', 'tracker_stop_data.json'), 'r') as f:
         tracker_stop_data = json.load(f)    
     for data_item in tracker_stop_data:
         if data_item[0] not in bssids:
