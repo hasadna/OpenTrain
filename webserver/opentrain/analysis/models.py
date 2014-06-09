@@ -86,11 +86,13 @@ class SingleWifiReport(models.Model):
     frequency = models.FloatField()
     key = models.CharField(max_length=30)
     signal = models.IntegerField()
+    timestamp = models.DateTimeField(default=None,blank=True,null=True)
     def __unicode__(self):
         return self.SSID
     
     def to_api_dict(self):
-        return dict(SSID=self.SSID,key=self.key,frequency=self.frequency,signal=self.signal)
+        ts = self.timestamp.isoformat() if self.timestamp else None
+        return dict(SSID=self.SSID,key=self.key,frequency=self.frequency,signal=self.signal,timestamp=ts)
  
 class RealTimeStop(models.Model):
     tracker_id = models.CharField(max_length=40,db_index=True)
