@@ -38,6 +38,8 @@ class Report(models.Model):
         result['device_id'] = self.device_id
         result['id'] = self.id
         result['is_station'] = self.is_station()
+        result['app_version_code'] = self.app_version_code
+        result['app_version_name'] = self.app_version_name
         if self.my_loc:
             result['loc'] = self.my_loc.to_api_dict()
         if full:
