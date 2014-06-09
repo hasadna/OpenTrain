@@ -116,16 +116,7 @@ def get_device_reports(device_id,info):
     for obj in qs:
         result.append(obj.to_api_dict(full=info['full']))
     return result
-
-## CUR TRIPS #
      
-@common.ot_utils.benchit
-def test3():
-    secs = 1391451464.94
-    dt = common.ot_utils.unix_time_to_localtime(secs)
-    result = get_live_trips(dt)
-    return result
-
 @common.ot_utils.benchit
 def test4():
     import gtfs.models

@@ -4,6 +4,9 @@ class Report(models.Model):
     device_id = models.CharField(max_length=50)
     timestamp = models.DateTimeField()
     created = models.DateTimeField(auto_now_add=True)
+    source = models.CharField(max_length=30,default='')
+    app_version_name = models.CharField(max_length=30,default='')
+    app_version_code = models.CharField(max_length=20,default='')
     def __unicode__(self):
         return '%s @%s' % (self.device_id,self.timestamp)
     

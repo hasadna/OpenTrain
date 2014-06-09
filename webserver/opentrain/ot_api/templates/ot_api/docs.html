@@ -12,7 +12,7 @@
         <div>
             <code>{{ac.get_api_url_nice}}</code>
         </div>
-        {{ac.get_doc}}
+        {{ac.get_doc | safe}}
     </div>
     {% endfor %}
 </div>
