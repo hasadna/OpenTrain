@@ -37,6 +37,8 @@ def dump_item(item):
     if models.Report.objects.filter(device_id=item['device_id'],timestamp=report_dt).exists():
         #print 'Repeated report - skipping'
         return None
+    m.app_version_name = item.get('app_version_name')
+    m.app_version_code = item.get('app_version_code')
     m.save()
     item_loc = item.get('location_api')
     if item_loc:
@@ -48,10 +50,15 @@ def dump_item(item):
                                   accuracy = item_loc['accuracy'])
         locs.append(loc)
     for wifi in item['wifi']:
+        if wifi.get('timestamp'):
+            ts = common.ot_utils.get_utc_time_from_timestamp(float(wifi['timestamp']) / 1000)
+        else:
+            ts = None
         wifis.append(models.SingleWifiReport(SSID=wifi['SSID'],
                                              signal=wifi['signal'],
                                              frequency=wifi['frequency'],
                                              key=wifi['key'],
+                                             timestamp = ts,
                                              report=m))
     models.SingleWifiReport.objects.bulk_create(wifis)
     models.LocationInfo.objects.bulk_create(locs)
