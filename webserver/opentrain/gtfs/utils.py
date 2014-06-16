@@ -18,8 +18,6 @@ def download_gtfs_file(download_only=False):
     else:
         basedir = GTFS_ZIP_DIR
 
-    local_dir = os.path.join(basedir,time_suffix)
-    ot_utils.mkdir_p(local_dir)
     tmp_file = '/tmp/%s_tmp.zip' % (time_suffix)     
     ot_utils.ftp_get_file(MOT_FTP,FILE_NAME,tmp_file)
     tmp_md5 = ot_utils.md5_for_file(tmp_file)
@@ -30,16 +28,17 @@ def download_gtfs_file(download_only=False):
     except Exception,e:
         print e
         last_md5 = 'error_in_md5'
-    if last_md5 != tmp_md5:
-        print 'Checksum is different- copying'
-        ot_utils.mkdir_p(local_dir)
-        local_file = os.path.join(local_dir,FILE_NAME)
-        shutil.move(tmp_file,local_file)
-    else:
+    if last_md5 == tmp_md5:
         print 'Checksum is identical - removing tmp file'
         os.remove(tmp_file)
         return
-    
+        
+    local_dir = os.path.join(basedir,time_suffix)
+    ot_utils.mkdir_p(local_dir)
+    print 'Checksum is different- copying'
+    ot_utils.mkdir_p(local_dir)
+    local_file = os.path.join(local_dir,FILE_NAME)
+    shutil.move(tmp_file,local_file)
     if not download_only:
         ot_utils.unzip_file(local_file,local_dir)   
         
