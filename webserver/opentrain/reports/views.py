@@ -1,4 +1,5 @@
-from django.http.response import HttpResponseNotAllowed, HttpResponse
+from django.http.response import HttpResponseNotAllowed, HttpResponse,\
+    HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 import models
@@ -13,7 +14,10 @@ def add(req):
         return HttpResponseNotAllowed(permitted_methods=["POST"],content="405 - ONLY POST")
     
     body = req.body
-    text = json.dumps(json.loads(body))
+    try:
+        text = json.dumps(json.loads(body))
+    except ValueError:
+        return HttpResponseBadRequest(content="Could not parse json",content_type='plain/text')
     rep = models.RawReport(text=text)
     rep.save()
     analysis.logic.analyze_single_raw_report(rep)
