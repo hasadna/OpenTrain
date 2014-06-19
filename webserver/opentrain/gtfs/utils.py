@@ -22,16 +22,17 @@ def download_gtfs_file(download_only=False):
     ot_utils.ftp_get_file(MOT_FTP,FILE_NAME,tmp_file)
     tmp_md5 = ot_utils.md5_for_file(tmp_file)
     last_dir = ot_utils.find_lastest_in_dir(basedir)
-    last_file = os.path.join(last_dir,FILE_NAME)
-    try:
-        last_md5 = ot_utils.md5_for_file(last_file)
-    except Exception,e:
-        print e
+    if last_dir:
+        last_file = os.path.join(last_dir,FILE_NAME)
+        try:
+            last_md5 = ot_utils.md5_for_file(last_file)
+        except Exception,e:
+            print e
         last_md5 = 'error_in_md5'
-    if last_md5 == tmp_md5:
-        print 'Checksum is identical - removing tmp file'
-        os.remove(tmp_file)
-        return
+        if last_md5 == tmp_md5:
+            print 'Checksum is identical - removing tmp file'
+            os.remove(tmp_file)
+            return
         
     local_dir = os.path.join(basedir,time_suffix)
     ot_utils.mkdir_p(local_dir)

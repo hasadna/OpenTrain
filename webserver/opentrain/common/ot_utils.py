@@ -231,8 +231,11 @@ def md5_for_file(path, block_size=32768):
 def find_lastest_in_dir(dirname):
     def ctime_in_dirname(f):
         return os.path.getctime(os.path.join(dirname,f))
-    newest = max(os.listdir(dirname), key = ctime_in_dirname)
-    return os.path.join(dirname,newest)
+    files = os.listdir(dirname)
+    if files:
+        newest = max(os.listdir(dirname), key = ctime_in_dirname)
+        return os.path.join(dirname,newest)
+    return None
     
     
     
