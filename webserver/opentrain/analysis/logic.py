@@ -20,7 +20,11 @@ def analyze_raw_reports_subset(offset,count):
     items = _collect_items(offset,count)
     if items:
         for item in items:
-            dump_item(item)
+            try:
+                dump_item(item)
+            except Exception,e:
+                print 'ERROR: Failed to analze item'
+                print e
         return True
     return False
 
