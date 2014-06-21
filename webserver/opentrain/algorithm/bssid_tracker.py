@@ -57,7 +57,7 @@ class BSSIDTracker(object):
             if file_map.has_key(bssid):
                 return file_map[bssid], 1, 1
             else:
-                return stops.NOSTOP, 0, 0
+                return stops.NOSTOP_ID, 0, 0
         else:
             p = get_redis_pipeline()
             p.zrange("bssid:%s:counters" % (bssid), -1, -1, withscores=True)

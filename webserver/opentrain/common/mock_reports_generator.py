@@ -50,18 +50,18 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
     if len(trip_stop_ids - stop_ids_uniques) > 0:
         unfound_stops = trip_stop_ids - stop_ids_uniques
         print('Warning: these stops were not found in gtfs shape: %s' % (unfound_stops))
-    stops_not_in_trip = stop_ids_uniques - trip_stop_ids - set([stops.NOSTOP])
-    stop_ids = [x if x not in stops_not_in_trip else stops.NOSTOP for x in stop_ids]
+    stops_not_in_trip = stop_ids_uniques - trip_stop_ids - set([stops.NOSTOP_ID])
+    stop_ids = [x if x not in stops_not_in_trip else stops.NOSTOP_ID for x in stop_ids]
 
     # strip nostops from start and end
-    while len(stop_ids) > 0 and stop_ids[0] == stops.NOSTOP:
+    while len(stop_ids) > 0 and stop_ids[0] == stops.NOSTOP_ID:
         del stop_ids[0]
-    while len(stop_ids) > 0 and stop_ids[-1] == stops.NOSTOP:
+    while len(stop_ids) > 0 and stop_ids[-1] == stops.NOSTOP_ID:
         del stop_ids[-1]    
 
     # remove nostop reports according to nostop_percent:
-    nostop_inds = [i for i in xrange(len(stop_ids)) if stop_ids[i] == stops.NOSTOP]
-    keep_inds = [i for i in xrange(len(stop_ids)) if stop_ids[i] != stops.NOSTOP]
+    nostop_inds = [i for i in xrange(len(stop_ids)) if stop_ids[i] == stops.NOSTOP_ID]
+    keep_inds = [i for i in xrange(len(stop_ids)) if stop_ids[i] != stops.NOSTOP_ID]
     nostop_inds = nostop_inds[::int(1/nostop_percent)]
     keep_inds.extend(nostop_inds)
     stop_ids = [stop_ids[i] for i in xrange(len(stop_ids)) if i in keep_inds]
@@ -93,7 +93,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
         if stop_id != prev_stop_id:
             counter = -1
             group_index += 1
-            if stop_id != stops.NOSTOP:
+            if stop_id != stops.NOSTOP_ID:
                 stop_index += 1
                 interval_start = stop_times[stop_index].arrival_time
                 interval_end = stop_times[stop_index].departure_time
@@ -126,7 +126,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
         wifi_report_train.key = 'FAKE_%s' % (device_id)    
         report.wifi_set_mock = [wifi_report_train]
     
-        if stop_id != stops.NOSTOP:
+        if stop_id != stops.NOSTOP_ID:
             wifi_report_station = analysis.models.SingleWifiReport()
             wifi_report_station.report = report
             wifi_report_station.SSID = STATION_SSID

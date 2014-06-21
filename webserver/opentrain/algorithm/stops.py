@@ -10,7 +10,7 @@ import config
 
 from utils import *
 
-NOSTOP = -1
+NOSTOP_ID = -1
 
 class Stop(object):
     def __init__( self, id_, name, coords ) :
@@ -39,9 +39,9 @@ class StopList(dict):
             self[stop.id] = stop
         
         coord = (None, None)
-        stop = Stop(NOSTOP, 'nostop', coord)
+        stop = Stop(NOSTOP_ID, 'nostop', coord)
         self[stop.id] = stop
-        self.id_list.append(NOSTOP)
+        self.id_list.append(NOSTOP_ID)
         stop_coords = np.array(stop_coords)
         self.point_tree = spatial.cKDTree(stop_coords)               
 
@@ -61,7 +61,7 @@ class StopList(dict):
         res_coord_int_ids = query_coords(self.point_tree, coords, accuracies)   
         if len(res_coord_int_ids) == 1:
             res_coord_int_ids = [res_coord_int_ids]
-        res_coord_ids = [self.id_list[i[0]] if i else NOSTOP for i in res_coord_int_ids]
+        res_coord_ids = [self.id_list[i[0]] if i else NOSTOP_ID for i in res_coord_int_ids]
         return res_coord_ids
 
 

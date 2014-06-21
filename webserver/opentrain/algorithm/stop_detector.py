@@ -223,7 +223,7 @@ def add_report(tracker_id, report):
     else:
         time_from_last_report = report.timestamp - prev_timestamp
         hour = datetime.timedelta(minutes = 60)
-        if time_from_last_report > hour and prev_stop_id != stops.NOSTOP:
+        if time_from_last_report > hour and prev_stop_id != stops.NOSTOP_ID:
             prev_state = tracker_states.TIMEGAP
         else:
             prev_state = prev_stop_id
@@ -269,7 +269,7 @@ def add_report(tracker_id, report):
                 index_of_oldest_current_state = max(0, find_index_of_first_consecutive_value(prev_stops_by_hmm, len(prev_stops_by_hmm)-1))
             index_of_most_recent_previous_state = index_of_oldest_current_state-1
               
-            if current_state == stops.NOSTOP:
+            if current_state == stops.NOSTOP_ID:
                 stop_id = prev_stops_by_hmm[index_of_most_recent_previous_state]
                 unix_timestamp = ot_utils.dt_time_to_unix_time(prev_stops_timestamps[index_of_most_recent_previous_state])
 
@@ -283,7 +283,7 @@ def add_report(tracker_id, report):
             else: # current_state == tracker_states.STOP
                 arrival_unix_timestamp_prev_stop = None
                 stop_id_and_departure_time_prev_stop = None
-                if (prev_state != tracker_states.INITIAL and prev_state != stops.NOSTOP):
+                if (prev_state != tracker_states.INITIAL and prev_state != stops.NOSTOP_ID):
                     stop_time = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
                     departure_unix_timestamp = ot_utils.dt_time_to_unix_time(prev_timestamp) 
                     stop_id_and_departure_time = "%s_%d" % (prev_stop_id, departure_unix_timestamp)
