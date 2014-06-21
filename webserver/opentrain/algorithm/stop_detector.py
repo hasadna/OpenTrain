@@ -201,7 +201,7 @@ def add_report(tracker_id, report):
     if not prev_stop_id:
         prev_state = tracker_states.INITIAL
     else:
-        prev_report_timestamp = ot_utils.unix_time_to_localtime(prev_timestamp)
+        prev_report_timestamp = prev_timestamp
         time_from_last_report = report.timestamp - prev_report_timestamp
         hour = datetime.timedelta(minutes = 60)
         if time_from_last_report > hour and prev_stop_id != stops.NOSTOP:
@@ -266,7 +266,7 @@ def add_report(tracker_id, report):
                 stop_id_and_departure_time_prev_stop = None
                 if (prev_state != tracker_states.INITIAL and prev_state != stops.NOSTOP):
                     stop_time = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
-                    departure_unix_timestamp = prev_timestamp
+                    departure_unix_timestamp = ot_utils.dt_time_to_unix_time(prev_timestamp) 
                     stop_id_and_departure_time = "%s_%d" % (prev_stop_id, departure_unix_timestamp)
                     arrival_unix_timestamp_prev_stop = stop_time[0][1]
                     stop_id_and_departure_time_prev_stop = stop_id_and_departure_time
@@ -277,8 +277,8 @@ def add_report(tracker_id, report):
                 arrival_unix_timestamp = unix_timestamp
                 stop_id_and_departure_time = "%s_" % (current_stop_id_by_hmm)
                 update_stop_time(tracker_id, prev_report_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop)
-                    
-            prev_timestamp = unix_timestamp
+            print unix_timestamp
+            prev_timestamp = ot_utils.unix_time_to_localtime(unix_timestamp)
 
     stop_times = get_detected_stop_times(tracker_id)
     is_stops_updated = (prev_state != current_state) and current_state != tracker_states.UNKNOWN and len(stop_times) > 0
@@ -292,6 +292,7 @@ def get_prev(tracker_id):
         prev_current_timestamp_by_hmm = prev_current_stop_id_and_timestamp_by_hmm.split("_")[1]
         prev_current_stop_id_by_hmm = int(prev_current_stop_id_by_hmm)
         prev_current_timestamp_by_hmm = float(prev_current_timestamp_by_hmm)
+        prev_current_timestamp_by_hmm = ot_utils.unix_time_to_localtime(prev_current_timestamp_by_hmm)
     else:
         prev_current_stop_id_by_hmm = None
         prev_current_timestamp_by_hmm = None
