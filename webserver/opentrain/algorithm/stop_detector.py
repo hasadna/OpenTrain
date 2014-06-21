@@ -233,8 +233,6 @@ def add_report(tracker_id, report):
         detector_state.set_current(current_state, str(prev_stops_and_timestamps[-1][1]))
 
         if prev_state != current_state: # change in state
-            prev_stops_timestamps = [ot_utils.unix_time_to_localtime((x[1])) for x in prev_stops_and_timestamps]
-            
             if prev_state == tracker_states.NOREPORT_TIMEGAP:
                 # after a time gap, we're essentially in a new state:
                 index_of_oldest_current_state = len(prev_stop_int_ids) - 1
@@ -264,7 +262,7 @@ def add_report(tracker_id, report):
                     stop_id_and_departure_time_prev_stop = stop_id_and_departure_time
                     
                 stop_id = stops.all_stops.id_list[prev_stop_int_ids[index_of_oldest_current_state]]
-                unix_timestamp = ot_utils.dt_time_to_unix_time(prev_stops_timestamps[index_of_oldest_current_state])
+                unix_timestamp = prev_stops_and_timestamps[index_of_oldest_current_state][1]
                 
                 arrival_unix_timestamp = unix_timestamp
                 stop_id_and_departure_time = "%s_" % (current_state)
