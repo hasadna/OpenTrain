@@ -237,9 +237,9 @@ def add_report(tracker_id, report):
             prev_stops_timestamps = [ot_utils.unix_time_to_localtime((x[1])) for x in prev_stops_and_timestamps]
             if prev_state == tracker_states.NOREPORT_TIMEGAP:
                 # after a time gap, we're essentially in a new state:
-                index_of_oldest_current_state = len(prev_stops_by_hmm) - 1
+                index_of_oldest_current_state = len(prev_stop_int_ids) - 1
             else:
-                index_of_oldest_current_state = max(0, find_index_of_first_consecutive_value(prev_stops_by_hmm, len(prev_stops_by_hmm)-1))
+                index_of_oldest_current_state = max(0, find_index_of_first_consecutive_value(prev_stop_int_ids, len(prev_stop_int_ids)-1))
             index_of_most_recent_previous_state = index_of_oldest_current_state-1
               
             if current_state == stops.NOSTOP_ID:
