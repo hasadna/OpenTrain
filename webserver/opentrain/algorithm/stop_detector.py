@@ -101,6 +101,17 @@ class DetectorState(object):
             current_timestamp = None
         return current_stop_id, current_timestamp
     
+    def get_prev_stop_data(self):
+        tracker_id = self.tracker_id
+        prev_stops_and_timestamps = cl.zrange(get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id), 0, -1, withscores=True)
+        prev_stop_ids_order = [int(x[0].split("_")[0]) for x in prev_stops_and_timestamps]
+        prev_stops_and_timestamps = [x for (y,x) in sorted(zip(prev_stop_ids_order,prev_stops_and_timestamps))]
+        
+        prev_stop_ids = [int(x[0].split("_")[1]) for x in prev_stops_and_timestamps]
+    
+        prev_stop_int_ids = np.array([stops.all_stops.id_list.index(x) for x in prev_stop_ids])
+        return prev_stops_and_timestamps, prev_stop_int_ids    
+    
 
 def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp2=None, stop_id_and_departure_time2=None):
     stop_times = get_detected_stop_times(tracker_id)
@@ -213,7 +224,7 @@ def add_report(tracker_id, report):
     # calculate hmm to get state_sequence, update stop_times and current_stop if needed
     if  current_state != tracker_states.UNKNOWN and prev_state != current_state:
 
-        prev_stops_and_timestamps, prev_stop_int_ids = get_prev_stop_data(tracker_id)
+        prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
 
         # update current_stop_id_by_hmm and current_state by hmm:        
         current_stop_id_by_hmm = stops.all_stops.id_list[prev_stop_int_ids[-1]]
@@ -264,17 +275,7 @@ def add_report(tracker_id, report):
     is_stops_updated = (prev_state != current_state) and current_state != tracker_states.UNKNOWN and len(stop_times) > 0
     return stop_times, is_stops_updated
 
-def get_prev_stop_data(tracker_id):
-    prev_stops_and_timestamps = cl.zrange(get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id), 0, -1, withscores=True)
-    prev_stop_ids_order = [int(x[0].split("_")[0]) for x in prev_stops_and_timestamps]
-    prev_stops_and_timestamps = [x for (y,x) in sorted(zip(prev_stop_ids_order,prev_stops_and_timestamps))]
-    
-    prev_stop_ids = [int(x[0].split("_")[1]) for x in prev_stops_and_timestamps]
 
-    prev_stop_int_ids = np.array([stops.all_stops.id_list.index(x) for x in prev_stop_ids])
-    return prev_stops_and_timestamps, prev_stop_int_ids
-
-           
 tracker_states = enum(INITIAL='initial', NOSTOP='nostop', STOP='stop', UNKNOWN='unknown', NOREPORT_TIMEGAP='noreport_timegap', NOSTOP_TIMEGAP='nostop_timegap')
 
 cl = get_redis_client()
