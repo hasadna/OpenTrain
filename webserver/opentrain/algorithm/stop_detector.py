@@ -196,12 +196,12 @@ def add_report(tracker_id, report):
     # 1) add stop or non-stop to prev_stops and prev_stops_timestamps     
     # 2) set calc_hmm to true if according to wifis and/or location, our
     #    state changed from stop to non-stop or vice versa
-    prev_stop_id, prev_current_timestamp_by_hmm = get_prev(tracker_id)
+    prev_stop_id, prev_timestamp = get_prev(tracker_id)
       
     if not prev_stop_id:
         prev_state = tracker_states.INITIAL
     else:
-        prev_report_timestamp = ot_utils.unix_time_to_localtime(prev_current_timestamp_by_hmm)
+        prev_report_timestamp = ot_utils.unix_time_to_localtime(prev_timestamp)
         time_from_last_report = report.timestamp - prev_report_timestamp
         hour = datetime.timedelta(minutes = 60)
         if time_from_last_report > hour and prev_stop_id != stops.NOSTOP:
@@ -266,7 +266,7 @@ def add_report(tracker_id, report):
                 stop_id_and_departure_time_prev_stop = None
                 if (prev_state != tracker_states.INITIAL and prev_state != stops.NOSTOP):
                     stop_time = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
-                    departure_unix_timestamp = prev_current_timestamp_by_hmm
+                    departure_unix_timestamp = prev_timestamp
                     stop_id_and_departure_time = "%s_%d" % (prev_stop_id, departure_unix_timestamp)
                     arrival_unix_timestamp_prev_stop = stop_time[0][1]
                     stop_id_and_departure_time_prev_stop = stop_id_and_departure_time
