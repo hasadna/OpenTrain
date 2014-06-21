@@ -70,4 +70,3 @@ def get_all_stops():
     return all_stops
 
 all_stops = get_all_stops()
-NOSTOP_IND = len(all_stops) - 1

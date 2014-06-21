@@ -108,7 +108,6 @@ def setup_hmm():
 
     n_components = stop_count
     n_symbols = n_components
-    hmm_non_stop_component_num = n_components-1
     # should probably get these numbers from the data and not guess them :)
     stay_prob = 0.99
     a = np.diag(np.ones(n_components) * stay_prob)
@@ -122,7 +121,7 @@ def setup_hmm():
                                 transmat=transmat)        
     hmm._set_emissionprob(emissionprob)
     
-    return hmm, hmm_non_stop_component_num        
+    return hmm        
 
 def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp2=None, stop_id_and_departure_time2=None):
     stop_times = get_detected_stop_times(tracker_id)
@@ -199,7 +198,7 @@ def try_get_stop_id(report):
             logger.debug('No stop for bssids: %s' % ','.join([x.key for x in wifis]))
             stop_id = None          
     else:
-        stop_id = nostop_id
+        stop_id = stops.NOSTOP_ID
            
     return stop_id
 
@@ -304,9 +303,7 @@ def add_report(tracker_id, report):
     return stop_times, is_stops_updated
 
            
-hmm, hmm_non_stop_component_num = setup_hmm()
-nostop_id = stops.NOSTOP_IND
-nostop_id = stops.all_stops.id_list[hmm_non_stop_component_num]
+hmm = setup_hmm()
 tracker_states = enum(INITIAL='initial', NOSTOP=-1, STOP='stop', UNKNOWN='unknown', TIMEGAP='timegap')
 
 cl = get_redis_client()
