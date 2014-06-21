@@ -243,7 +243,7 @@ def add_report(tracker_id, report):
             index_of_most_recent_previous_state = index_of_oldest_current_state-1
               
             if current_state == stops.NOSTOP_ID:
-                stop_id = prev_stops_by_hmm[index_of_most_recent_previous_state]
+                stop_id = stops.all_stops.id_list[prev_stop_int_ids[index_of_most_recent_previous_state]]
                 unix_timestamp = ot_utils.dt_time_to_unix_time(prev_stops_timestamps[index_of_most_recent_previous_state])
 
                 if prev_state == tracker_states.INITIAL:
@@ -263,7 +263,7 @@ def add_report(tracker_id, report):
                     arrival_unix_timestamp_prev_stop = stop_time[0][1]
                     stop_id_and_departure_time_prev_stop = stop_id_and_departure_time
                     
-                stop_id = prev_stops_by_hmm[index_of_oldest_current_state]
+                stop_id = stops.all_stops.id_list[prev_stop_int_ids[index_of_oldest_current_state]]
                 unix_timestamp = ot_utils.dt_time_to_unix_time(prev_stops_timestamps[index_of_oldest_current_state])
                 
                 arrival_unix_timestamp = unix_timestamp
