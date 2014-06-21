@@ -213,26 +213,15 @@ def add_report(tracker_id, report):
     # calculate hmm to get state_sequence, update stop_times and current_stop if needed
     if  current_state != tracker_states.UNKNOWN and prev_state != current_state:
 
-        prev_stops_and_timestamps = cl.zrange(get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id), 0, -1, withscores=True)
-        prev_stop_ids_order = [int(x[0].split("_")[0]) for x in prev_stops_and_timestamps]
-        prev_stops_and_timestamps = [x for (y,x) in sorted(zip(prev_stop_ids_order,prev_stops_and_timestamps))]
-        
-        prev_stop_ids = [int(x[0].split("_")[1]) for x in prev_stops_and_timestamps]
+        prev_stops_and_timestamps, prev_stop_int_ids = get_prev_stop_data(tracker_id)
 
-        prev_stop_int_ids = np.array([stops.all_stops.id_list.index(x) for x in prev_stop_ids])
-
-        # turning off hmm for now, as it might make us miss some stations, and right now it's not really needed:
-        #prev_stop_hmm_logprob, prev_stop_int_ids_by_hmm = hmm.decode(prev_stop_int_ids)
-        prev_stop_int_ids_by_hmm = prev_stop_int_ids
-        prev_stop_int_ids_by_hmm_for_debug = prev_stop_int_ids_by_hmm
-        
         # update current_stop_id_by_hmm and current_state by hmm:        
-        current_stop_id_by_hmm = stops.all_stops.id_list[prev_stop_int_ids_by_hmm[-1]]
+        current_stop_id_by_hmm = stops.all_stops.id_list[prev_stop_int_ids[-1]]
         cl.set(get_train_tracker_current_stop_id_and_timestamp_key(tracker_id), str(current_stop_id_by_hmm) + "_" + str(prev_stops_and_timestamps[-1][1]))
         current_state = current_stop_id_by_hmm
 
         if prev_state != current_state: # change in state
-            prev_stops_by_hmm = [stops.all_stops.id_list[x] for x in prev_stop_int_ids_by_hmm]
+            prev_stops_by_hmm = [stops.all_stops.id_list[x] for x in prev_stop_int_ids]
             prev_stops_timestamps = [ot_utils.unix_time_to_localtime((x[1])) for x in prev_stops_and_timestamps]
             if prev_state == tracker_states.NOREPORT_TIMEGAP:
                 # after a time gap, we're essentially in a new state:
@@ -274,6 +263,16 @@ def add_report(tracker_id, report):
     stop_times = get_detected_stop_times(tracker_id)
     is_stops_updated = (prev_state != current_state) and current_state != tracker_states.UNKNOWN and len(stop_times) > 0
     return stop_times, is_stops_updated
+
+def get_prev_stop_data(tracker_id):
+    prev_stops_and_timestamps = cl.zrange(get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id), 0, -1, withscores=True)
+    prev_stop_ids_order = [int(x[0].split("_")[0]) for x in prev_stops_and_timestamps]
+    prev_stops_and_timestamps = [x for (y,x) in sorted(zip(prev_stop_ids_order,prev_stops_and_timestamps))]
+    
+    prev_stop_ids = [int(x[0].split("_")[1]) for x in prev_stops_and_timestamps]
+
+    prev_stop_int_ids = np.array([stops.all_stops.id_list.index(x) for x in prev_stop_ids])
+    return prev_stops_and_timestamps, prev_stop_int_ids
 
            
 tracker_states = enum(INITIAL='initial', NOSTOP='nostop', STOP='stop', UNKNOWN='unknown', NOREPORT_TIMEGAP='noreport_timegap', NOSTOP_TIMEGAP='nostop_timegap')
