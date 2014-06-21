@@ -115,66 +115,15 @@ class train_tracker_test(TestCase):
     def test_tracker_on_real_devices(self):    
         device_ids = []
         trip_suffixes_list = []
-        device_ids.append('1cb87f1e')# Udi's trip  
-        trip_suffixes_list.append(['_00073'])
-        device_ids.append('91b251f8')
-        trip_suffixes_list.append(['_00152'])        
-        device_ids.append('eran_ec8d0d5fd1a16aed')
-        trip_suffixes_list.append(['_00046'])              
-        device_ids.append('ofer_57656382027dc9c8')
-        trip_suffixes_list.append(['_00281'])
-        device_ids.append('eran_63479c43eb54ff1f')
-        trip_suffixes_list.append(['_00050'])
-        #device_ids.append('ed918429baaf8ab8')
-        #trip_suffixes_list.append(['_00086'])
-        device_ids.append('5dc40476ad438414')
-        trip_suffixes_list.append(['_00164'])
+        device_ids.append('ofer_b3b994f2ff17f4be')
+        trip_suffixes_list.append(['_00234'])
+        #device_ids.append('ofer_57dd77efa53ebe59') # before gtfs - 16-6
+        #trip_suffixes_list.append(['_00073'])
+        device_ids.append('ofer_d64213d3f844903d')
+        trip_suffixes_list.append(['_00287', '_00234'])        
+        #device_ids.append('992d69efe920047a') # before gtfs - 16-6
+        #trip_suffixes_list.append(['_00073'])        
 
-        #device_ids.append('2dfc74b71c91677b')
-        #trip_suffixes_list.append(['_00956']) # wrongly takes _00685 as second trip. What is correct trip?
-        #device_ids.append('iocean_323b5911306012a9')
-        #trip_suffixes_list.append(['_00124'])        
-
-        device_ids.append('eran_b7fa2ccec8c127d2')        
-        trip_suffixes_list.append(['_00050'])
-        #device_ids.append('3c70f9b11f28734b')        
-        #trip_suffixes_list.append(['_00956', '_00279'])
-
-        #device_ids.append('0c89639c69c4caf1') # this one can't find the evening trip
-        #trip_suffixes_list.append(['_00956', '_00279'])
-        ##device_ids.append('0756bb390dabe025') # this one merges stops from different trips        
-        ##trip_suffixes_list.append(['_00956', '_00227'])
-
-        device_ids.append('eran_ec8d0d5fd1a16aed')        
-        trip_suffixes_list.append(['_00046'])        
-        #device_ids.append('0297cb91eaf724cd')        
-        #trip_suffixes_list.append(['_00956'])        
-
-        ##device_ids.append('d9e77fb9c6c851f4') # only tel aviv stations detected, but by map should be more     
-        ##trip_suffixes_list.append(['_00956'])
-        ##device_ids.append('871d8773d36a2b8f') # only tel aviv stations detected, but by map should be more     
-        ##trip_suffixes_list.append(['_00956'])
-
-        #device_ids.append('eran_63479c43eb54ff1f')        
-        #trip_suffixes_list.append(['_00050'])
-        #device_ids.append('ofer_57656382027dc9c8')        
-        #trip_suffixes_list.append(['_00281'])
-
-        ##device_ids.append('ofer_a7700dd1b90dea4c') # download db
-        ##trip_suffixes_list.append(['_00281'])
-        ##device_ids.append('Amit_81db2ecaa94d5377') # download db
-        ##trip_suffixes_list.append(['_00281'])  
-        ##device_ids.append('eran_5060bdab5d871850') # download db
-        ##trip_suffixes_list.append(['_00281']) 
-        ##device_ids.append('ofer_9d7d84b96a97b156') # download db
-        ##trip_suffixes_list.append(['_00281'])        
-        ##device_ids.append('eran_d57316d7c8610535') # download db
-        ##trip_suffixes_list.append(['_00281'])
-        ##device_ids.append('ofer_e402a16800ea3cc9') # download db
-        ##trip_suffixes_list.append(['_00281'])
-
-
-        
         stop_detector_test.remove_from_redis(device_ids)
         
         for i in xrange(len(device_ids)):

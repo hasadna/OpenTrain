@@ -34,7 +34,7 @@ import cProfile
 class trip_matcher_test(TestCase):
     
 
-    def test_matcher_on_full_trip(self, trip_id = '010414_00168'):
+    def test_matcher_on_full_trip(self, trip_id = '010714_00115'):
         detected_stop_times_gtfs, relevant_service_ids, day = self.load_trip_info_for_matcher(trip_id)
             
         trip_delays_ids_list_of_lists = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs,\
@@ -43,7 +43,7 @@ class trip_matcher_test(TestCase):
         matched_trip_ids = get_trusted_trips(trip_delays_ids_list_of_lists)
         self.assertEquals(matched_trip_ids[0], trip_id)
 
-    def test_matcher_on_trip_set(self, trip_ids = ['010414_00100', '010414_00168']):
+    def test_matcher_on_trip_set(self, trip_ids = ['010714_00283', '010714_00115']):
         detected_stop_times_gtfs_all = []
         for trip_id in trip_ids:
             detected_stop_times_gtfs, relevant_service_ids, day = self.load_trip_info_for_matcher(trip_id)
@@ -57,7 +57,7 @@ class trip_matcher_test(TestCase):
         self.assertEquals(matched_trip_ids, sorted(trip_ids))
         
         
-    def test_matcher_on_partial_random_trip(self, trip_id = '010414_00168', seeds=[0,1,2,3], stop_counts=[3,4,5]):
+    def test_matcher_on_partial_random_trip(self, trip_id = '010714_00115', seeds=[0,1,2,3], stop_counts=[3,4,5]):
         for seed in seeds:
             for stop_count in stop_counts:
                 print 'seed =', seed, 'stop_count =', stop_count

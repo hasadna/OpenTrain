@@ -137,9 +137,7 @@ class stop_detector_test(TestCase):
 
     def test_stop_detector_on_real_trips(self):
         self._stop_detector_on_real_trip(device_id = 'ofer_b3b994f2ff17f4be', trip_id = '010414_00168')
-        self._stop_detector_on_real_trip(device_id = 'b37fb3da3c244170', trip_id = '010414_00168')
         self._stop_detector_on_real_trip(device_id = 'ofer_57dd77efa53ebe59', trip_id = '010414_00168')
-        self._stop_detector_on_real_trip(device_id = '5e4bcf31fcc4a8d3', trip_id = '010414_00168')
         self._stop_detector_on_real_trip(device_id = '992d69efe920047a', trip_id = '010414_00168')
         self._stop_detector_on_real_trip(device_id = 'ofer_d64213d3f844903d', trip_id = '010414_00168')
         
