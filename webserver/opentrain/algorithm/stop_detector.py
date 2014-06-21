@@ -101,6 +101,9 @@ class DetectorState(object):
             current_timestamp = None
         return current_stop_id, current_timestamp
     
+    def set_current(self, stop_id, timestamp):
+        cl.set(get_train_tracker_current_stop_id_and_timestamp_key(self.tracker_id), str(stop_id) + "_" + str(timestamp))
+    
     def get_prev_stop_data(self):
         tracker_id = self.tracker_id
         prev_stops_and_timestamps = cl.zrange(get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id), 0, -1, withscores=True)
@@ -226,10 +229,8 @@ def add_report(tracker_id, report):
 
         prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
 
-        # update current_stop_id_by_hmm and current_state by hmm:        
-        current_stop_id_by_hmm = stops.all_stops.id_list[prev_stop_int_ids[-1]]
-        cl.set(get_train_tracker_current_stop_id_and_timestamp_key(tracker_id), str(current_stop_id_by_hmm) + "_" + str(prev_stops_and_timestamps[-1][1]))
-        current_state = current_stop_id_by_hmm
+        current_state = stops.all_stops.id_list[prev_stop_int_ids[-1]]
+        detector_state.set_current(current_state, str(prev_stops_and_timestamps[-1][1]))
 
         if prev_state != current_state: # change in state
             prev_stops_by_hmm = [stops.all_stops.id_list[x] for x in prev_stop_int_ids]
@@ -266,7 +267,7 @@ def add_report(tracker_id, report):
                 unix_timestamp = ot_utils.dt_time_to_unix_time(prev_stops_timestamps[index_of_oldest_current_state])
                 
                 arrival_unix_timestamp = unix_timestamp
-                stop_id_and_departure_time = "%s_" % (current_stop_id_by_hmm)
+                stop_id_and_departure_time = "%s_" % (current_state)
                 update_stop_time(tracker_id, prev_report_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop)
             print unix_timestamp
             prev_timestamp = ot_utils.unix_time_to_localtime(unix_timestamp)
