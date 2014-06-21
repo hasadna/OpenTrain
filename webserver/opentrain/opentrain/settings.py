@@ -51,7 +51,8 @@ INSTALLED_APPS = (
     'south',
     'ot_api',
     'traindata',
-    'client'
+    'client',
+    'timetable'
 )
 
 MIDDLEWARE_CLASSES = (
