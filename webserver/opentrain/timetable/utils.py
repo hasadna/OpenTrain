@@ -1,6 +1,6 @@
 from django.conf import settings
 import os.path
-from models import Stop
+from models import Stop,Trip
 
 DIR = os.path.join(settings.BASE_DIR,'tmp_data/gtfs/zip_data/2014_06_21_18_58_46')
 import csv
@@ -32,5 +32,18 @@ def build_stops():
                             stop_url=stop_dict['stop_url'])
             new_stop.save()
             print 'New stop created %s' % (new_stop)
+            
+def build_trips():
+    filename = os.path.join(DIR,'trips.txt')
+    trip_dicts = read_csv(filename)
+    new_trips = []
+    for trip_dict in trip_dicts:
+        t = Trip(trip_id=trip_dict['trip_id'],
+                 shape_id=trip_dict['shape_id'])
+                 
+        new_trips.append(t)
+    print 'Built %d trips, saving...' % (len(new_trips))
+    Trip.objects.bulk_create(new_trips)
+    print 'Trips saved # of trips in system: %d' % (Trip.objects.all().count())
             
     
