@@ -106,7 +106,7 @@ class DetectorState(object):
 def setup_hmm():
     stop_count = len(stops.all_stops)
 
-    n_components = stop_count+1 # +1 for non-stop
+    n_components = stop_count
     n_symbols = n_components
     hmm_non_stop_component_num = n_components-1
     # should probably get these numbers from the data and not guess them :)
@@ -305,6 +305,7 @@ def add_report(tracker_id, report):
 
            
 hmm, hmm_non_stop_component_num = setup_hmm()
+nostop_id = stops.NOSTOP_IND
 nostop_id = stops.all_stops.id_list[hmm_non_stop_component_num]
 tracker_states = enum(INITIAL='initial', NOSTOP=-1, STOP='stop', UNKNOWN='unknown', TIMEGAP='timegap')
 

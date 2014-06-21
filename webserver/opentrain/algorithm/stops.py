@@ -38,6 +38,9 @@ class StopList(dict):
             self.id_list.append(stop.id)
             self[stop.id] = stop
         
+        coord = (None, None)
+        stop = Stop(NOSTOP, 'nostop', coord)
+        self[stop.id] = stop
         self.id_list.append(NOSTOP)
         stop_coords = np.array(stop_coords)
         self.point_tree = spatial.cKDTree(stop_coords)               
@@ -67,3 +70,4 @@ def get_all_stops():
     return all_stops
 
 all_stops = get_all_stops()
+NOSTOP_IND = len(all_stops) - 1
