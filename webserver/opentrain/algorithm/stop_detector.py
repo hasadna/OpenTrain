@@ -5,7 +5,6 @@ import config
 import numpy as np
 import stops
 import shapes
-from sklearn.hmm import MultinomialHMM
 from utils import *
 from common.ot_utils import *
 from common import ot_utils
@@ -103,26 +102,6 @@ class DetectorState(object):
         return current_stop_id, current_timestamp
     
 
-def setup_hmm():
-    stop_count = len(stops.all_stops)
-
-    n_components = stop_count
-    n_symbols = n_components
-    # should probably get these numbers from the data and not guess them :)
-    stay_prob = 0.99
-    a = np.diag(np.ones(n_components) * stay_prob)
-    a[-1,:-1] = (1-stay_prob)/len(a[-1,:-1])
-    a[:-1,-1] = (1-stay_prob)
-    emissionprob = a
-    transmat = a
-    startprob = np.ones(n_components)/(n_components) # uniform probability
-    hmm = MultinomialHMM(n_components,
-                                startprob=startprob,
-                                transmat=transmat)        
-    hmm._set_emissionprob(emissionprob)
-    
-    return hmm        
-
 def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp2=None, stop_id_and_departure_time2=None):
     stop_times = get_detected_stop_times(tracker_id)
     if len(stop_times) > 0 and stop_times[-1].stop_id == int(stop_id_and_departure_time.split('_')[0]): # if last station is same station
@@ -211,9 +190,6 @@ def get_detected_stop_times(tracker_id):
     return stop_times
 
 def add_report(tracker_id, report):
-    # 1) add stop or non-stop to prev_stops and prev_stops_timestamps     
-    # 2) set calc_hmm to true if according to wifis and/or location, our
-    #    state changed from stop to non-stop or vice versa
     detector_state = DetectorState(tracker_id)
     prev_stop_id, prev_timestamp = detector_state.get_current()
       
@@ -223,15 +199,12 @@ def add_report(tracker_id, report):
         time_from_last_report = report.timestamp - prev_timestamp
         hour = datetime.timedelta(minutes = 60)
         if time_from_last_report > hour and prev_stop_id != stops.NOSTOP_ID:
-            prev_state = tracker_states.TIMEGAP
+            prev_state = tracker_states.NOREPORT_TIMEGAP
         else:
             prev_state = prev_stop_id
 
     stop_id = try_get_stop_id(report)
-    if not stop_id:
-        current_state = tracker_states.UNKNOWN
-    else:
-        current_state = stop_id
+    current_state = stop_id if stop_id else tracker_states.UNKNOWN
 
     if current_state != tracker_states.UNKNOWN:
         timestamp = report.get_timestamp_israel_time()
@@ -261,7 +234,7 @@ def add_report(tracker_id, report):
         if prev_state != current_state: # change in state
             prev_stops_by_hmm = [stops.all_stops.id_list[x] for x in prev_stop_int_ids_by_hmm]
             prev_stops_timestamps = [ot_utils.unix_time_to_localtime((x[1])) for x in prev_stops_and_timestamps]
-            if prev_state == tracker_states.TIMEGAP:
+            if prev_state == tracker_states.NOREPORT_TIMEGAP:
                 # after a time gap, we're essentially in a new state:
                 index_of_oldest_current_state = len(prev_stops_by_hmm) - 1
             else:
@@ -303,8 +276,7 @@ def add_report(tracker_id, report):
     return stop_times, is_stops_updated
 
            
-hmm = setup_hmm()
-tracker_states = enum(INITIAL='initial', NOSTOP='nostop', STOP='stop', UNKNOWN='unknown', TIMEGAP='timegap')
+tracker_states = enum(INITIAL='initial', NOSTOP='nostop', STOP='stop', UNKNOWN='unknown', NOREPORT_TIMEGAP='noreport_timegap', NOSTOP_TIMEGAP='nostop_timegap')
 
 cl = get_redis_client()
 p = get_redis_pipeline()
