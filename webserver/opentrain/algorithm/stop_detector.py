@@ -196,27 +196,18 @@ def add_report(tracker_id, report):
     # 1) add stop or non-stop to prev_stops and prev_stops_timestamps     
     # 2) set calc_hmm to true if according to wifis and/or location, our
     #    state changed from stop to non-stop or vice versa
-    prev_current_stop_id_and_timestamp_by_hmm = cl.get(\
-        get_train_tracker_current_stop_id_and_timestamp_key(tracker_id))
-    if prev_current_stop_id_and_timestamp_by_hmm:
-        prev_current_stop_id_by_hmm = prev_current_stop_id_and_timestamp_by_hmm.split("_")[0]
-        prev_current_timestamp_by_hmm = prev_current_stop_id_and_timestamp_by_hmm.split("_")[1]
-        prev_current_stop_id_by_hmm = int(prev_current_stop_id_by_hmm)
-        prev_current_timestamp_by_hmm = float(prev_current_timestamp_by_hmm)
-    else:
-        prev_current_stop_id_by_hmm = None
-        prev_current_timestamp_by_hmm = None
+    prev_stop_id, prev_current_timestamp_by_hmm = get_prev(tracker_id)
       
-    if not prev_current_stop_id_by_hmm:
+    if not prev_stop_id:
         prev_state = tracker_states.INITIAL
     else:
         prev_report_timestamp = ot_utils.unix_time_to_localtime(prev_current_timestamp_by_hmm)
         time_from_last_report = report.timestamp - prev_report_timestamp
         hour = datetime.timedelta(minutes = 60)
-        if time_from_last_report > hour and prev_current_stop_id_by_hmm != stops.NOSTOP:
+        if time_from_last_report > hour and prev_stop_id != stops.NOSTOP:
             prev_state = tracker_states.TIMEGAP
         else:
-            prev_state = prev_current_stop_id_by_hmm
+            prev_state = prev_stop_id
 
     stop_id = try_get_stop_id(report)
     if not stop_id:
@@ -226,7 +217,7 @@ def add_report(tracker_id, report):
 
     if current_state != tracker_states.UNKNOWN:
         timestamp = report.get_timestamp_israel_time()
-        prev_stop_id = add_prev_stop(tracker_id, stop_id, timestamp)
+        prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
         
     # calculate hmm to get state_sequence, update stop_times and current_stop if needed
     if  current_state != tracker_states.UNKNOWN and prev_state != current_state:
@@ -268,15 +259,15 @@ def add_report(tracker_id, report):
                 else: # previous_state == tracker_states.STOP - need to set stop_time departure
                     stop_time = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
                     departure_unix_timestamp = unix_timestamp
-                    stop_id_and_departure_time = "%s_%d" % (prev_current_stop_id_by_hmm, departure_unix_timestamp)
-                    update_stop_time(tracker_id, prev_stop_id, stop_time[0][1], stop_id_and_departure_time)
+                    stop_id_and_departure_time = "%s_%d" % (prev_stop_id, departure_unix_timestamp)
+                    update_stop_time(tracker_id, prev_report_id, stop_time[0][1], stop_id_and_departure_time)
             else: # current_state == tracker_states.STOP
                 arrival_unix_timestamp_prev_stop = None
                 stop_id_and_departure_time_prev_stop = None
                 if (prev_state != tracker_states.INITIAL and prev_state != stops.NOSTOP):
                     stop_time = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
                     departure_unix_timestamp = prev_current_timestamp_by_hmm
-                    stop_id_and_departure_time = "%s_%d" % (prev_current_stop_id_by_hmm, departure_unix_timestamp)
+                    stop_id_and_departure_time = "%s_%d" % (prev_stop_id, departure_unix_timestamp)
                     arrival_unix_timestamp_prev_stop = stop_time[0][1]
                     stop_id_and_departure_time_prev_stop = stop_id_and_departure_time
                     
@@ -285,13 +276,26 @@ def add_report(tracker_id, report):
                 
                 arrival_unix_timestamp = unix_timestamp
                 stop_id_and_departure_time = "%s_" % (current_stop_id_by_hmm)
-                update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop)
+                update_stop_time(tracker_id, prev_report_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop)
                     
             prev_timestamp = unix_timestamp
 
     stop_times = get_detected_stop_times(tracker_id)
     is_stops_updated = (prev_state != current_state) and current_state != tracker_states.UNKNOWN and len(stop_times) > 0
     return stop_times, is_stops_updated
+
+def get_prev(tracker_id):
+    prev_current_stop_id_and_timestamp_by_hmm = cl.get(\
+        get_train_tracker_current_stop_id_and_timestamp_key(tracker_id))
+    if prev_current_stop_id_and_timestamp_by_hmm:
+        prev_current_stop_id_by_hmm = prev_current_stop_id_and_timestamp_by_hmm.split("_")[0]
+        prev_current_timestamp_by_hmm = prev_current_stop_id_and_timestamp_by_hmm.split("_")[1]
+        prev_current_stop_id_by_hmm = int(prev_current_stop_id_by_hmm)
+        prev_current_timestamp_by_hmm = float(prev_current_timestamp_by_hmm)
+    else:
+        prev_current_stop_id_by_hmm = None
+        prev_current_timestamp_by_hmm = None
+    return prev_current_stop_id_by_hmm, prev_current_timestamp_by_hmm
             
 hmm, hmm_non_stop_component_num = setup_hmm()
 nostop_id = stops.all_stops.id_list[hmm_non_stop_component_num]
