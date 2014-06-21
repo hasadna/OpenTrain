@@ -25,8 +25,8 @@ from alg_logger import logger
 
 HISTORY_LENGTH = 100000
 
-def get_train_tracker_current_stop_id_key(tracker_id):
-    return "train_tracker:%s:current_stop_id" % (tracker_id)
+def get_train_tracker_current_stop_id_and_timestamp_key(tracker_id):
+    return "train_tracker:%s:current_stop_id_and_timestamp" % (tracker_id)
 
 def get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id):
     return "train_tracker:%s:timestamp_sorted_stop_ids" % (tracker_id)
@@ -108,7 +108,10 @@ def setup_hmm():
 def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp2=None, stop_id_and_departure_time2=None):
     stop_times = get_detected_stop_times(tracker_id)
     if len(stop_times) > 0 and stop_times[-1].stop_id == int(stop_id_and_departure_time.split('_')[0]): # if last station is same station
-        arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(stop_times[-1].arrival)
+        arrival_timestamp = ot_utils.unix_time_to_localtime(arrival_unix_timestamp)
+        hour = datetime.timedelta(minutes = 60)
+        if not stop_times or arrival_timestamp - stop_times[-1].arrival < hour:  # no timegap
+            arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(stop_times[-1].arrival)
     prev_stops_counter_key = get_train_tracker_tracked_stops_prev_stops_counter_key(tracker_id)
     done = False
     # we try to update a stop_time only if no stop_time was updated since we started the report processing. If one was updated, we don't update at all:
@@ -193,15 +196,27 @@ def add_report(tracker_id, report):
     # 1) add stop or non-stop to prev_stops and prev_stops_timestamps     
     # 2) set calc_hmm to true if according to wifis and/or location, our
     #    state changed from stop to non-stop or vice versa
-    prev_current_stop_id_by_hmm = cl.get(\
-        get_train_tracker_current_stop_id_key(tracker_id))
-    prev_current_stop_id_by_hmm = int(prev_current_stop_id_by_hmm) if\
-        prev_current_stop_id_by_hmm else None
+    prev_current_stop_id_and_timestamp_by_hmm = cl.get(\
+        get_train_tracker_current_stop_id_and_timestamp_key(tracker_id))
+    if prev_current_stop_id_and_timestamp_by_hmm:
+        prev_current_stop_id_by_hmm = prev_current_stop_id_and_timestamp_by_hmm.split("_")[0]
+        prev_current_timestamp_by_hmm = prev_current_stop_id_and_timestamp_by_hmm.split("_")[1]
+        prev_current_stop_id_by_hmm = int(prev_current_stop_id_by_hmm)
+        prev_current_timestamp_by_hmm = float(prev_current_timestamp_by_hmm)
+    else:
+        prev_current_stop_id_by_hmm = None
+        prev_current_timestamp_by_hmm = None
       
     if not prev_current_stop_id_by_hmm:
         prev_state = tracker_states.INITIAL
     else:
-        prev_state = prev_current_stop_id_by_hmm
+        prev_report_timestamp = ot_utils.unix_time_to_localtime(prev_current_timestamp_by_hmm)
+        time_from_last_report = report.timestamp - prev_report_timestamp
+        hour = datetime.timedelta(minutes = 60)
+        if time_from_last_report > hour and prev_current_stop_id_by_hmm != stops.NOSTOP:
+            prev_state = tracker_states.TIMEGAP
+        else:
+            prev_state = prev_current_stop_id_by_hmm
 
     stop_id = try_get_stop_id(report)
     if not stop_id:
@@ -231,13 +246,17 @@ def add_report(tracker_id, report):
         
         # update current_stop_id_by_hmm and current_state by hmm:        
         current_stop_id_by_hmm = stops.all_stops.id_list[prev_stop_int_ids_by_hmm[-1]]
-        cl.set(get_train_tracker_current_stop_id_key(tracker_id), current_stop_id_by_hmm)
+        cl.set(get_train_tracker_current_stop_id_and_timestamp_key(tracker_id), str(current_stop_id_by_hmm) + "_" + str(prev_stops_and_timestamps[-1][1]))
         current_state = current_stop_id_by_hmm
 
         if prev_state != current_state: # change in state
             prev_stops_by_hmm = [stops.all_stops.id_list[x] for x in prev_stop_int_ids_by_hmm]
             prev_stops_timestamps = [ot_utils.unix_time_to_localtime((x[1])) for x in prev_stops_and_timestamps]
-            index_of_oldest_current_state = max(0, find_index_of_first_consecutive_value(prev_stops_by_hmm, len(prev_stops_by_hmm)-1))
+            if prev_state == tracker_states.TIMEGAP:
+                # after a time gap, we're essentially in a new state:
+                index_of_oldest_current_state = len(prev_stops_by_hmm) - 1
+            else:
+                index_of_oldest_current_state = max(0, find_index_of_first_consecutive_value(prev_stops_by_hmm, len(prev_stops_by_hmm)-1))
             index_of_most_recent_previous_state = index_of_oldest_current_state-1
               
             if current_state == stops.NOSTOP:
@@ -255,9 +274,8 @@ def add_report(tracker_id, report):
                 arrival_unix_timestamp_prev_stop = None
                 stop_id_and_departure_time_prev_stop = None
                 if (prev_state != tracker_states.INITIAL and prev_state != stops.NOSTOP):
-                    last_prev_end_ind = len(prev_stops_by_hmm) - prev_stops_by_hmm[::-1].index(prev_state) - 1
                     stop_time = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
-                    departure_unix_timestamp = ot_utils.dt_time_to_unix_time(prev_stops_timestamps[last_prev_end_ind])
+                    departure_unix_timestamp = prev_current_timestamp_by_hmm
                     stop_id_and_departure_time = "%s_%d" % (prev_current_stop_id_by_hmm, departure_unix_timestamp)
                     arrival_unix_timestamp_prev_stop = stop_time[0][1]
                     stop_id_and_departure_time_prev_stop = stop_id_and_departure_time
@@ -277,7 +295,7 @@ def add_report(tracker_id, report):
             
 hmm, hmm_non_stop_component_num = setup_hmm()
 nostop_id = stops.all_stops.id_list[hmm_non_stop_component_num]
-tracker_states = enum(INITIAL='initial', NOSTOP=-1, STOP='stop', UNKNOWN='unknown')
+tracker_states = enum(INITIAL='initial', NOSTOP=-1, STOP='stop', UNKNOWN='unknown', TIMEGAP='timegap')
 
 cl = get_redis_client()
 p = get_redis_pipeline()

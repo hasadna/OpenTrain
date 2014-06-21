@@ -197,7 +197,7 @@ def ReloadRedisGTFSData():
   #days = sorted([x for x in days])
   #days = [days[0]]
   for i, day in enumerate(days):
-    print i, ' of ', len(days)
+    print i, ' of ', len(days), '(', day, ')'
     trip_data = SetTripData(day) 
     costop_matrix = SetCostopMatrix(day, trip_data)
     SetTripStopMatrix(day, costop_matrix, trip_data)

@@ -13,7 +13,7 @@ import algorithm.shapes as shapes
 import algorithm.stops as stops
 import ot_utils
 
-def generate_mock_reports(device_id='fake_device_1', trip_id='260214_00077', day=None, from_stop_id=None, to_stop_id=None, nostop_percent=0.2, station_radius_in_meters=300):
+def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day=None, from_stop_id=None, to_stop_id=None, nostop_percent=0.2, station_radius_in_meters=300):
     trips = gtfs.models.Trip.objects.filter(trip_id=trip_id)
     trip = trips[0]
     shape_points = gtfs.models.Shape.objects.filter(shape_id=trip.shape_id).order_by('shape_pt_sequence')

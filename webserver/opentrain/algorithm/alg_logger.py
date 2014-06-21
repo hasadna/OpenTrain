@@ -20,7 +20,7 @@ class FilenameLineNumberExcludeFilter(logging.Filter):
     self.lineno = lineno
     
   def filter(self, record):
-    return self.filename not in record.filename or (not self.lineno or self.lineno != record.lineno)
+    return self.filename not in record.filename and (not self.lineno or self.lineno != record.lineno)
 
 # create logger
 logger = logging.getLogger('algorithm')
@@ -48,7 +48,7 @@ logger.debug('aaa')
 
 logger.addFilter(MessageExcludeFilter('qps'))
 logger.addFilter(MessageExcludeFilter('skipped because of large loc_ts_delta'))
-
+logger.addFilter(FilenameLineNumberExcludeFilter('stop_detector_test'))
 #logger.addFilter(MessageIncludeFilter('No stop for bssids'))
 
 

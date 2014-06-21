@@ -54,7 +54,7 @@ def get_device_id_reports(device_id):
 
 class stop_detector_test(TestCase):
 
-    def test_stop_detector_on_mock_trip(self, device_id = 'fake_device_1', trip_id = '010414_00168'):
+    def test_stop_detector_on_mock_trip(self, device_id = 'fake_device_1', trip_id = '010714_00115'):
         remove_from_redis([device_id])
         day = datetime.datetime.strptime(trip_id.split('_')[0], '%d%m%y')
         now = ot_utils.get_localtime_now() # we want to get the correct timezone so we take it from get_localtime_now()
@@ -89,9 +89,9 @@ class stop_detector_test(TestCase):
             if i % fps_period_length == 0:
                 elapsed = (time.clock() - fps_period_start)
                 if elapsed > 0:
-                    print('%d\t%.1f qps' % (i, fps_period_length/elapsed))
+                    logger.debug('%d\t%.1f qps' % (i, fps_period_length/elapsed))
                 else:
-                    print('Elapsed time should be positive but is %d' % (elapsed))
+                    logger.debug('Elapsed time should be positive but is %d' % (elapsed))
                 fps_period_start = time.clock()                
             
             report = reports_queryset[i]
@@ -108,10 +108,12 @@ class stop_detector_test(TestCase):
             if do_show_fig:
                 plt.scatter(report.my_loc.lat, report.my_loc.lon)
                 plt.show()
+            #print i, ot_utils.get_localtime(report.timestamp)
             stop_times, is_stops_updated = add_report(tracker_id, report)
             if is_stops_updated:
                 logger.debug(str(stop_times[-1]))
-            
+        
+        stop_detector.print_tracked_stop_times(device_id)
         remove_from_redis([device_id])
         print 'done'
         return tracker_id
@@ -134,9 +136,14 @@ class stop_detector_test(TestCase):
                 self.assertAlmostEquals(detected_departure, gtfs_departure, msg=msg, delta=acceptible_time_delta)
 
     def test_stop_detector_on_real_trips(self):
-        #self._stop_detector_on_real_trip(device_id = '2ef1b758', trip_id = '010414_00168')
-        #self._stop_detector_on_real_trip(device_id = '1cb87f1e', trip_id = '010414_00168')
-        self._stop_detector_on_real_trip(device_id = '1cb87f1e', trip_id = '010414_00168')
+        self._stop_detector_on_real_trip(device_id = 'ofer_b3b994f2ff17f4be', trip_id = '010414_00168')
+        self._stop_detector_on_real_trip(device_id = 'b37fb3da3c244170', trip_id = '010414_00168')
+        self._stop_detector_on_real_trip(device_id = 'ofer_57dd77efa53ebe59', trip_id = '010414_00168')
+        self._stop_detector_on_real_trip(device_id = '5e4bcf31fcc4a8d3', trip_id = '010414_00168')
+        self._stop_detector_on_real_trip(device_id = '992d69efe920047a', trip_id = '010414_00168')
+        self._stop_detector_on_real_trip(device_id = 'ofer_d64213d3f844903d', trip_id = '010414_00168')
+        
+        #self._stop_detector_on_real_trip(device_id = '71_70d6006f83c00e2a', trip_id = '010414_00168')
             
 if __name__ == '__main__':
     unittest.main()

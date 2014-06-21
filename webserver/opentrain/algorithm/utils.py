@@ -1,4 +1,5 @@
 import os
+os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 import gtfs.models
 import analysis.models
 import numpy as np
@@ -54,3 +55,18 @@ def find_index_of_first_consecutive_value(values, start_index):
             break        
     
     return res
+
+def get_reports_and_dates():
+    result = {}
+    device_ids = analysis.models.Report.objects.values_list('device_id', flat=True).distinct()
+    for device_id in device_ids:
+        count = analysis.models.Report.objects.filter(device_id=device_id).count()
+        report = analysis.models.Report.objects.filter(device_id=device_id).order_by('timestamp')[:1].get()
+        result[device_id] = report.timestamp.date()
+        print result[device_id], count, device_id
+    return result
+        
+
+if __name__ == '__main__':
+    pass
+    #get_reports_and_dates()

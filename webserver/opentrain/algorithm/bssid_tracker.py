@@ -18,7 +18,7 @@ from alg_logger import logger
 import json
 from django.conf import settings
 
-USE_FILE = True
+USE_FILE = False
 
 class BSSIDTracker(object):
     def __init__(self) :
