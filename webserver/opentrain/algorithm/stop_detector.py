@@ -132,6 +132,12 @@ class DetectorState(object):
         unix_timestamp = self.prev_stops_and_timestamps[index_of_oldest_current_state][1]        
         return stop_id, unix_timestamp
 
+    def get_most_recent_previous_state_data(self, prev_state):
+        _, index_of_most_recent_previous_state = self._get_previous_state_inds(prev_state, self.prev_stop_int_ids)
+        stop_id = stops.all_stops.id_list[self.prev_stop_int_ids[index_of_most_recent_previous_state]]
+        unix_timestamp = self.prev_stops_and_timestamps[index_of_most_recent_previous_state][1]        
+        return stop_id, unix_timestamp
+
 def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp2=None, stop_id_and_departure_time2=None):
     stop_times = get_detected_stop_times(tracker_id)
     if len(stop_times) > 0 and stop_times[-1].stop_id == int(stop_id_and_departure_time.split('_')[0]): # if last station is same station
@@ -242,18 +248,13 @@ def add_report(tracker_id, report):
         
     # calculate hmm to get state_sequence, update stop_times and current_stop if needed
     if  current_state != detector_states.UNKNOWN and prev_state != current_state:
-
         prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
-
         current_state = stops.all_stops.id_list[prev_stop_int_ids[-1]]
         detector_state.set_current(current_state, str(prev_stops_and_timestamps[-1][1]))
 
         if prev_state != current_state: # change in state
-            index_of_oldest_current_state, index_of_most_recent_previous_state = detector_state._get_previous_state_inds(prev_state, prev_stop_int_ids)
-
             if current_state == stops.NOSTOP_ID:
-                stop_id = stops.all_stops.id_list[prev_stop_int_ids[index_of_most_recent_previous_state]]
-                unix_timestamp = prev_stops_and_timestamps[index_of_most_recent_previous_state][1]
+                stop_id, unix_timestamp = detector_state.get_most_recent_previous_state_data(prev_state)
 
                 if prev_state == detector_states.INITIAL:
                     pass #do nothing
@@ -273,9 +274,7 @@ def add_report(tracker_id, report):
                     stop_id_and_departure_time_prev_stop = stop_id_and_departure_time
                     
                 stop_id, unix_timestamp = detector_state.get_oldest_current_state_data(prev_state)
-                #stop_id = stops.all_stops.id_list[prev_stop_int_ids[index_of_oldest_current_state]]
-                #unix_timestamp = prev_stops_and_timestamps[index_of_oldest_current_state][1]
-                
+  
                 arrival_unix_timestamp = unix_timestamp
                 stop_id_and_departure_time = "%s_" % (current_state)
                 update_stop_time(tracker_id, prev_report_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop)
