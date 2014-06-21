@@ -304,7 +304,7 @@ def add_report(tracker_id, report):
 
            
 hmm = setup_hmm()
-tracker_states = enum(INITIAL='initial', NOSTOP=-1, STOP='stop', UNKNOWN='unknown', TIMEGAP='timegap')
+tracker_states = enum(INITIAL='initial', NOSTOP='nostop', STOP='stop', UNKNOWN='unknown', TIMEGAP='timegap')
 
 cl = get_redis_client()
 p = get_redis_pipeline()
