@@ -234,8 +234,7 @@ def add_report(tracker_id, report):
         prev_state = detector_states.INITIAL
     else:
         time_from_last_report = report.timestamp - prev_timestamp
-        hour = datetime.timedelta(minutes = 60)
-        if time_from_last_report > hour and prev_stop_id != stops.NOSTOP_ID:
+        if time_from_last_report > config.no_report_timegap and prev_stop_id != stops.NOSTOP_ID:
             detector_state_transition = detector_state_transitions.NOREPORT_TIMEGAP
         prev_state = prev_stop_id
 
