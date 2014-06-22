@@ -142,8 +142,7 @@ def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_a
     stop_times = get_detected_stop_times(tracker_id)
     if len(stop_times) > 0 and stop_times[-1].stop_id == int(stop_id_and_departure_time.split('_')[0]): # if last station is same station
         arrival_timestamp = ot_utils.unix_time_to_localtime(arrival_unix_timestamp)
-        hour = datetime.timedelta(minutes = 60)
-        if not stop_times or arrival_timestamp - stop_times[-1].arrival < hour:  # no timegap
+        if not stop_times or arrival_timestamp - stop_times[-1].arrival < config.no_stop_timegap:  # no timegap
             arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(stop_times[-1].arrival)
     prev_stops_counter_key = get_train_tracker_tracked_stops_prev_stops_counter_key(tracker_id)
     done = False
@@ -233,8 +232,7 @@ def add_report(tracker_id, report):
     if not prev_stop_id:
         prev_state = detector_states.INITIAL
     else:
-        time_from_last_report = report.timestamp - prev_timestamp
-        if time_from_last_report > config.no_report_timegap and prev_stop_id != stops.NOSTOP_ID:
+        if report.timestamp - prev_timestamp > config.no_report_timegap and prev_stop_id != stops.NOSTOP_ID:
             detector_state_transition = detector_state_transitions.NOREPORT_TIMEGAP
         prev_state = prev_stop_id
 
