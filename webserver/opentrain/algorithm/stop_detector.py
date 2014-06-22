@@ -232,7 +232,7 @@ def add_report(tracker_id, report):
     if not prev_stop_id:
         prev_state = detector_states.INITIAL
     else:
-        if report.timestamp - prev_timestamp > config.no_report_timegap and prev_stop_id != stops.NOSTOP_ID:
+        if report.timestamp - prev_timestamp > config.no_report_timegap:
             detector_state_transition = detector_state_transitions.NOREPORT_TIMEGAP
         prev_state = prev_stop_id
 
