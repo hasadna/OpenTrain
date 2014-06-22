@@ -228,7 +228,7 @@ def get_detected_stop_times(tracker_id):
 def add_report(tracker_id, report):
     detector_state = DetectorState(tracker_id)
     prev_stop_id, prev_timestamp = detector_state.get_current()
-      
+
     detector_state_transition = detector_state_transitions.NORMAL
     if not prev_stop_id:
         prev_state = detector_states.INITIAL
@@ -245,7 +245,7 @@ def add_report(tracker_id, report):
     if current_state != detector_states.UNKNOWN:
         timestamp = report.get_timestamp_israel_time()
         prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
-        
+
     # calculate hmm to get state_sequence, update stop_times and current_stop if needed
     if  current_state != detector_states.UNKNOWN and prev_state != current_state:
 
