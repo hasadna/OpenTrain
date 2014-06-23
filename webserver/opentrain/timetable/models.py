@@ -14,6 +14,7 @@ class TtStop(models.Model):
 class TtTrip(models.Model):
     trip_id = models.CharField(max_length=100,unique=True)
     shape_id = models.CharField(max_length=100)
+    date = models.DateTimeField(blank=True,null=True)
         
 class TtStopTime(models.Model):
     stop = models.ForeignKey(TtStop)
