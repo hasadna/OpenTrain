@@ -16,10 +16,12 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 	$scope.initReport = function() {
 		var device_id = $scope.getParameterByName('device_id');
 	    var stops_only = $scope.getParameterByName('stops_only');
+	    var bssid = $scope.getParameterByName('bssid');
 		$scope.devices = [];
 		$scope.reportsStatus = 'none';
 		$scope.liveMode = false;
 	    $scope.stopsOnly = stops_only == '1';
+	   	$scope.bssid = bssid;
 		$scope.loadDeviceList(device_id);
 	};
 	$scope.intervalPromise = undefined;
@@ -38,9 +40,9 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 	};
 
     $scope.setStopsOnly = function(val) {
-	$scope.stopsOnly = val;
-	$scope.redirectToReports();
-    }
+		$scope.stopsOnly = val;
+		$scope.redirectToReports();
+    };
 
 	$scope.updateDevice = function() {
 		$scope.loadLiveReports();
@@ -72,7 +74,10 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 	$scope.redirectToReports = function() {
 	   var url =  '/analysis/device-reports/?device_id=' + $scope.input.selectedDevice.device_id;
 	    if ($scope.stopsOnly) {
-		url += '&stops_only=1';
+			url += '&stops_only=1';
+	    }
+	    if ($scope.bssid) {
+	    	url += '&bssid=' + $scope.bssid;
 	    }
 	    window.location.href = url;
 	};
@@ -91,6 +96,9 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 		var url = '/api/1/devices/' + curId + '/reports/?limit=200';
 	    var stopsOnly = $scope.stopsOnly ? '1' : '0';
 	    url += '&stops_only=' + stopsOnly;
+	    if ($scope.bssid) {
+	    	url += '&bssid=' + $scope.bssid;
+	    }
 		$scope.appendReportsRec(url);
 	};
 

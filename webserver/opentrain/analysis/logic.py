@@ -119,7 +119,10 @@ def get_device_reports(device_id,info):
                                                      id__gte=info['since_id'],
                                                      device_id=device_id)
     if info['stops_only']:
-        qs = qs.filter(wifi_set__SSID='S-ISRAEL-RAILWAYS').distinct().order_by('id')
+        qs = qs.filter(wifi_set__SSID='S-ISRAEL-RAILWAYS')
+    if info['bssid']:
+        qs = qs.filter(wifi_set__key=info['bssid'])
+    qs = qs.distinct().order_by('id')
     qs = qs.prefetch_related('my_loc','wifi_set')
     info['total_count'] = qs.count()
     qs = qs[info['offset']:info['offset'] + info['limit']]
