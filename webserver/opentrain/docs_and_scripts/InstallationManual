@@ -1,0 +1,26 @@
+Basically, you need to have environemnt with the following:
+1. python 2.7
+2. django 1.6.X
+3. database: we use postgres, both locally and remotely. But I think you can handle it with the more standard sqlite3.
+4. redis
+5. git
+6. pip installer  (python installer)
+7. scipy + numpy - This is the most complex part, maybe on window this would be easier.
+8. bunch of other python packages (installed via pip)
+
+locally we wok on virtualenv, up to you (not sure how this works on windows).
+
+Fabric==1.8.1
+South==0.8.4
+django-bootstrap3-datetimepicker==2.1.0
+django-extensions==1.2.5
+django-statici18n==1.1
+python-dateutil==2.2
+pytz==2013.8
+redis==2.9.1
+requests==2.0.1
+easy_install-2.7 django-tastypie(only using easy_install worked for some reason)
+pip install django-bootstrap3-datetimepicker
+sudo apt-get install postgresql
+export PATH=/usr/lib/postgresql/9.3/bin:"$PATH"
+pip install psycopg2
