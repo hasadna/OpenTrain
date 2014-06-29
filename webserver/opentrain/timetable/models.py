@@ -12,11 +12,12 @@ class TtStop(models.Model):
 
 
 class TtTrip(models.Model):
-    trip_id = models.CharField(max_length=100,unique=True)
+    trip_id = models.CharField(max_length=100,unique=True,db_index=True)
     shape_id = models.CharField(max_length=100)
     date = models.DateTimeField(blank=True,null=True)
         
 class TtStopTime(models.Model):
+    trip = models.ForeignKey(TtTrip)
     stop = models.ForeignKey(TtStop)
     stop_sequence = models.IntegerField()
     exp_arrival = models.DateTimeField()
