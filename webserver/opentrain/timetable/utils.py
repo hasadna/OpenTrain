@@ -14,26 +14,43 @@ def build_stops():
             new_stop.save()
             print 'Added stop %s' % (new_stop)
             
-def build_trips(from_date=None):
+def clean_trips(from_date):
+    if from_date:
+        qs = TtTrip.objects.filter(date__lt=from_date)
+    else:
+        qs = TtTrip.objects.all()
+    print 'Going to delete %s trips' % (qs.count())
+    qs.delete()
+            
+def build_trips(from_date=None,to_date=None,clean=False):
+    if clean:
+        clean_trips(from_date)
+        
     trips = gtfs.models.Trip.objects.all()        
-    for trip in trips:
+    print 'Total number of trips: %s' % (trips.count())
+    if from_date:
+        trips = trips.filter(service__start_date__gte=from_date)
+    if to_date:
+        trips = trips.filter(service__end_date__lte=to_date)
+    print 'number of trips in date range %s' % (trips.count())
+    trips_count = trips.count()
+    for idx,trip in enumerate(trips):
+        print 'Building trip %s/%s' % (idx,trips_count)
         trip_date = trip.service.start_date
-        if from_date and trip_date < from_date:
-            continue
         new_trip = TtTrip()
         new_trip.trip_id = trip.trip_id
         new_trip.shape_id = trip.shape_id
         new_trip.date = trip_date
         assert trip.service.start_date == trip.service.end_date
         new_trip.save()
-        build_stoptimes(new_trip)
+        build_stoptimes(new_trip,trip)
         
 def build_stoptimes(new_trip,trip):
     import common.ot_utils
     stoptimes = trip.stoptime_set.all().order_by('stop_sequence')
     new_stoptimes = []
     for stoptime in stoptimes:
-        new_stop = TtStop.objects.get(stop_id=stoptime.stop.id)
+        new_stop = TtStop.objects.get(stop_id=stoptime.stop.stop_id)
         exp_arrival = common.ot_utils.db_time_to_datetime(stoptime.arrival_time,new_trip.date)
         exp_departure = common.ot_utils.db_time_to_datetime(stoptime.departure_time,new_trip.date)
         new_stoptime = TtStopTime(stop=new_stop,
