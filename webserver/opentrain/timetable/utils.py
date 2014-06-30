@@ -1,4 +1,3 @@
-from django.conf import settings
 from models import TtStop,TtStopTime,TtTrip
 import gtfs.models
         
@@ -44,6 +43,7 @@ def build_trips(from_date=None,to_date=None,clean=False):
         assert trip.service.start_date == trip.service.end_date
         new_trip.save()
         build_stoptimes(new_trip,trip)
+        
         
 def build_stoptimes(new_trip,trip):
     import common.ot_utils
