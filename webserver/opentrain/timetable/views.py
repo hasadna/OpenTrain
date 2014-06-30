@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 
 import models
 import common.ot_utils
+import services
  
 def show_map(req,trip_id):
     ctx = dict()
@@ -18,11 +19,10 @@ def show_map(req,trip_id):
     ctx['trip'] = models.Trip.objects.get(trip_id=trip_id)
     return render(req, 'timetable/trip_map.html', ctx)
 
+from forms import SearchInForm
 class TimeTableSearchIn(View):
-    import forms
     url_name = 'timetable:search-in'
     fields = ['in_station','when','before','after']
-    FormClass = forms.SearchInForm
     title = 'Search In'
 
     def get(self,req,*args,**kwargs):
@@ -37,18 +37,18 @@ class TimeTableSearchIn(View):
                 else:
                     initial[f] = value
                 
-        form = self.FormClass(initial=initial if initial else defaultForm)
+        form = SearchInForm(initial=initial if initial else defaultForm)
         ctx['form'] = form        
         ctx['title'] = self.title
         ctx['url_name'] = self.url_name 
         if initial: 
             ctx['when'] = initial['when']
-            ctx['results'] = ''#logic.do_search(kind=self.url_name.split(':')[1],**initial) 
+            ctx['results'] = services.do_search(**initial) 
         return render(req, 'timetable/search_form.html', ctx)
     
     def post(self,req,*args,**kwargs):
         import urllib
-        form = self.FormClass(req.POST)
+        form = SearchInForm(req.POST)
         if form.is_valid():
             params = dict()
             params.update(form.cleaned_data)

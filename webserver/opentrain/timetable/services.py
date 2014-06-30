@@ -3,6 +3,7 @@ import common.ot_utils
 import json
 from django.conf import settings
 from django.utils.translation import ugettext as _
+from timetable.models import TtStopTime
 
 def get_stations():
     result = models.TtStop.objects.all().order_by('stop_name')
@@ -84,31 +85,19 @@ def find_closest_point_index(trip,points,lat,lon):
         return (pt[0]-lat)*(pt[0]-lat) + (pt[1]-lon)*(pt[1]-lon)
     return min(enumerate(points),key = lambda t : dist(t[1]))[0]
     
-def do_search(kind,in_station=None,from_station=None,to_station=None,when=None,before=None,after=None):
+def do_search(in_station=None,when=None,before=None,after=None):
+    import pdb
+    pdb.set_trace()
     before = int(before)
     after = int(after)
-    if kind == 'search-in':
-        return do_search_in(in_station,when,before *60,after*60)
-    elif kind == 'search-between':
-        return do_seatch_between(from_station,to_station,when,before,after)
-    else:
-        raise Exception('Illegal kind %s' % (kind))
+    return do_search_in(in_station,when,before *60,after*60)
 
 WEEKDAY_FIELDS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
 
 def do_search_in(in_station,when,before,after):
-    weekday = when.weekday()
-    services = models.Service.objects.filter(start_date__lte=when,end_date__gte=when)
-    wd = dict()
-    wd[WEEKDAY_FIELDS[weekday]] = True
-    services = services.filter(**wd)
-    service_ids = services.values_list('service_id')
-    trip_ids_on_date = models.Trip.objects.filter(service_id__in=service_ids).values_list('trip_id')
-    
-    stop_times = models.StopTime.objects.filter(stop_id=in_station).filter(trip_id__in=trip_ids_on_date)
-    normal_time = when.hour * 3660 + when.minute * 60
-    stop_times = stop_times.filter(arrival_time__gt=normal_time-before,arrival_time__lt=normal_time+after)
-    stop_times = stop_times.order_by('arrival_time')
+    from models import TtStop,TtStopTime
+    stop = TtStop.objects.get(gtfs_stop_id=in_station)
+    stop_times = TtStopTime.objects.filter(stop=stop)
    
    
     #trips_on_station_in_date = trips_in_station
