@@ -1,5 +1,7 @@
 from models import TtStop,TtStopTime,TtTrip
 import gtfs.models
+from timetable.models import TtShape
+import json
         
 def build_stops():
     stops = gtfs.models.Stop.objects.all()
@@ -38,14 +40,31 @@ def build_trips(from_date=None,to_date=None,clean=False):
         trip_date = trip.service.start_date
         new_trip = TtTrip()
         new_trip.trip_id = trip.trip_id
-        new_trip.shape_id = trip.shape_id
         new_trip.date = trip_date
         assert trip.service.start_date == trip.service.end_date
+        new_trip.shape = _get_or_build_shape(trip.shape_id)
         new_trip.save()
-        build_stoptimes(new_trip,trip)
+        _build_stoptimes(new_trip,trip)
+     
+def _get_or_build_shape(gtfs_shape_id):
+    try:
+        ttshape = TtShape.objects.get(gtfs_shape_id=gtfs_shape_id)
+        # TODO: check same
+        return ttshape
+    except TtShape.DoesNotExist:
+        return _build_shape(gtfs_shape_id)
+    
+def _build_shape(gtfs_shape_id):
+    print 'Building shape for gtfs shape id = %s' % (gtfs_shape_id)
+    points = gtfs.models.Shape.objects.filter(shape_id=gtfs_shape_id).order_by('shape_pt_sequence')
+    point_list = []
+    for point in points:
+        point_list.append([point.shape_pt_lat,point.shape_pt_lon])
+    ttshape = TtShape(shape_id=gtfs_shape_id,points=json.dumps(point_list))
+    ttshape.save()
+    return ttshape
         
-        
-def build_stoptimes(new_trip,trip):
+def _build_stoptimes(new_trip,trip):
     import common.ot_utils
     stoptimes = trip.stoptime_set.all().order_by('stop_sequence')
     new_stoptimes = []

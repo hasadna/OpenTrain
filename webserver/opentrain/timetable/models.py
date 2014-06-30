@@ -10,7 +10,10 @@ class TtStop(models.Model):
     def __unicode__(self):
         return '%s %s' % (self.stop_name,self.stop_id)
 
-
+class TtShape(models.Model):
+    gtfs_shape_id = models.CharField(max_length=100,db_index=True)
+    points = models.TextField()
+    
 class TtTrip(models.Model):
     trip_id = models.CharField(max_length=100,unique=True,db_index=True)
     date = models.DateTimeField(blank=True,null=True)
