@@ -24,7 +24,7 @@ def db_time_to_datetime(db_time, date=None):
     result = datetime.time(db_time / 3600 % 24, (db_time % 3600) / 60, db_time % 60)
     if date:
         result = datetime.datetime.combine(date, result)
-    return result
+    return get_localtime(result)
 
 def get_utc_time_underscored():
     """ return UTC time as underscored, to timestamp folders """

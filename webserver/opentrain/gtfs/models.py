@@ -187,7 +187,6 @@ class Stop(GTFSModel):
     def __unicode__(self):
         return self.stop_name
 
-    
 class StopTime(GTFSModel):
     filename = "stop_times.txt"
     trip = models.ForeignKey('Trip')
