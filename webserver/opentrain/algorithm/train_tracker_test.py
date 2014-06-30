@@ -4,7 +4,7 @@ export DJANGO_SETTINGS_MODULE="opentrain.settings"
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 #/home/oferb/docs/train_project/OpenTrains/webserver
-import gtfs.models
+import gtfs.services
 import analysis.models
 import numpy as np
 from scipy import spatial
@@ -86,10 +86,10 @@ class train_tracker_test(TestCase):
         trips = get_trusted_trips(trip_delays_ids_list_of_lists)
         return trips
     
-    def teXXXst_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010414_00100', '010414_00168'], remove_some_locations=True):
+    def teXXXst_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010714_00115', '010714_00283'], remove_some_locations=True):
         self.test_tracker_on_mock_device(device_id, trip_ids, remove_some_locations)
         
-    def teXXXst_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010414_00168'], remove_some_locations=True):
+    def test_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010714_00115'], remove_some_locations=True):
         if not isinstance(trip_ids, list):
             trip_ids = [trip_ids]
         tracker_id = device_id
@@ -107,7 +107,7 @@ class train_tracker_test(TestCase):
         
         matched_trips = self.track_mock_reports(reports, tracker_id)
         for matched_trip in matched_trips:
-            gtfs.models.Trip.objects.filter(trip_id = matched_trip)[0].print_stoptimes()
+            gtfs.services.get_trip(matched_trip).print_stoptimes()
         self.assertEquals(len(matched_trips), len(trip_ids))        
         self.assertEquals(sorted(matched_trips), sorted(trip_ids))
         stop_detector_test.remove_from_redis(tracker_id)        
@@ -115,14 +115,16 @@ class train_tracker_test(TestCase):
     def test_tracker_on_real_devices(self):    
         device_ids = []
         trip_suffixes_list = []
-        device_ids.append('ofer_b3b994f2ff17f4be')
-        trip_suffixes_list.append(['_00234'])
+        #device_ids.append('ofer_b3b994f2ff17f4be')
+        #trip_suffixes_list.append(['_00234'])
         #device_ids.append('ofer_57dd77efa53ebe59') # before gtfs - 16-6
         #trip_suffixes_list.append(['_00073'])
-        device_ids.append('ofer_d64213d3f844903d')
-        trip_suffixes_list.append(['_00287', '_00234'])        
+        #device_ids.append('ofer_d64213d3f844903d')
+        #trip_suffixes_list.append(['_00287', '_00234'])        
         #device_ids.append('992d69efe920047a') # before gtfs - 16-6
-        #trip_suffixes_list.append(['_00073'])        
+        #trip_suffixes_list.append(['_00073'])    
+        device_ids.append('ofer_995357870c491cad')
+        trip_suffixes_list.append(['_00287', '_00234'])  
 
         stop_detector_test.remove_from_redis(device_ids)
         
@@ -131,7 +133,7 @@ class train_tracker_test(TestCase):
             trip_suffixes = trip_suffixes_list[i]
             tracker_id, trips = self.track_device(device_id, do_preload_reports=True)
             for trip_id in trips:
-                trip_matcher.print_trip(trip_id)
+                gtfs.services.print_trip_stop_times(trip_id)
             stop_detector.print_tracked_stop_times(device_id)
             
             self.assertEquals(len(trips), len(trip_suffixes))

@@ -1,0 +1,95 @@
+(datetime.date(2014, 1, 13), u'02090d12') 5445
+(datetime.date(2014, 1, 16), u'1cb87f1e') 1097
+(datetime.date(2014, 1, 19), u'a81da157') 2455
+(datetime.date(2014, 1, 20), u'91b251f8') 1104
+(datetime.date(2014, 1, 23), u'071ba801') 925
+(datetime.date(2014, 1, 26), u'2b85bf30') 2038
+(datetime.date(2014, 1, 27), u'ae59d76e') 759
+(datetime.date(2014, 1, 27), u'ca86a698') 1406
+(datetime.date(2014, 1, 29), u'7c3a12e8') 1342
+(datetime.date(2014, 2, 3), u'03a4bf7f') 887
+(datetime.date(2014, 2, 3), u'0d651c58') 10212
+
+(datetime.date(2014, 2, 10), u'2c0e9b57') 732 Trip 100214_00694
+(datetime.date(2014, 2, 10), u'f406bdf1') 1260 Trip 100214_00148 and another stop in Petah Tikva - Kiryat Arie
+(datetime.date(2014, 2, 17), u'06df523b3f591ef5') 3359 Rehovot-Tel Aviv (2 trips)
+(datetime.date(2014, 2, 18), u'6a469b18') 459 Trip 180214_00684 Tel Aviv-Kfar Saba
+(datetime.date(2014, 2, 18), u'a3db4699') 287 Probably Trip 180214_00622
+(datetime.date(2014, 2, 20), u'639b264a') 2195 2 trips, do later
+(datetime.date(2014, 2, 23), u'043346a0') 125 - Just Tel Aviv stops
+(datetime.date(2014, 2, 24), u'9441706ac910c5da') 551 Trip 240214_00272
+(datetime.date(2014, 2, 24), u'de46c33f') 221 Trip 240214_00684
+(datetime.date(2014, 2, 25), u'6f30dac6') 810 Jerusalem - do later
+(datetime.date(2014, 2, 25), u'ee568383') 1697 Trips 250214_00635, 250214_00684
+(datetime.date(2014, 2, 26), u'5aedeb5b') 605 Trip 260214_00631
+(datetime.date(2014, 2, 27), u'7dc78b6c') 1325 LGTM, Match trip later
+(datetime.date(2014, 2, 28), u'eran28020910') 1101 LGTM
+(datetime.date(2014, 3, 2), u'8890d50b') 3590 LGTM Trips 020314_00665
+(datetime.date(2014, 3, 3), u'00f6d726') 935 LGTM Trip 030314_00631
+(datetime.date(2014, 3, 3), u'12ceee6f') 1022 LGTM
+(datetime.date(2014, 3, 10), u'0c84b9e2') 4044 LGTM
+(datetime.date(2014, 3, 11), u'5355c362') 1391 LGTM
+(datetime.date(2014, 3, 13), u'926c46a7') 586 LGTM
+(datetime.date(2014, 3, 14), u'03242342') 1230 LGTM
+(datetime.date(2014, 3, 17), u'2ef1b758') 1013 LGTM
+(datetime.date(2014, 3, 17), u'a29c1c7e') 382 LGTM
+(datetime.date(2014, 3, 18), u'f0a3692e1e9b2813') 545 LGTM
+(datetime.date(2014, 3, 20), u'd22ab259f7f00884') 952 LGTM
+(datetime.date(2014, 3, 21), u'd4065eef85aa51b8') 176 LGTM
+(datetime.date(2014, 3, 23), u'1ea8bd8e2209b7a6') 619 LGTM
+(datetime.date(2014, 3, 24), u'ff00668c') 1580 LGTM
+(datetime.date(2014, 3, 25), u'a2402d42') 943 LGTM
+(datetime.date(2014, 3, 26), u'29a90ca7') 822 LGTM
+(datetime.date(2014, 3, 26), u'6dac01de293738ff') 231 LGTM
+(datetime.date(2014, 3, 27), u'940e3161c577f921') 906 - do later. Looks like Acco!
+(datetime.date(2014, 4, 1), u'032b3544') 696 LGTM
+(datetime.date(2014, 4, 1), u'9abb8365') 794 LGTM
+(datetime.date(2014, 4, 2), u'eefe93a6') 334 LGTM
+(datetime.date(2014, 4, 7), u'ed918429baaf8ab8') 1774 LGTM
+(datetime.date(2014, 4, 8), u'5dc40476ad438414') 296 LGTM
+(datetime.date(2014, 4, 8), u'f623a294be8a33eb') 222 LGTM
+(datetime.date(2014, 4, 29), u'2dfc74b71c91677b') 269 unmapped b4c79982be20, b4c79982ab00
+(datetime.date(2014, 4, 30), u'iocean_323b5911306012a9') 269 - do later. Looks like Haifa
+(datetime.date(2014, 5, 1), u'iocean_977c890b5cac5e8a') 243 - do later. Looks like Haifa
+(datetime.date(2014, 5, 7), u'9bc75282') 4885 LGTM
+(datetime.date(2014, 5, 8), u'd6093c45') 371 LGTM
+(datetime.date(2014, 5, 11), u'3c70f9b11f28734b') 735 LGTM
+(datetime.date(2014, 5, 11), u'45e16c82') 2034 LGTM
+(datetime.date(2014, 5, 11), u'eran_b7fa2ccec8c127d2') 419 LGTM
+(datetime.date(2014, 5, 12), u'0c89639c69c4caf1') 1006 LGTM
+(datetime.date(2014, 5, 13), u'0756bb390dabe025') 945 LGTM
+(datetime.date(2014, 5, 13), u'6f87f12a') 1700 LGTM
+(datetime.date(2014, 5, 13), u'887e38a68fba876b') 6193
+(datetime.date(2014, 5, 13), u'eran_ec8d0d5fd1a16aed') 179
+(datetime.date(2014, 5, 14), u'0297cb91eaf724cd') 504
+(datetime.date(2014, 5, 14), u'887e38a68fba876b') 6193 - wierd, only 70 stop reports
+(datetime.date(2014, 5, 14), u'eec00b8a751cd7dc') 5179 - wierd, only 26 stop reports
+(datetime.date(2014, 5, 15), u'368ad67702a58fdf') 3918 - wierd, only 46 stop reports
+(datetime.date(2014, 5, 15), u'871d8773d36a2b8f') 558 - unknown b4c79982b9a0
+(datetime.date(2014, 5, 15), u'd9e77fb9c6c851f4') 908 - do later
+(datetime.date(2014, 5, 16), u'368ad67702a58fdf') 3918 - wierd, only 43 stop reports
+(datetime.date(2014, 5, 18), u'eran_63479c43eb54ff1f') 415 LGTM
+(datetime.date(2014, 5, 19), u'ac1cb07e') 712 LGTM
+(datetime.date(2014, 5, 19), u'ofer_57656382027dc9c8') 393 LGTM
+(datetime.date(2014, 5, 20), u'Amit_25556b5ee50f9ee5') 428 LGTM
+(datetime.date(2014, 5, 20), u'edf699494a2414cb') 283 LGTM
+(datetime.date(2014, 5, 22), u'Amit_e5066b39c330e434') 433 - do later
+(datetime.date(2014, 5, 22), u'b375c196e840cd96') 351 LGTM
+(datetime.date(2014, 5, 25), u'ofer_a7700dd1b90dea4c') 391 LGTM
+(datetime.date(2014, 5, 26), u'Amit_81db2ecaa94d5377') 171 - do later
+(datetime.date(2014, 5, 26), u'eran_5060bdab5d871850') 574 LGTM
+(datetime.date(2014, 5, 26), u'ofer_9d7d84b96a97b156') 400 LGTM
+(datetime.date(2014, 5, 29), u'eran_d57316d7c8610535') 804 LGTM
+(datetime.date(2014, 5, 29), u'ofer_e402a16800ea3cc9') 1140 LGTM
+(datetime.date(2014, 6, 3), u'e4e504549d341ced') 297 LGTM
+(datetime.date(2014, 6, 10), u'1fbbe499fee0a8f4') 1008 LGTM
+(datetime.date(2014, 6, 16), u'992d69efe920047a') 350 LGTM
+(datetime.date(2014, 6, 16), u'ofer_57dd77efa53ebe59') 885 LGTM
+(datetime.date(2014, 6, 17), u'ofer_b3b994f2ff17f4be') 1270 LGTM
+(datetime.date(2014, 6, 19), u'ofer_d64213d3f844903d') 1390 LGTM
+(datetime.date(2014, 6, 22), u'ofer_995357870c491cad') 2070 LGTM
+(datetime.date(2014, 6, 23), u'ofer_a805c254139a38e9') 450 LGTM
+
+
+
+

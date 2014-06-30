@@ -1,16 +1,16 @@
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
-import gtfs.models
 from scipy import spatial
 import os
 import config
 import numpy as np
 import copy
 import config
+import gtfs.services
 
 from utils import *
 
-NOSTOP = -1
+NOSTOP_ID = -1
 
 class Stop(object):
     def __init__( self, id_, name, coords ) :
@@ -26,7 +26,7 @@ class StopList(dict):
     def __init__(self) :
         super(StopList, self).__init__()
         
-        stops = gtfs.models.Stop.objects.all().order_by('stop_id')
+        stops = gtfs.services.get_all_stops_ordered_by_id()
         stops = list(stops)
         
         self.id_list = []
@@ -38,7 +38,10 @@ class StopList(dict):
             self.id_list.append(stop.id)
             self[stop.id] = stop
         
-        self.id_list.append(NOSTOP)
+        coord = (None, None)
+        stop = Stop(NOSTOP_ID, 'nostop', coord)
+        self[stop.id] = stop
+        self.id_list.append(NOSTOP_ID)
         stop_coords = np.array(stop_coords)
         self.point_tree = spatial.cKDTree(stop_coords)               
 
@@ -58,7 +61,7 @@ class StopList(dict):
         res_coord_int_ids = query_coords(self.point_tree, coords, accuracies)   
         if len(res_coord_int_ids) == 1:
             res_coord_int_ids = [res_coord_int_ids]
-        res_coord_ids = [self.id_list[i[0]] if i else NOSTOP for i in res_coord_int_ids]
+        res_coord_ids = [self.id_list[i[0]] if i else NOSTOP_ID for i in res_coord_int_ids]
         return res_coord_ids
 
 

@@ -1,6 +1,7 @@
 import config 
 import os
 from common.ot_utils import mkdir_p
+import datetime
 
 def set_config(base_dir):
     config.base = base_dir
@@ -34,6 +35,8 @@ def set_config(base_dir):
     # if the trip list is longer than the threshold, we do not 
     # have a match to GTFS
     config.trip_list_length_thresh = 3
+    config.no_report_timegap = datetime.timedelta(minutes = 60)
+    config.no_stop_timegap = datetime.timedelta(minutes = 60)
     
    
 base_dir = os.path.dirname(os.path.dirname(__file__))

@@ -5,7 +5,7 @@ dir=os.path.dirname(os.path.dirname(__file__))
 sys.path.append(dir)
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 import sys
-import gtfs.models
+import gtfs.services
 from redis_intf.client import get_redis_pipeline, get_redis_client, get_by_key
 
 cl = get_redis_client()
@@ -14,7 +14,7 @@ trip_deviation_seconds_list = load_by_key('train_tracker:%s:trip_ids_deviation_s
 trip_ids = trip_ids[:3]
 trip_deviation_seconds_list = trip_deviation_seconds_list[:3]
 for trip_id, trip_deviation_seconds in reversed(zip(trip_ids, trip_deviation_seconds_list)):
-    trip = gtfs.models.Trip.objects.get(trip_id=trip_id)
+    trip = gtfs.services.get_trip(trip_id)
     print('')
     print('deviation from closest gtfs trip in seconds = %s' % (trip_deviation_seconds))
     trip.print_stoptimes()

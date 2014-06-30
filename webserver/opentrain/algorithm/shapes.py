@@ -1,12 +1,12 @@
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
-import gtfs.models
 from scipy import spatial
 import os
 import config
 import numpy as np
 import copy
 from utils import *
+import gtfs.services
 
 class Shape(object):
     def __init__( self, id_, coords ) :
@@ -78,7 +78,8 @@ class ShapeList(dict):
         #return res_shape_point_ids, res_shape_ids
 
     def query_sampled_points(self, coords, accuracies)   :
-        sampled_coord_ids = query_coords(self.sampled_point_tree, coords, accuracies)    
+        sampled_coord_ids = query_coords(self.sampled_point_tree, coords, accuracies)
+        sampled_coord_ids = [x[0] for x in sampled_coord_ids]
         sampled_coord_coords = self.sampled_point_tree.data[sampled_coord_ids]
         return sampled_coord_ids, sampled_coord_coords
 
@@ -104,9 +105,4 @@ class ShapeList(dict):
         return inds_to_keep, sampled_all_routes_tree
   
 
-def get_all_shapes():
-    gtfs_shapes_data = list(gtfs.models.ShapeJson.objects.all())
-    all_shapes = ShapeList(gtfs_shapes_data)
-    return all_shapes
-
-all_shapes = get_all_shapes()
+all_shapes = ShapeList(list(gtfs.services.get_all_shapes()))

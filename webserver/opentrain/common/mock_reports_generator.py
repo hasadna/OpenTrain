@@ -4,7 +4,7 @@ export DJANGO_SETTINGS_MODULE="opentrain.settings"
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 #/home/oferb/docs/train_project/OpenTrains/webserver
-import gtfs.models
+import gtfs.services
 import analysis.models
 import numpy as np
 import itertools
@@ -14,10 +14,9 @@ import algorithm.stops as stops
 import ot_utils
 
 def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day=None, from_stop_id=None, to_stop_id=None, nostop_percent=0.2, station_radius_in_meters=300):
-    trips = gtfs.models.Trip.objects.filter(trip_id=trip_id)
-    trip = trips[0]
-    shape_points = gtfs.models.Shape.objects.filter(shape_id=trip.shape_id).order_by('shape_pt_sequence')
-    stop_times = gtfs.models.StopTime.objects.filter(trip=trip_id).order_by('arrival_time')
+    trip = gtfs.services.get_trip(trip_id)
+    # TODO(oferb): 
+    stop_times = gtfs.services.get_trip_stop_times(trip)
     if not day:
         day = ot_utils.get_localtime_now()
         print 'WARNING: Note that there may be time zone issues'
@@ -36,9 +35,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
     trip_stop_ids = set([x.stop.stop_id for x in stop_times])
 
     # get coords:
-    coords = []
-    for x in shape_points:
-        coords.append([x.shape_pt_lat, x.shape_pt_lon])
+    coords = gtfs.services.get_shape_coords_by_trip(trip)
     coords = np.array(coords)
     accuracies = np.ones((len(coords),1))*ot_utils.meter_distance_to_coord_distance(station_radius_in_meters)
     
@@ -50,22 +47,22 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
     if len(trip_stop_ids - stop_ids_uniques) > 0:
         unfound_stops = trip_stop_ids - stop_ids_uniques
         print('Warning: these stops were not found in gtfs shape: %s' % (unfound_stops))
-    stops_not_in_trip = stop_ids_uniques - trip_stop_ids - set([stops.NOSTOP])
-    stop_ids = [x if x not in stops_not_in_trip else stops.NOSTOP for x in stop_ids]
+    stops_not_in_trip = stop_ids_uniques - trip_stop_ids - set([stops.NOSTOP_ID])
+    stop_ids = [x if x not in stops_not_in_trip else stops.NOSTOP_ID for x in stop_ids]
 
     # strip nostops from start and end
-    while len(stop_ids) > 0 and stop_ids[0] == stops.NOSTOP:
+    while len(stop_ids) > 0 and stop_ids[0] == stops.NOSTOP_ID:
         del stop_ids[0]
-    while len(stop_ids) > 0 and stop_ids[-1] == stops.NOSTOP:
+    while len(stop_ids) > 0 and stop_ids[-1] == stops.NOSTOP_ID:
         del stop_ids[-1]    
 
     # remove nostop reports according to nostop_percent:
-    nostop_inds = [i for i in xrange(len(stop_ids)) if stop_ids[i] == stops.NOSTOP]
-    keep_inds = [i for i in xrange(len(stop_ids)) if stop_ids[i] != stops.NOSTOP]
+    nostop_inds = [i for i in xrange(len(stop_ids)) if stop_ids[i] == stops.NOSTOP_ID]
+    keep_inds = [i for i in xrange(len(stop_ids)) if stop_ids[i] != stops.NOSTOP_ID]
     nostop_inds = nostop_inds[::int(1/nostop_percent)]
     keep_inds.extend(nostop_inds)
     stop_ids = [stop_ids[i] for i in xrange(len(stop_ids)) if i in keep_inds]
-    shape_points = [shape_points[i] for i in xrange(len(shape_points)) if i in keep_inds]
+    coords = [coords[i] for i in xrange(len(coords)) if i in keep_inds]
 
 
     stop_id_to_stop_time_dict = {}
@@ -89,11 +86,11 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
     stop_index = -1
     counter = -1
     group_index = -1
-    for shape_point, stop_id, i in zip(shape_points, stop_ids, xrange(len(stop_ids))):
+    for coord, stop_id, i in zip(coords, stop_ids, xrange(len(stop_ids))):
         if stop_id != prev_stop_id:
             counter = -1
             group_index += 1
-            if stop_id != stops.NOSTOP:
+            if stop_id != stops.NOSTOP_ID:
                 stop_index += 1
                 interval_start = stop_times[stop_index].arrival_time
                 interval_end = stop_times[stop_index].departure_time
@@ -112,8 +109,8 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
         loc = analysis.models.LocationInfo()
         #loc.report = report
         loc.accuracy = 0.1
-        loc.lat = shape_point.shape_pt_lat
-        loc.lon = shape_point.shape_pt_lon
+        loc.lat = coords[0]
+        loc.lon = coords[1]
         loc.provider = 'mock'
         loc.timestamp = timestamp
         report.my_loc_mock = loc
@@ -126,7 +123,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
         wifi_report_train.key = 'FAKE_%s' % (device_id)    
         report.wifi_set_mock = [wifi_report_train]
     
-        if stop_id != stops.NOSTOP:
+        if stop_id != stops.NOSTOP_ID:
             wifi_report_station = analysis.models.SingleWifiReport()
             wifi_report_station.report = report
             wifi_report_station.SSID = STATION_SSID

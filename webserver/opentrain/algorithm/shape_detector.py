@@ -1,4 +1,3 @@
-import gtfs.models
 from scipy import spatial
 import os
 import config
