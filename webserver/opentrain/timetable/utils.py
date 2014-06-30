@@ -6,8 +6,8 @@ import json
 def build_stops():
     stops = gtfs.models.Stop.objects.all()
     for stop in stops:
-        if not TtStop.objects.filter(stop_id=stop.stop_id).exists():
-            new_stop = TtStop(stop_id = stop.stop_id,
+        if not TtStop.objects.filter(gtfs_stop_id=stop.stop_id).exists():
+            new_stop = TtStop(gtfs_stop_id = stop.stop_id,
                               stop_name = stop.stop_name,
                               stop_lat = stop.stop_lat,
                               stop_lon = stop.stop_lon,
@@ -39,7 +39,7 @@ def build_trips(from_date=None,to_date=None,clean=False):
         print 'Building trip %s/%s' % (idx,trips_count)
         trip_date = trip.service.start_date
         new_trip = TtTrip()
-        new_trip.trip_id = trip.trip_id
+        new_trip.grfs_trip_id = trip.trip_id
         new_trip.date = trip_date
         assert trip.service.start_date == trip.service.end_date
         new_trip.shape = _get_or_build_shape(trip.shape_id)
@@ -69,7 +69,7 @@ def _build_stoptimes(new_trip,trip):
     stoptimes = trip.stoptime_set.all().order_by('stop_sequence')
     new_stoptimes = []
     for stoptime in stoptimes:
-        new_stop = TtStop.objects.get(stop_id=stoptime.stop.stop_id)
+        new_stop = TtStop.objects.get(gtfs_stop_id=stoptime.stop.stop_id)
         exp_arrival = common.ot_utils.db_time_to_datetime(stoptime.arrival_time,new_trip.date)
         exp_departure = common.ot_utils.db_time_to_datetime(stoptime.departure_time,new_trip.date)
         new_stoptime = TtStopTime(stop=new_stop,
