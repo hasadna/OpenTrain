@@ -11,7 +11,7 @@ class TtStop(models.Model):
         return '%s %s' % (self.stop_name,self.stop_id)
 
 class TtShape(models.Model):
-    gtfs_shape_id = models.CharField(max_length=100,db_index=True)
+    gtfs_shape_id = models.CharField(max_length=100,db_index=True,unique=True)
     points = models.TextField()
     
 class TtTrip(models.Model):

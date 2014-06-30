@@ -60,7 +60,7 @@ def _build_shape(gtfs_shape_id):
     point_list = []
     for point in points:
         point_list.append([point.shape_pt_lat,point.shape_pt_lon])
-    ttshape = TtShape(shape_id=gtfs_shape_id,points=json.dumps(point_list))
+    ttshape = TtShape(gtfs_shape_id=gtfs_shape_id,points=json.dumps(point_list))
     ttshape.save()
     return ttshape
         
