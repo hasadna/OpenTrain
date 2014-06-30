@@ -3,7 +3,7 @@ import common.ot_utils
 import json
 from django.conf import settings
 from django.utils.translation import ugettext as _
-from timetable.models import TtStopTime
+from timetable.models import TtStopTime,TtStop
 
 def get_stations():
     result = models.TtStop.objects.all().order_by('stop_name')
@@ -86,28 +86,18 @@ def find_closest_point_index(trip,points,lat,lon):
     return min(enumerate(points),key = lambda t : dist(t[1]))[0]
     
 def do_search(in_station=None,when=None,before=None,after=None):
-    import pdb
-    pdb.set_trace()
-    before = int(before)
-    after = int(after)
-    return do_search_in(in_station,when,before *60,after*60)
+    import datetime
+    before = int(before or 0)
+    after = int(after or 0)
+    start_time = when - datetime.timedelta(minutes=before)
+    end_time = when + datetime.timedelta(minutes=after)
+    return do_search_in(in_station,start_time,end_time)
 
-WEEKDAY_FIELDS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
-
-def do_search_in(in_station,when,before,after):
-    from models import TtStop,TtStopTime
+def do_search_in(in_station,start_time,end_time):
     stop = TtStop.objects.get(gtfs_stop_id=in_station)
-    stop_times = TtStopTime.objects.filter(stop=stop)
-   
-   
-    #trips_on_station_in_date = trips_in_station
-    #route_ids = models.Trip.objects.filter(trip_id__in=trip_ids).values_list('route_id')
-    #routes = models.Route.objects.filter(route_id__in=route_ids)
-    
-    return stop_times
-
-def do_seatch_between(from_station,to_station,when,before,after):
-    pass
+    stop_times_in_station = TtStopTime.objects.filter(stop=stop)
+    stops_in_time = stop_times_in_station.filter(exp_arrival__gte=start_time,exp_arrival__lte=end_time)
+    return stops_in_time
 
 def create_all(clean=True,download=True):
     import utils

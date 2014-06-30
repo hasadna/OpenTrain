@@ -18,7 +18,7 @@ class TtTrip(models.Model):
     gtfs_trip_id = models.CharField(max_length=100,unique=True,db_index=True,null=True,blank=True)
     date = models.DateTimeField(blank=True,null=True)
     def __unicode__(self):
-        stop_times = list(self.stoptime_set.all().order_by('stop_sequence'))
+        stop_times = list(self.ttstoptime_set.all().order_by('stop_sequence'))
         return 'Trip %s from %s to %s' % (self.gtfs_trip_id,stop_times[0],stop_times[-1])
         
 class TtStopTime(models.Model):
@@ -30,5 +30,5 @@ class TtStopTime(models.Model):
     trip = models.ForeignKey(TtTrip)
     
     def __unicode__(self):
-        return 'arrive to %s at %s' % (self.exp_arrival,self.stop.stop_name)
+        return '%s at %s' % (self.stop.stop_name,self.exp_arrival)
  

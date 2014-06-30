@@ -39,7 +39,7 @@ def build_trips(from_date=None,to_date=None,clean=False):
         print 'Building trip %s/%s' % (idx,trips_count)
         trip_date = trip.service.start_date
         new_trip = TtTrip()
-        new_trip.grfs_trip_id = trip.trip_id
+        new_trip.gtfs_trip_id = trip.trip_id
         new_trip.date = trip_date
         assert trip.service.start_date == trip.service.end_date
         new_trip.shape = _get_or_build_shape(trip.shape_id)
