@@ -1,6 +1,5 @@
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
-import gtfs.models
 import analysis.models
 import numpy as np
 import warnings
@@ -72,5 +71,4 @@ def draw_map():
 
 
 if __name__ == "__main__":
-    trips = gtfs.models.Trip.objects.filter(trip_id='170214_00517')
-    trips[0].print_stoptimes()
+    pass

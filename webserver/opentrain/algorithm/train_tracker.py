@@ -1,4 +1,3 @@
-import gtfs.models
 import os
 import config
 import numpy as np
@@ -20,6 +19,7 @@ from redis_intf.client import (get_redis_pipeline,
                                save_by_key)
 import stop_detector
 import trip_matcher
+import gtfs.services
 
 # Trip edge (a,b): trip a must end before trip b starts
 # They may share at most one station
@@ -40,10 +40,6 @@ def get_train_tracker_visited_shape_sampled_point_ids_key(tracker_id):
 def get_train_tracker_day_key(tracker_id):
     return "train_tracker:%s:day" % (tracker_id)
 
-# relevant_services = services for today. used to filter trips by day
-def get_train_tracker_relevant_services_key(tracker_id):
-    return "train_tracker:%s:relevant_services" % (tracker_id)
-
 def get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id):
     return "train_tracker:%s:trip_delays_ids_list_of_lists" % (tracker_id)
 
@@ -62,18 +58,6 @@ def set_tracker_day(tracker_id, report):
     day_str = report.timestamp.strftime("%Y-%m-%d")
     save_by_key(get_train_tracker_day_key(tracker_id), day_str, cl=p)
     return report.timestamp.date()
-
-def get_relevant_service_ids(tracker_id):
-    result = load_by_key(get_train_tracker_relevant_services_key(tracker_id))
-    if not result:
-        start_date = load_by_key(get_train_tracker_day_key(tracker_id))
-        relevant_services = gtfs.models.Service.objects.filter(start_date \
-                                                               = start_date)
-        result = [x[0] for x in relevant_services.all().values_list(\
-            'service_id')]
-        save_by_key(get_train_tracker_relevant_services_key(tracker_id),\
-                    result)    
-    return result
 
 def add_report(report):  
     bssid_tracker.tracker.add(report)
@@ -148,8 +132,7 @@ def update_coords(report, tracker_id):
         p.execute()          
 
 def update_trips(tracker_id, day, detected_stop_times):
-    relevant_service_ids = get_relevant_service_ids(tracker_id)
-    trip_delays_ids_list_of_lists = trip_matcher.get_matched_trips(tracker_id, detected_stop_times, relevant_service_ids, day)
+    trip_delays_ids_list_of_lists = trip_matcher.get_matched_trips(tracker_id, detected_stop_times, day)
     save_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id), trip_delays_ids_list_of_lists)
     return trip_delays_ids_list_of_lists
 
@@ -158,7 +141,7 @@ def print_trips(tracker_id):
     print 'Trip count = %d' %(len(trips))
     for trip in trips:
         print "trip id: %s" % (trip)        
-        trip_stop_times = gtfs.models.StopTime.objects.filter(trip = trip).order_by('arrival_time')
+        trip_stop_times = gtfs.services.get_trip_stop_times(trip)
         for x in trip_stop_times:
             print db_time_to_datetime(x.arrival_time), db_time_to_datetime(x.departure_time), x.stop
         print

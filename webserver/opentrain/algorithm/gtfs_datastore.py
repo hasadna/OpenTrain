@@ -8,7 +8,6 @@ from redis_intf.client import (get_redis_pipeline,
                                get_redis_client,
                                load_by_key, 
                                save_by_key)
-import gtfs.models
 from ot_profiler import do_profile
 import os
 import config
@@ -20,6 +19,7 @@ from common.ot_utils import *
 from common import ot_utils
 import datetime
 import json
+import gtfs.services
 
 GTFS_COSTOP_MATRIX_KEY = 'gtfs:costop_matrix'
 GTFS_TRIP_DATA_KEY = 'gtfs:trip_data'
@@ -118,12 +118,7 @@ def GenerateTripData(day):
   return result
             
 def GetTripsByDay(day):
-  day_str = _DayToDayStr(day)
-  relevant_services = gtfs.models.Service.objects.filter(start_date = day_str)
-  relevant_service_ids = [x[0] for x in relevant_services.all().values_list('service_id')]
-  # eran: do prefetch related
-  trips = gtfs.models.Trip.objects.filter(service__in=relevant_service_ids).order_by('trip_id').prefetch_related('stoptime_set','stoptime_set__stop')
-  return trips
+  return gtfs.services.get_trips_by_day(day)
 
 def GetRedisData(redis_key, day=None):
   if day:
@@ -189,8 +184,8 @@ def daterange(start_date, end_date):
     yield start_date + datetime.timedelta(n)
 
 def ReloadRedisGTFSData():
-  days = gtfs.models.Service.objects.all().values_list('start_date', flat=True)
-  days = sorted(list(set(days)))
+  days = gtfs.services.get_all_days()
+  days = sorted(days)
   #days_begin_end = [_GTFSDayStrToDay('010414'), datetime.date.today()+datetime.timedelta(1)]
   #days = daterange(days_begin_end[0], days_begin_end[1])
   #days = days_begin_end

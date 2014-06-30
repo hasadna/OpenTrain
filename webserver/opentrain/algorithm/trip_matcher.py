@@ -1,4 +1,4 @@
-import gtfs.models
+import gtfs.services
 import os
 import config
 import numpy as np
@@ -23,18 +23,11 @@ from ot_profiler import do_profile
 from gtfs_datastore import TripDatastore
 
 all_stops = stops.all_stops
-
-
-def print_trip(trip_id):
-    trips = gtfs.models.Trip.objects.filter(trip_id=trip_id)
-    print('')
-    trips[0].print_stoptimes()
-    print('')    
-
+    
 # None means we cannot find a reasonable trip list
 # empty list means there are no trips that fit this tracker
 #@do_profile(follow=[])
-def get_matched_trips(tracker_id, detected_stop_times, relevant_service_ids, day):
+def get_matched_trips(tracker_id, detected_stop_times, day):
     if len(detected_stop_times) == 0:
         return None
     detected_stop_ids = [x.stop_id for x in detected_stop_times]   

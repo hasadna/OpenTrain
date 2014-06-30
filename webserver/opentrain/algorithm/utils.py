@@ -1,6 +1,5 @@
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
-import gtfs.models
 import analysis.models
 import numpy as np
 from scipy import spatial

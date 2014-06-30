@@ -4,7 +4,7 @@ export DJANGO_SETTINGS_MODULE="opentrain.settings"
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 #/home/oferb/docs/train_project/OpenTrains/webserver
-import gtfs.models
+import gtfs.services
 import analysis.models
 import numpy as np
 from scipy import spatial
@@ -35,10 +35,10 @@ class trip_matcher_test(TestCase):
     
 
     def test_matcher_on_full_trip(self, trip_id = '010714_00115'):
-        detected_stop_times_gtfs, relevant_service_ids, day = self.load_trip_info_for_matcher(trip_id)
+        detected_stop_times_gtfs, day = self.load_trip_info_for_matcher(trip_id)
             
         trip_delays_ids_list_of_lists = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs,\
-                               relevant_service_ids, day)
+                               day)
         self.assertEquals(len(trip_delays_ids_list_of_lists), 1)        
         matched_trip_ids = get_trusted_trips(trip_delays_ids_list_of_lists)
         self.assertEquals(matched_trip_ids[0], trip_id)
@@ -46,11 +46,11 @@ class trip_matcher_test(TestCase):
     def test_matcher_on_trip_set(self, trip_ids = ['010714_00283', '010714_00115']):
         detected_stop_times_gtfs_all = []
         for trip_id in trip_ids:
-            detected_stop_times_gtfs, relevant_service_ids, day = self.load_trip_info_for_matcher(trip_id)
+            detected_stop_times_gtfs, day = self.load_trip_info_for_matcher(trip_id)
             detected_stop_times_gtfs_all += detected_stop_times_gtfs
             
         trip_delays_ids_list_of_lists = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs_all,\
-                               relevant_service_ids, day)
+                               day)
         
         self.assertEquals(len(trip_delays_ids_list_of_lists), 2)        
         matched_trip_ids = sorted(get_trusted_trips(trip_delays_ids_list_of_lists))
@@ -61,12 +61,12 @@ class trip_matcher_test(TestCase):
         for seed in seeds:
             for stop_count in stop_counts:
                 print 'seed =', seed, 'stop_count =', stop_count
-                detected_stop_times_gtfs, relevant_service_ids, day = self.load_trip_info_for_matcher(trip_id)
+                detected_stop_times_gtfs, day = self.load_trip_info_for_matcher(trip_id)
                 random.seed(seed)
                 subset_inds = sorted(random.sample(xrange(0,len(detected_stop_times_gtfs)),stop_count))
                 detected_stop_times_gtfs_subset = [detected_stop_times_gtfs[i] for i in subset_inds]
                 trip_delays_ids_list_of_lists = get_matched_trips('test_matcher_on_full_trip', detected_stop_times_gtfs,\
-                                       relevant_service_ids, day)
+                                       day)
 
 
                 self.assertEquals(len(trip_delays_ids_list_of_lists), 1)        
@@ -75,14 +75,9 @@ class trip_matcher_test(TestCase):
 
     def load_trip_info_for_matcher(self, trip_id):
         day = datetime.datetime.strptime(trip_id.split('_')[0], '%d%m%y').date()
-        trip = gtfs.models.Trip.objects.filter(trip_id = trip_id)
-        stop_times_gtfs = gtfs.models.StopTime.objects.filter(trip = trip_id).order_by('arrival_time')
+        stop_times_gtfs = gtfs.services.get_trip_stop_times(trip_id)
         detected_stop_times_gtfs = [DetectedStopTime.load_from_gtfs(x, day) for x in stop_times_gtfs]      
-        relevant_services = gtfs.models.Service.objects.filter(start_date \
-                                                              = day)
-        relevant_service_ids = [x[0] for x in relevant_services.all().values_list(\
-           'service_id')]
-        return detected_stop_times_gtfs, relevant_service_ids, day
+        return detected_stop_times_gtfs, day
         
        
 if __name__ == '__main__':

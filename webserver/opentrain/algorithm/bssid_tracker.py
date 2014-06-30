@@ -1,6 +1,5 @@
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
-import gtfs.models
 from scipy import spatial
 import os
 import config
@@ -11,14 +10,16 @@ from sklearn.hmm import MultinomialHMM
 from utils import *
 from collections import deque
 from common.ot_utils import meter_distance_to_coord_distance
+import common.ot_utils as ot_utils
 from redis_intf.client import get_redis_pipeline, get_redis_client
 import display_utils
 from export_utils import *
 from alg_logger import logger
 import json
 from django.conf import settings
+import math
 
-USE_FILE = False
+USE_FILE = True
 
 class BSSIDTracker(object):
     def __init__(self) :
@@ -103,21 +104,26 @@ class BSSIDTracker(object):
                 return False
             
             return True
-             
+    
+    def get_bssids():
+        cl = get_redis_client()
+        bssid_keys = cl.keys(pattern='bssid*total')
+        bssids = [x.split(":")[1] for x in bssid_keys]  
+        return bssids
+    
     def print_table(self, bssids=None):
         print 'bssid\tcount\tprobability\tstop_id\tname' 
         if bssids is None:
-            cl = get_redis_client()
-            bssid_keys = cl.keys(pattern='bssid*total')
-            bssids = [x.split(":")[1] for x in bssid_keys]
+            bssids = self.get_bssids()
         
         table = []
+        bssids = [x for x in bssids if 'FAKE' not in x]
         for bssid in bssids:
             stop_id, stop_probability, total = self.get_stop_id(bssid)
-            if stop_probability > 0.93 and int(total) > 80:
-                cur_tuple = (bssid, total, stop_probability, stop_id, stops.all_stops[stop_id].name)
-                table.append(cur_tuple)
-                print '%s\t%s\t%.2f\t%d\t%s' % cur_tuple
+            #if stop_probability >= config.stop_discovery_probability_thresh and int(total) >= config.stop_discovery_count_thresh:
+            cur_tuple = (bssid, total, stop_probability, stop_id, stops.all_stops[stop_id].name)
+            table.append(cur_tuple)
+            print '%s\t%s\t%.2f\t%d\t%s' % cur_tuple
         print json.dumps(table)
        
             
@@ -133,12 +139,44 @@ def calc_tracker():
     if len(keys) > 0:
         cl.delete(*keys)
     tracker = BSSIDTracker()
-    reports = analysis.models.Report.objects.filter(wifi_set__SSID = 'S-ISRAEL-RAILWAYS', my_loc__isnull=False).order_by('id')
+    reports = analysis.models.Report.objects.filter(wifi_set__SSID = 'S-ISRAEL-RAILWAYS', my_loc__isnull=False).order_by('device_id', 'timestamp')
     reports.prefetch_related('wifi_set', 'my_loc')
     reports = list(set(reports))
     
-    for report in reports:
-        tracker.add(report)
+    ignore_timestamp = reports[0].timestamp
+    ignore_devices_timestamps = []
+    prev_loc = None
+    prev_device_id = None
+    for i, report in enumerate(reports):
+        if i % 1000 == 0:
+            print i
+        lat = report.get_my_loc().lat if report.get_my_loc() else None
+        lon = report.get_my_loc().lon if report.get_my_loc() else None
+        if prev_loc and report.get_my_loc() and prev_device_id == report.device_id:
+            dist = math.sqrt(math.pow(lat - prev_loc.lat,2) + math.pow(lon - prev_loc.lon,2))*110101.0
+        else:
+            dist = -1
+        if dist > 200:
+            ignore_timestamp = report.timestamp
+            ignore_devices_timestamps.append((ignore_timestamp, report.device_id))
+        prev_loc = report.get_my_loc()
+        prev_device_id = report.device_id
+        
+        
+    ignore_devices = set(x[1] for x in ignore_devices_timestamps)
+    devices = set([x.device_id for x in reports])
+    good_devices = devices - ignore_devices
+    non_test_devices = [x for x in devices if 'test' not in devices]
+    for x in non_test_devices:
+        print x
+    for i, report in enumerate(reports):
+        if i % 1000 == 0:
+            print i
+            tracker.print_table()
+        if report.device_id not in ignore_devices:
+            tracker.add(report)
+        else:
+            print 'Ignoring report'
     tracker.print_table()
     
     return tracker
@@ -153,24 +191,30 @@ def get_tracker(reset=False):
 
 
 def PrintBSSIDReportsOnMap(bssid):
-    display_utils.draw_map()
+    #display_utils.draw_map()
     wifi_reports = analysis.models.SingleWifiReport.objects.filter(key = bssid)
     reports = list(set(x.report for x in wifi_reports))
-    
-    
-    
-    
     
     #t = [((x.timestamp - x.get_my_loc().timestamp).total_seconds(), x.get_my_loc().accuracy) for x in reports]
     #t = sorted(t)
     #t = np.array(t)
     #a = [x.get_my_loc().accuracy for x in reports]
+    ts = sorted([x.timestamp for x in reports])
+    import common.ot_utils as ot_utils
+    sorted_reports = sorted(zip(ts, reports))
+    sorted_reports = [x[1] for x in sorted_reports]
+    for x in sorted_reports:
+        print x.id, x, ot_utils.get_localtime(x.timestamp), x.my_loc.lat, x.my_loc.lon
+    
+    ot_utils.get_localtime(ts[0])
+    ot_utils.get_localtime(ts[-1])
     
     #plt.plot(t)
     #plt.plot(a)
-    for report in reports:
+    for i, report in enumerate(reports):
+        print i
         if hasattr(report, 'my_loc'):
-            plt.scatter(report.my_loc.lon, report.my_loc.lat)
+            plt.scatter(report.my_loc.lon, report.my_loc.lat, s=10)
             plt.show
     print 'done'
 
@@ -185,16 +229,16 @@ def print_bssids_report_dates(bssids_lowconf):
     return y
 
 
-def print_bssids_stats(bssids_lowconf):
-    for x in bssids_lowconf:
+def print_bssids_stats(bssids):
+    for x in bssids:
         stat = tracker.get_bssid_stats(x)
         stat = [(stops.all_stops[int(y[0])].name, y[1]) for y in stat]
         print x, stat
 
 
-def print_bssids_by_stop(bssids_lowconf):
+def print_bssids_by_stop(bssids):
     data = {}
-    for x in bssids_lowconf:
+    for x in bssids:
         print 'bassid', x
         data[x] = {}
         wifi_reports = analysis.models.SingleWifiReport.objects.filter(key = x)
@@ -219,7 +263,7 @@ def print_bssids_by_stop(bssids_lowconf):
             for dict_tuple in sorted(data[x][stop_id]):
                 print str(dict_tuple[0]), dict_tuple[1]
 
-def load_bssids_from_file():
+def load_bssids_from_json_file():
     import json
     
     with open(os.path.join(settings.BASE_DIR, 'algorithm', 'stop_data.json'), 'r') as f:
@@ -248,17 +292,103 @@ def load_bssids_from_file():
                 
     return data
 
+def load_bssids_from_manual_map_file():
+    data = []
+    with open(os.path.join(settings.BASE_DIR, 'algorithm', 'data', 'manual_bssid_map.txt'), 'r') as f:
+        content = f.readlines()          
+    for line in content:
+        line = line.strip('\n')
+        if line and line[0] != '#':
+            bssid = line.split(' ', 1)[0]
+            rest = line.split(' ', 1)[1]
+            stop_id = int(rest.split(' ', 1)[0])
+            name = rest.split(' ', 1)[1]
+            data.append((name, stop_id, bssid))
+    
+    return data
+            
+            
+
 tracker = get_tracker(False)
 if USE_FILE:
-    data = load_bssids_from_file()
+    data = load_bssids_from_manual_map_file()
     bssids = [x[2] for x in data]
     stop_ids = [x[1] for x in data]
     file_map = dict(zip(bssids, stop_ids))
-    
+
+def print_trip_story(device_id):
+    bssid_map = {}
+    has_unmapped_bssid = False
+    with open(os.path.join(settings.BASE_DIR, 'algorithm', 'data', 'manual_bssid_map.txt'), 'r') as f:
+        content = f.readlines()          
+    for line in content:
+        line = line.strip('\n')
+        if line and line[0] != '#':
+            bssid_map[line.split(' ', 1)[0]] = line.split(' ', 1)[1]
+    reports3 = analysis.models.Report.objects.filter(device_id = device_id).order_by('timestamp')
+    prev_loc = None
+    prev_has_bssid = False
+    for report in reports3:
+        #has_bssid = bssid in [x.key for x in report.get_wifi_set_all()]
+        has_bssid = 'S-ISRAEL-RAILWAYS' in [x.SSID for x in report.get_wifi_set_all()]
+        if prev_has_bssid != has_bssid:
+            if has_bssid:
+                start_time = ot_utils.get_localtime(report.timestamp)
+            else:
+                print start_time.date(), start_time.strftime("%H:%M:%S"), ot_utils.get_localtime(report.timestamp).strftime("%H:%M:%S"), report.device_id, has_bssid
+        stop_bssids = [x.key for x in report.get_wifi_set_all() if x.SSID == 'S-ISRAEL-RAILWAYS'] 
+        if not all(x in bssid_map for x in stop_bssids):
+            has_unmapped_bssid = True
+        stop_bssids = [bssid_map[x] if x in bssid_map else x for x in stop_bssids]
+        if stop_bssids:
+            print ot_utils.get_localtime(report.timestamp).strftime("%H:%M:%S"), sorted(stop_bssids)
+        #print ot_utils.get_localtime(report.timestamp), report.device_id, bssid, has_bssid, lat, lon, int(dist)
+        #print report.timestamp, ot_utils.get_localtime(report.timestamp), report.device_id, bssid, has_bssid, lat, lon, int(dist)
+        prev_loc = report.get_my_loc()
+        prev_has_bssid = has_bssid 
+    if has_unmapped_bssid:
+        print 'HAS UNMAPPED BSSID!!!'
+    else:
+        print 'All bssids mapped'
 
 if __name__ == '__main__':
-    #tracker.print_table()
-    pass
+    #PrintBSSIDReportsOnMap('b4c799a3dee0') #'b4c79982a110')
+    #bssid = 'b4c799a3ddd0'
+    #wifi_reports = analysis.models.SingleWifiReport.objects.filter(key = bssid)
+    #reports = list(set(x.report for x in wifi_reports))    
+    ##tracker.print_table()
+    #device_ids = sorted(set([(x.timestamp.date(), x.device_id) for x in reports]))
+    #for x in device_ids:
+        #print x
+    
+    #reports2 = list(set(x.report for x in wifi_reports if x.report.device_id == '887e38a68fba876b'))    
+    #for x in reports2:
+        #print x
+    
+    
+    #device_id = '940e3161c577f921'
+    #print_trip_story(device_id)
 
+
+    #reports = analysis.models.Report.objects.all()
+    #device_ids = sorted(set([(x.timestamp.date(), x.device_id) for x in reports]))
+    #for x in device_ids:
+        #count = len(analysis.models.Report.objects.filter(device_id = x[1]))
+        #if not ('test' in x[1] or 'windows' in x[1]) and count > 100:
+            #continue
+        #else:
+            #print x, count
+            
+    #with open(os.path.join(settings.BASE_DIR, 'algorithm', 'data', 'device_ids_to_keep.txt'), 'r') as f:
+        #content = f.readlines()
+    #for line in content:
+        #print line[line.index("u'")+2:line.index("')")]
+    
+    #import reports
+    #rr = reports.models.RawReport.objects.all().order_by('saved_at')
+    #for x in rr:
+        #print x.id, x.saved_at, x.text
+    #r = reports.models.RawReport.objects.filter(saved_at=datetime(2014, 06, 22)).order_by('saved_at')
+    pass
     
     #calc_tracker()    

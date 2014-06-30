@@ -1,12 +1,12 @@
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
-import gtfs.models
 from scipy import spatial
 import os
 import config
 import numpy as np
 import copy
 import config
+import gtfs.services
 
 from utils import *
 
@@ -26,7 +26,7 @@ class StopList(dict):
     def __init__(self) :
         super(StopList, self).__init__()
         
-        stops = gtfs.models.Stop.objects.all().order_by('stop_id')
+        stops = gtfs.services.get_all_stops_ordered_by_id()
         stops = list(stops)
         
         self.id_list = []
