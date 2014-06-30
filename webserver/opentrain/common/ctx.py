@@ -1,7 +1,7 @@
 from django.core.urlresolvers import reverse
 
 def menu(req):
-    menu_items = [dict(title="Search In",name = 'gtfs:search-in'),
+    menu_items = [dict(title="Search In",name = 'timetable:search-in'),
                   dict(title="Device Reports",name = 'analysis:device-reports'),
                   dict(title="Live Trains",name = 'analysis:live-trips'),
                   dict(title="Report Details",name='analysis:report-details'),

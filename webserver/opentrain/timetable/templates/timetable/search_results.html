@@ -26,7 +26,7 @@
 				{% trans 'Trip Details' %}
 			</p>
 			<div id="trip_details_{{forloop.counter}}">
-				{% include "gtfs/trip_details.html" with trip=result.trip %}
+				{% include "timetable/trip_details.html" with trip=result.trip %}
 			</div>
 			<script type="text/javascript">
 								$(document).ready(function() {
@@ -52,7 +52,7 @@
 		</tr>
 		<tr>
 			<td>{% trans 'Show on Map' %}</td>
-			<td><a target="_blank" href="/gtfs/maps/{{result.trip.trip_id}}/?zoom_stop_id={{result.stop.stop_id}}">{% trans 'Map' %}</a></td>
+			<td><a target="_blank" href="/timetable/maps/{{result.trip.trip_id}}/?zoom_stop_id={{result.stop.stop_id}}">{% trans 'Map' %}</a></td>
 		</tr>
 	</table>
 </div>
