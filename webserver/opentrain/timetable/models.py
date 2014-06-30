@@ -1,7 +1,7 @@
 from django.db import models
 
 class TtStop(models.Model):
-    stop_id = models.IntegerField(db_index=True)
+    gtfs_stop_id = models.IntegerField(db_index=True,null=True)
     stop_name = models.CharField(max_length=200)
     stop_lat = models.FloatField()
     stop_lon = models.FloatField()
@@ -15,7 +15,7 @@ class TtShape(models.Model):
     points = models.TextField()
     
 class TtTrip(models.Model):
-    trip_id = models.CharField(max_length=100,unique=True,db_index=True)
+    gtfs_trip_id = models.CharField(max_length=100,unique=True,db_index=True,null=True,blank=True)
     date = models.DateTimeField(blank=True,null=True)
         
 class TtStopTime(models.Model):
