@@ -51,13 +51,14 @@ def find_gtfs_data_dir():
 
 
 def clean_all():
+    import models
     cls_list = models.GTFSModel.__subclasses__()  # @UndefinedVariable
     for cls in reversed(cls_list):
-        common.ot_utils.delete_from_model(cls)
+        ot_utils.delete_from_model(cls)
     
 def create_all(dirname,clean=True):
-    import os
-    common.ot_utils.rmf(os.path.join(settings.BASE_DIR,'tmp_data/gtfs/processed_data'))
+    import models
+    ot_utils.rmf(os.path.join(settings.BASE_DIR,'tmp_data/gtfs/processed_data'))
     cls_list = models.GTFSModel.__subclasses__()  # @UndefinedVariable
     if clean:
         clean_all()

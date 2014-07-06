@@ -74,13 +74,12 @@ def _build_shape(gtfs_shape_id):
     return ttshape
         
 def _build_stoptimes(new_trip,trip):
-    import common.ot_utils
     stoptimes = trip.stoptime_set.all().order_by('stop_sequence')
     new_stoptimes = []
     for stoptime in stoptimes:
         new_stop = TtStop.objects.get(gtfs_stop_id=stoptime.stop.stop_id)
-        exp_arrival = common.ot_utils.db_time_to_datetime(stoptime.arrival_time,new_trip.date)
-        exp_departure = common.ot_utils.db_time_to_datetime(stoptime.departure_time,new_trip.date)
+        exp_arrival = ot_utils.db_time_to_datetime(stoptime.arrival_time,new_trip.date)
+        exp_departure = ot_utils.db_time_to_datetime(stoptime.departure_time,new_trip.date)
         new_stoptime = TtStopTime(stop=new_stop,
                                   stop_sequence=stoptime.stop_sequence,
                                   trip=new_trip,
