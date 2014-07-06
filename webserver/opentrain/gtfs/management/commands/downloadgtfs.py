@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
 import gtfs.utils
-import gtfs.logic
 import timetable.utils
 import common.ot_utils
 
@@ -15,7 +14,7 @@ class Command(BaseCommand):
         if not dirname:
             print 'No new gtfs info - return'
         if dirname:
-            gtfs.logic.create_all(dirname=dirname,clean=True)
+            gtfs.utils.create_all(dirname=dirname,clean=True)
             timetable.utils.build_from_gtfs(2) 
             #gtfs.logic.clean_all()
         self.stdout.write('GTFS command completed')

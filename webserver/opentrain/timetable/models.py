@@ -23,8 +23,8 @@ class TtShape(models.Model):
 class TtTrip(models.Model):
     gtfs_trip_id = models.CharField(max_length=100,unique=True,db_index=True,null=True,blank=True)
     date = models.DateTimeField(blank=True,null=True)
-    from_stop = models.ForeignKey('TtStopTime',related_name='first_stop')
-    to_stop = models.ForeignKey('TtStopTime',related_name='last_stop')
+    from_stoptime = models.ForeignKey('TtStopTime',null=True,related_name='first_stop')
+    to_stoptime = models.ForeignKey('TtStopTime',null=True,related_name='last_stop')
     shape = models.ForeignKey(TtShape,null=True)
     
     def get_stop_times(self):
