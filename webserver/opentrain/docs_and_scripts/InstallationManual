@@ -1,26 +1,76 @@
-Basically, you need to have environemnt with the following:
-1. python 2.7
-2. django 1.6.X
-3. database: we use postgres, both locally and remotely. But I think you can handle it with the more standard sqlite3.
-4. redis
-5. git
-6. pip installer  (python installer)
-7. scipy + numpy - This is the most complex part, maybe on window this would be easier.
-8. bunch of other python packages (installed via pip)
+1. install virtualenv:
+http://virtualenv.readthedocs.org/en/latest/virtualenv.html#installation
+Will ask to run the command:
+[sudo] pip install virtualenv
 
-locally we wok on virtualenv, up to you (not sure how this works on windows).
+2. install setuptools:
+https://pypi.python.org/pypi/setuptools#installation-instructions
+Will ask to run the command:
+wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
 
-Fabric==1.8.1
-South==0.8.4
-django-bootstrap3-datetimepicker==2.1.0
-django-extensions==1.2.5
-django-statici18n==1.1
-python-dateutil==2.2
-pytz==2013.8
-redis==2.9.1
-requests==2.0.1
-easy_install-2.7 django-tastypie(only using easy_install worked for some reason)
-pip install django-bootstrap3-datetimepicker
-sudo apt-get install postgresql
+3. Install virtualenvwrapper:
+http://virtualenvwrapper.readthedocs.org/en/latest/install.html#basic-installation
+Run command:
+sudo pip install virtualenvwrapper
+
+be sure to edit ~/.bashrc with the following lines after installation:
+export WORKON_HOME=$HOME/.virtualenvs
+export PROJECT_HOME=$HOME/Devel
+source /usr/local/bin/virtualenvwrapper.sh
+
+4. install pip installer:
+http://pip.readthedocs.org/en/latest/installing.html
+
+5. install Django:
+https://www.djangoproject.com/download/
+Will ask to run the command:
+pip install Django==1.6.5
+
+6. install PostgressSQL:
+http://www.postgresql.org/download/linux/ubuntu/
+Will ask to run the command:
+sudo apt-get install postgresql-9.3
 export PATH=/usr/lib/postgresql/9.3/bin:"$PATH"
+
+7. install redis:
+http://redis.io/topics/quickstart
+Will ask to run the command:
+wget http://download.redis.io/redis-stable.tar.gz
+tar xvzf redis-stable.tar.gz
+cd redis-stable
+make
+sudo make install
+
+8. install git:
+http://git-scm.com/download/linux
+
+9. install scipy + numpy:
+http://www.scipy.org/install.html
+
+Will ask to run the command:
+sudo apt-get install python-numpy python-scipy python-matplotlib
+ipython ipython-notebook python-pandas python-sympy python-nose
+
+10. install the following pip install commands:
+pip install Fabric==1.8.1
+pip install South==0.8.4
+pip install django-bootstrap3-datetimepicker==2.1.0
+pip install django-extensions==1.2.5
+pip install django-statici18n==1.1
+pip install python-dateutil==2.2
+pip install pytz==2013.8
+pip install redis==2.9.1
+pip install requests==2.0.1
+pip install django-tastypie
+
+sudo apt-get install libpq-dev and only then:
+
+The following package is a postgreSQL adapter for django.
+This means it must be installed after django and postreSQL are installed.
+(If the installation was not successful try: pip uninstall psycopg2)
 pip install psycopg2
+
+To sync the DB with the postgreSQL and django ORM do the following:
+python manage.py sqlcreate --router=default| sudo -u postgres psql
+python manage.py syncdb
+python ./manage.py migrate
