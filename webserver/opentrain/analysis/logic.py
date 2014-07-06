@@ -178,10 +178,7 @@ def get_current_location(trip):
     return load_by_key('current_trip_id:coords:%s' % (trip.trip_id))
 
 def is_live(trip):
-    import gtfs.logic
-    if get_current_location(trip):
-        return True
-    return gtfs.logic.fake_cur_location(trip)
+    return False
     
     
 

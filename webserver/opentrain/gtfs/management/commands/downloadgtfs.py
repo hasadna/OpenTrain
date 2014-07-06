@@ -15,7 +15,7 @@ class Command(BaseCommand):
             print 'No new gtfs info - return'
         if dirname:
             gtfs.utils.create_all(dirname=dirname,clean=True)
-            timetable.utils.build_from_gtfs(2) 
+            timetable.utils.build_from_gtfs(1,31) 
             #gtfs.logic.clean_all()
         self.stdout.write('GTFS command completed')
         

@@ -4,12 +4,12 @@ from timetable.models import TtShape
 import json
 from common import ot_utils
 
-def build_from_gtfs(days=31):
+def build_from_gtfs(start_offset=1,end_offset=31):
     build_stops()
-    tomorrow = ot_utils.get_days_after_today(1)
-    tomorrow_plus_days = ot_utils.get_days_after_today(days)
-    clean_trips(tomorrow)
-    build_trips(tomorrow, tomorrow_plus_days)
+    start_day = ot_utils.get_days_after_today(start_offset)
+    end_day = ot_utils.get_days_after_today(end_offset)
+    clean_trips(start_day)
+    build_trips(start_day, end_day)
         
 def build_stops():
     stops = gtfs.models.Stop.objects.all()

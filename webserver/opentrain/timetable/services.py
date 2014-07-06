@@ -21,7 +21,7 @@ def get_stations_choices():
     return tuple(result)
         
 def get_all_trips_in_datetime(dt):
-    return TtTrip.objects.filter(exp_start_time__lte=dt).filter(exp_end_time__gte=dt)
+    return TtTrip.objects.filter(from_stoptime__exp_departure__lte=dt).filter(to_stoptime__exp_arrival__gte=dt)
 
 def get_all_trips_in_date(date):
     return TtTrip.objects.filter(date=date)
