@@ -273,14 +273,14 @@ def add_report(tracker_id, report):
         prev_state = prev_stop_id
 
     stop_id = try_get_stop_id(report)
-    current_state = stop_id if stop_id else detector_states.UNKNOWN
+    current_state = stop_id if stop_id else detector_states.UNKNOWN_STOP
 
-    if current_state != detector_states.UNKNOWN:
+    if current_state != detector_states.UNKNOWN_STOP:
         timestamp = report.get_timestamp_israel_time()
         prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
 
     # calculate hmm to get state_sequence, update stop_times and current_stop if needed
-    if  current_state != detector_states.UNKNOWN and prev_state != current_state:
+    if  current_state != detector_states.UNKNOWN_STOP and prev_state != current_state:
 
         prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
 
@@ -318,12 +318,12 @@ def add_report(tracker_id, report):
         
 
     stop_times = get_detected_stop_times(tracker_id)
-    is_stops_updated = (prev_state != current_state) and current_state != detector_states.UNKNOWN and len(stop_times) > 0
+    is_stops_updated = (prev_state != current_state) and current_state != detector_states.UNKNOWN_STOP and len(stop_times) > 0
     return stop_times, is_stops_updated
 
 
-detector_states = enum(INITIAL='initial', NOSTOP='nostop', STOP='stop', UNKNOWN='unknown')
-detector_state_transitions = enum(NORMAL='normal', NOREPORT_TIMEGAP='noreport_timegap', NOSTOP_TIMEGAP='nostop_timegap')
+detector_states = enum(INITIAL='initial', NOSTOP='nostop', STOP='stop', UNKNOWN_STOP='unknown_stop')
+detector_state_transitions = enum(NORMAL='normal', NOREPORT_TIMEGAP='noreport_timegap')
 
 cl = get_redis_client()
 p = get_redis_pipeline()
