@@ -129,13 +129,14 @@ class DetectorState(object):
         index_of_oldest_current_state, _ = self._get_previous_state_inds(detector_state_transition, self.prev_stop_int_ids)
         stop_id = stops.all_stops.id_list[self.prev_stop_int_ids[index_of_oldest_current_state]]
         unix_timestamp = self.prev_stops_and_timestamps[index_of_oldest_current_state][1]        
-        return stop_id, unix_timestamp
+        timestamp = ot_utils.unix_time_to_localtime(unix_timestamp)
+        return stop_id, timestamp
 
     def get_most_recent_previous_state_data(self, detector_state_transition):
         _, index_of_most_recent_previous_state = self._get_previous_state_inds(detector_state_transition, self.prev_stop_int_ids)
         stop_id = stops.all_stops.id_list[self.prev_stop_int_ids[index_of_most_recent_previous_state]]
         unix_timestamp = self.prev_stops_and_timestamps[index_of_most_recent_previous_state][1]        
-        return stop_id, unix_timestamp
+        return stop_id, ot_utils.unix_time_to_localtime(unix_timestamp)
 
 def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id, departure_time, arrival_unix_timestamp2=None, stop_id_and_departure_time2=None, is_report_timegap=False):
     arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(arrival_unix_timestamp)    
@@ -281,14 +282,13 @@ def add_report(tracker_id, report):
 
         if prev_state != current_state: # change in state
             if current_state == stops.NOSTOP_ID:
-                stop_id, unix_timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
+                stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
 
                 if prev_state == detector_states.INITIAL:
                     pass #do nothing
                 else: # previous_state == tracker_states.STOP - need to set stop_time departure
                     stop_time = get_last_detected_stop_time(tracker_id)
-                    departure_unix_timestamp = ot_utils.unix_time_to_localtime(unix_timestamp)
-                    update_stop_time(tracker_id, prev_report_id, stop_time.arrival, prev_stop_id, departure_unix_timestamp)
+                    update_stop_time(tracker_id, prev_report_id, stop_time.arrival, prev_stop_id, timestamp)
             else: # current_state == tracker_states.STOP
                 arrival_unix_timestamp_prev_stop = None
                 stop_id_and_departure_time_prev_stop = None
@@ -299,18 +299,15 @@ def add_report(tracker_id, report):
                     arrival_unix_timestamp_prev_stop = stop_time.arrival
                     stop_id_and_departure_time_prev_stop = stop_id_and_departure_time
                     
-                stop_id, unix_timestamp = detector_state.get_oldest_current_state_data(detector_state_transition)
-  
-                arrival_unix_timestamp = ot_utils.unix_time_to_localtime(unix_timestamp)
-                update_stop_time(tracker_id, prev_report_id, arrival_unix_timestamp, current_state, None, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop)
-            print unix_timestamp
-            prev_timestamp = ot_utils.unix_time_to_localtime(unix_timestamp)
+                stop_id, timestamp = detector_state.get_oldest_current_state_data(detector_state_transition)
+                update_stop_time(tracker_id, prev_report_id, timestamp, current_state, None, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop)
+            prev_timestamp = timestamp
     elif detector_state_transition == detector_state_transitions.NOREPORT_TIMEGAP:
         stop_time = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
         prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
-        stop_id, unix_timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
+        stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
         arrival_unix_timestamp_prev_stop = stop_time[0][1]
-        stop_id_and_departure_time_prev_stop = "%s_%d" % (stop_id, unix_timestamp)
+        stop_id_and_departure_time_prev_stop = "%s_%d" % (stop_id, ot_utils.dt_time_to_unix_time(timestamp))
         # XXX todo - take care of the case when current_state == detector_states.UNKNOWN
         print 'NOREPORT_TIMEGAP'
         update_stop_time(tracker_id, prev_report_id, report.timestamp, current_state, None, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop, True)        
