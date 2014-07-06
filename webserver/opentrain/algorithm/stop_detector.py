@@ -138,13 +138,18 @@ class DetectorState(object):
         unix_timestamp = self.prev_stops_and_timestamps[index_of_most_recent_previous_state][1]        
         return stop_id, ot_utils.unix_time_to_localtime(unix_timestamp)
 
-def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id, departure_time, arrival_unix_timestamp2=None, stop_id_and_departure_time2=None, is_report_timegap=False):
+def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id, departure_time, arrival_unix_timestamp2=None, stop_id2=None, departure_time2=None, is_report_timegap=False):
     arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(arrival_unix_timestamp)    
     departure_time = ot_utils.dt_time_to_unix_time(departure_time) if departure_time else None
     if departure_time:
         stop_id_and_departure_time = "%s_%d" % (stop_id, departure_time)
     else:
         stop_id_and_departure_time = "%s_" % stop_id
+    if stop_id2:
+        if departure_time2:
+            stop_id_and_departure_time2 = "%s_%d" % (stop_id2, departure_time2)
+        else:
+            stop_id_and_departure_time2 = "%s_" % stop_id2       
     
     print_tracked_stop_times(tracker_id)
     print 'stop', stop_id_and_departure_time.split('_')[0]
@@ -307,10 +312,9 @@ def add_report(tracker_id, report):
         prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
         stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
         arrival_unix_timestamp_prev_stop = stop_time[0][1]
-        stop_id_and_departure_time_prev_stop = "%s_%d" % (stop_id, ot_utils.dt_time_to_unix_time(timestamp))
         # XXX todo - take care of the case when current_state == detector_states.UNKNOWN
         print 'NOREPORT_TIMEGAP'
-        update_stop_time(tracker_id, prev_report_id, report.timestamp, current_state, None, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop, True)        
+        update_stop_time(tracker_id, prev_report_id, report.timestamp, current_state, None, arrival_unix_timestamp_prev_stop, stop_id, ot_utils.dt_time_to_unix_time(timestamp), True)        
         
 
     stop_times = get_detected_stop_times(tracker_id)
