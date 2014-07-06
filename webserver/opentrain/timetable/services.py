@@ -12,6 +12,9 @@ def get_stations():
 def get_trip(trip_id):
     return TtTrip.objects.get(gtfs_trip_id=trip_id)
 
+def get_trips(trip_ids):
+    return TtTrip.objects.filter(gtfs_trip_id__in=trip_ids)
+
 def get_stations_choices():
     stations = get_stations()
     result = []
@@ -27,12 +30,10 @@ def get_all_trips_in_date(date):
     return TtTrip.objects.filter(date=date)
 
 def get_expected_location(trip,dt):
-    from models import ShapeJson
-    normal_time = common.ot_utils.get_normal_time(dt)
-    stop_times = list(trip.stoptime_set.all())
-    stop_times.sort(key=lambda x : x.stop_sequence)
-    before_stop_list = [st for st in stop_times if st.departure_time <= normal_time]
-    after_stop_list = [st for st in stop_times if st.arrival_time >= normal_time]
+    assert isinstance(trip,TtTrip)
+    stop_times = list(trip.get_stop_times())
+    before_stop_list = [st for st in stop_times if st.exp_departure <= dt]
+    after_stop_list = [st for st in stop_times if st.exp_arrival >= dt]
     before_stop = before_stop_list[-1] if before_stop_list else None
     after_stop = after_stop_list[0] if after_stop_list else None
     # if there is no before stop, means that the train is not in the first stop
@@ -42,30 +43,18 @@ def get_expected_location(trip,dt):
         return ([after_stop.stop.stop_lat,after_stop.stop.stop_lon],[after_stop.stop.stop_lat,after_stop.stop.stop_lon])
     if not after_stop or after_stop == before_stop:
         return ([before_stop.stop.stop_lat,before_stop.stop.stop_lon],[before_stop.stop.stop_lat,before_stop.stop.stop_lon])
-    points = json.loads(ShapeJson.objects.get(shape_id=trip.shape_id).points)
+    points = trip.get_points()
     idx_before = find_closest_point_index(trip,points,lat=before_stop.stop.stop_lat,lon=before_stop.stop.stop_lon)
     idx_after = find_closest_point_index(trip,points,lat=after_stop.stop.stop_lat,lon=after_stop.stop.stop_lon)
-    delta = float(after_stop.arrival_time - before_stop.departure_time)
+    delta = (after_stop.exp_arrival - before_stop.exp_departure).total_seconds()
     if delta == 0:
         relative = 0
     else:
-        relative = (normal_time - before_stop.departure_time) / delta
+        relative = (dt - before_stop.exp_departure).total_seconds() / delta
     num_points = idx_after - idx_before
     idx_result = int(relative*num_points) +  idx_before
     result = points[idx_result]
-    fake_result = None
-    to_fake = fake_cur_location(trip) 
-    if to_fake:
-        pt_delta = (int() -5 )*10;
-        if pt_delta == 0:
-            pt_delta = 1
-        idx_fake_result = idx_result + pt_delta
-        if idx_fake_result < 0:
-            idx_fake_result = 0
-        if idx_fake_result >= len(points):
-            idx_fake_result = points[-1]
-        fake_result = points[idx_fake_result]
-    return (result,fake_result)
+    return result
     
 
 def find_closest_point_index(trip,points,lat,lon):
@@ -87,10 +76,4 @@ def do_search_in(in_station,start_time,end_time):
     stops_in_time = stop_times_in_station.filter(exp_arrival__gte=start_time,exp_arrival__lte=end_time)
     return stops_in_time
     
-
-def fake_cur_location(trip):
-    last_digit = int(trip.trip_id[-1])
-    if settings.FAKE_CUR and last_digit % 2 == 0: 
-        return True
-    return False
 

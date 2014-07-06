@@ -2,8 +2,7 @@
 	<div class="col-md-4">
 		<div class="page-header">
 			<h2>{{ 'Live Trains' | trans }} 
-				<span ng-show="isFake">[{{ 'Simulated' | trans }}]</span>
-				<span ng-hide="isFake">[{{ 'WIP' | trans }}]</span>
+				<span>[{{ 'WIP' | trans }}]</span>
 			</h2>
 			
 		</div>
@@ -40,10 +39,10 @@
 						{{stop_time.stop.stop_name | trans}}
 					</td>
 					<td>
-						 {{stop_time.arrival_time | denormalTime}}&nbsp;&nbsp;
+						 {{stop_time.exp_arrival | date:'H:mm'}}&nbsp;&nbsp;
 					</td>
 					<td>
-						 {{stop_time.departure_time | denormalTime}}
+						 {{stop_time.exp_departure| date:'H:mm' }}
 					</td>	
 				</tr>
 				</table>
