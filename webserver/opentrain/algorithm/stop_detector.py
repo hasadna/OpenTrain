@@ -236,6 +236,10 @@ def get_detected_stop_times(tracker_id):
         stop_times.append(DetectedStopTime.load_from_redis(cur))
     return stop_times
 
+def get_last_detected_stop_time(tracker_id):
+    stop_time = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
+    return stop_time
+
 def add_report(tracker_id, report):
     detector_state = DetectorState(tracker_id)
     prev_stop_id, prev_timestamp = detector_state.get_current()
@@ -271,7 +275,7 @@ def add_report(tracker_id, report):
                 if prev_state == detector_states.INITIAL:
                     pass #do nothing
                 else: # previous_state == tracker_states.STOP - need to set stop_time departure
-                    stop_time = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
+                    stop_time = get_last_detected_stop_time(tracker_id)
                     departure_unix_timestamp = unix_timestamp
                     stop_id_and_departure_time = "%s_%d" % (prev_stop_id, departure_unix_timestamp)
                     update_stop_time(tracker_id, prev_report_id, stop_time[0][1], stop_id_and_departure_time)
@@ -279,7 +283,7 @@ def add_report(tracker_id, report):
                 arrival_unix_timestamp_prev_stop = None
                 stop_id_and_departure_time_prev_stop = None
                 if (prev_state != detector_states.INITIAL and prev_state != stops.NOSTOP_ID):
-                    stop_time = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
+                    stop_time = get_last_detected_stop_time(tracker_id)
                     departure_unix_timestamp = ot_utils.dt_time_to_unix_time(prev_timestamp) 
                     stop_id_and_departure_time = "%s_%d" % (prev_stop_id, departure_unix_timestamp)
                     arrival_unix_timestamp_prev_stop = stop_time[0][1]
