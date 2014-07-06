@@ -138,11 +138,13 @@ class DetectorState(object):
         return stop_id, unix_timestamp
 
 def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id, departure_time, arrival_unix_timestamp2=None, stop_id_and_departure_time2=None, is_report_timegap=False):
+    arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(arrival_unix_timestamp)    
+    departure_time = ot_utils.dt_time_to_unix_time(departure_time) if departure_time else None
     if departure_time:
         stop_id_and_departure_time = "%s_%d" % (stop_id, departure_time)
     else:
         stop_id_and_departure_time = "%s_" % stop_id
-    arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(arrival_unix_timestamp)
+    
     print_tracked_stop_times(tracker_id)
     print 'stop', stop_id_and_departure_time.split('_')[0]
     print 'arrival', ot_utils.unix_time_to_localtime(arrival_unix_timestamp)
@@ -285,8 +287,7 @@ def add_report(tracker_id, report):
                     pass #do nothing
                 else: # previous_state == tracker_states.STOP - need to set stop_time departure
                     stop_time = get_last_detected_stop_time(tracker_id)
-                    departure_unix_timestamp = unix_timestamp
-                    stop_id_and_departure_time = "%s_%d" % (prev_stop_id, departure_unix_timestamp)
+                    departure_unix_timestamp = ot_utils.unix_time_to_localtime(unix_timestamp)
                     update_stop_time(tracker_id, prev_report_id, stop_time.arrival, prev_stop_id, departure_unix_timestamp)
             else: # current_state == tracker_states.STOP
                 arrival_unix_timestamp_prev_stop = None
