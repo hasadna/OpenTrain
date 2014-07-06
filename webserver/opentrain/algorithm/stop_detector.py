@@ -137,15 +137,28 @@ class DetectorState(object):
         unix_timestamp = self.prev_stops_and_timestamps[index_of_most_recent_previous_state][1]        
         return stop_id, unix_timestamp
 
-def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp2=None, stop_id_and_departure_time2=None):
+def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp2=None, stop_id_and_departure_time2=None, is_report_timegap=False):
+    print_tracked_stop_times(tracker_id)
+    print 'stop', stop_id_and_departure_time.split('_')[0]
+    print 'arrival', ot_utils.unix_time_to_localtime(arrival_unix_timestamp)
+    if stop_id_and_departure_time.split('_')[1]:
+        print 'departure', ot_utils.unix_time_to_localtime(int(stop_id_and_departure_time.split('_')[1]))
+    else:
+        print 'no departure'
+    if arrival_unix_timestamp2:    
+        print 'arrival2', ot_utils.unix_time_to_localtime(arrival_unix_timestamp2)
+        print 'departure2', ot_utils.unix_time_to_localtime(int(stop_id_and_departure_time2.split('_')[1]))
+    
     stop_times = get_detected_stop_times(tracker_id)
-    if len(stop_times) > 0 and stop_times[-1].stop_id == int(stop_id_and_departure_time.split('_')[0]): # if last station is same station
+    if len(stop_times) > 0 and stop_times[-1].stop_id == int(stop_id_and_departure_time.split('_')[0]) and not is_report_timegap: # if last station is same station
         arrival_timestamp = ot_utils.unix_time_to_localtime(arrival_unix_timestamp)
         if not stop_times or arrival_timestamp - stop_times[-1].arrival < config.no_stop_timegap:  # no timegap
             arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(stop_times[-1].arrival)
     prev_stops_counter_key = get_train_tracker_tracked_stops_prev_stops_counter_key(tracker_id)
     done = False
     # we try to update a stop_time only if no stop_time was updated since we started the report processing. If one was updated, we don't update at all:
+    arrival_unix_timestamp = int(arrival_unix_timestamp)
+    
     while not done:
         p.watch(prev_stops_counter_key)
         prev_stops_counter_value = cl.get(prev_stops_counter_key)
@@ -231,7 +244,8 @@ def add_report(tracker_id, report):
     if not prev_stop_id:
         prev_state = detector_states.INITIAL
     else:
-        if report.timestamp - prev_timestamp > config.no_report_timegap:
+        data = detector_state.get_prev_stop_data()
+        if report.timestamp - ot_utils.unix_time_to_localtime(data[0][-1][1]) > config.no_report_timegap:
             detector_state_transition = detector_state_transitions.NOREPORT_TIMEGAP
         prev_state = prev_stop_id
 
@@ -278,6 +292,19 @@ def add_report(tracker_id, report):
                 update_stop_time(tracker_id, prev_report_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop)
             print unix_timestamp
             prev_timestamp = ot_utils.unix_time_to_localtime(unix_timestamp)
+    elif detector_state_transition == detector_state_transitions.NOREPORT_TIMEGAP:
+        stop_time = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
+        prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
+        stop_id, unix_timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
+        arrival_unix_timestamp_prev_stop = stop_time[0][1]
+        stop_id_and_departure_time_prev_stop = "%s_%d" % (stop_id, unix_timestamp)
+        # XXX todo - take care of the case when current_state == detector_states.UNKNOWN
+        arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(report.timestamp)
+        departure_unix_timestamp = unix_timestamp
+        stop_id_and_departure_time = "%s_" % (current_state)
+        print 'NOREPORT_TIMEGAP'
+        update_stop_time(tracker_id, prev_report_id, arrival_unix_timestamp, stop_id_and_departure_time, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop, True)        
+        
 
     stop_times = get_detected_stop_times(tracker_id)
     is_stops_updated = (prev_state != current_state) and current_state != detector_states.UNKNOWN and len(stop_times) > 0
