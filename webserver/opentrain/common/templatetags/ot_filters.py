@@ -9,6 +9,13 @@ register = template.Library()
 def week_day(dt):
     return _(common.ot_utils.get_weekdayname(dt))
 
+@register.filter(name='timeonly')
+def timeonly(dt):
+    h = dt.hour
+    m = dt.minute
+    s = dt.second
+    return '%02d:%02d:%02d' % (h,m,s)
+
 @register.filter(name="nicedate")
 def nice_date(dt):
     import uuid

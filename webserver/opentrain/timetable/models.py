@@ -17,8 +17,18 @@ class TtShape(models.Model):
 class TtTrip(models.Model):
     gtfs_trip_id = models.CharField(max_length=100,unique=True,db_index=True,null=True,blank=True)
     date = models.DateTimeField(blank=True,null=True)
+    
+    def get_stop_times(self):
+        return self.ttstoptime_set.all().order_by('stop_sequence')
+    
+    def get_from_stoptime(self):
+        return self.get_stop_times().earliest('stop_sequence')
+    
+    def get_to_stoptime(self):
+        return self.get_stop_times().latest('stop_sequence')
+    
     def __unicode__(self):
-        stop_times = list(self.ttstoptime_set.all().order_by('stop_sequence'))
+        stop_times = list(self.get_stop_times())
         return 'Trip %s from %s to %s' % (self.gtfs_trip_id,stop_times[0],stop_times[-1])
         
 class TtStopTime(models.Model):

@@ -11,8 +11,8 @@
 	<tr>
 		<td>{{stop_time.stop_sequence}}</td>
 		<td>{% trans stop_time.stop.stop_name %}</td>
-		<td>{{stop_time.arrival_time | denorm_time}}</td>
-		<td>{{stop_time.departure_time | denorm_time}}</td>
+		<td>{{stop_time.exp_arrival | timeonly }}</td>
+		<td>{{stop_time.exp_departure | timeonly }}</td>
 	</tr>
 	{% endfor %}
 </table>

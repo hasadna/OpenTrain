@@ -84,6 +84,6 @@ def _build_stoptimes(new_trip,trip):
                                   exp_departure=exp_departure)
 
         new_stoptimes.append(new_stoptime)
-        TtStopTime.objects.bulk_create(new_stoptimes)
+    TtStopTime.objects.bulk_create(new_stoptimes)
 
     
