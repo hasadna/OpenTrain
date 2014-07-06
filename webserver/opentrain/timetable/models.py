@@ -9,6 +9,12 @@ class TtStop(models.Model):
         
     def __unicode__(self):
         return '%s %s' % (self.stop_name,self.gtfs_stop_id)
+    
+    def to_json(self):
+        return dict(stop_name=self.stop_name,
+                    latlon=[self.stop_lat,self.stop_lon])
+
+
 
 class TtShape(models.Model):
     gtfs_shape_id = models.CharField(max_length=100,db_index=True,unique=True)
@@ -17,15 +23,26 @@ class TtShape(models.Model):
 class TtTrip(models.Model):
     gtfs_trip_id = models.CharField(max_length=100,unique=True,db_index=True,null=True,blank=True)
     date = models.DateTimeField(blank=True,null=True)
+    from_stop = models.ForeignKey('TtStopTime',related_name='first_stop')
+    to_stop = models.ForeignKey('TtStopTime',related_name='last_stop')
+    shape = models.ForeignKey(TtShape,null=True)
     
     def get_stop_times(self):
         return self.ttstoptime_set.all().order_by('stop_sequence')
     
-    def get_from_stoptime(self):
-        return self.get_stop_times().earliest('stop_sequence')
+    def get_points(self):
+        import json
+        return json.loads(self.shape.points)
     
-    def get_to_stoptime(self):
-        return self.get_stop_times().latest('stop_sequence')
+    def to_json_full(self,with_shapes=True):
+        stop_times = self.get_stop_times()
+        stop_times_json = [st.to_json() for st in stop_times]
+        result = dict(gtfs_trip_id=self.gtfs_trip_id,
+                      stop_times=stop_times_json)
+        if with_shapes:
+            result['shapes'] = self.get_points()
+        return result
+    
     
     def __unicode__(self):
         stop_times = list(self.get_stop_times())
@@ -41,4 +58,11 @@ class TtStopTime(models.Model):
     
     def __unicode__(self):
         return '%s at %s' % (self.stop.stop_name,self.exp_arrival)
- 
+    
+    def to_json(self):
+        return dict(exp_arrival=self.exp_arrival.isoformat(),
+                    exp_departure=self.exp_departure.isoformat(),
+                    stop_sequence=self.stop_sequence,
+                    stop=self.stop.to_json()
+                    )
+    

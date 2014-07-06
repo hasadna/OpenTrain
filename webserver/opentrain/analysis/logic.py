@@ -144,10 +144,10 @@ def test4():
     assert exp_shape.shape_pt_lon == 34.80547358
  
 def get_current_trips(dt=None):
-    import gtfs.logic
+    import timetable.services
     if not dt:
         dt = common.ot_utils.get_localtime_now()
-    current_trips = gtfs.logic.get_all_trips_in_datetime(dt)
+    current_trips = timetable.services.get_all_trips_in_datetime(dt)
     result = []
     for trip in current_trips:
         trip_dict = trip.to_json_full(with_shapes=False)

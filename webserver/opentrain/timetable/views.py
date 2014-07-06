@@ -8,15 +8,17 @@ from django.core.urlresolvers import reverse
 import models
 import common.ot_utils
 import services
+
+from models import TtTrip,TtStop
  
-def show_map(req,trip_id):
+def show_map(req,gtfs_trip_id):
     ctx = dict()
     zoom_stop_id = req.GET.get('zoom_stop_id',0)
     if zoom_stop_id > 0:
-        ctx['zoom_stop'] = models.Stop.objects.get(stop_id=zoom_stop_id)
+        ctx['zoom_stop'] = TtStop.objects.get(gtfs_stop_id=zoom_stop_id)
     else:
         ctx['zoom_stop'] = None
-    ctx['trip'] = models.Trip.objects.get(trip_id=trip_id)
+    ctx['trip'] = TtTrip.objects.get(gtfs_trip_id=gtfs_trip_id)
     return render(req, 'timetable/trip_map.html', ctx)
 
 from forms import SearchInForm

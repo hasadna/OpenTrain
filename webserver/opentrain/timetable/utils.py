@@ -50,6 +50,10 @@ def build_trips(from_date=None,to_date=None):
         new_trip.shape = _get_or_build_shape(trip.shape_id)
         new_trip.save()
         _build_stoptimes(new_trip,trip)
+        stops = list(new_trip.get_stop_times())
+        new_trip.from_stop = stops[0]
+        new_trip.last_stop = stops[-1]
+        new_trip.save()
      
 def _get_or_build_shape(gtfs_shape_id):
     try:

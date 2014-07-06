@@ -3,11 +3,14 @@ import common.ot_utils
 import json
 from django.conf import settings
 from django.utils.translation import ugettext as _
-from timetable.models import TtStopTime,TtStop
+from timetable.models import TtStopTime,TtStop,TtTrip
 
 def get_stations():
     result = models.TtStop.objects.all().order_by('stop_name')
     return list(result)
+
+def get_trip(trip_id):
+    return TtTrip.objects.get(gtfs_trip_id=trip_id)
 
 def get_stations_choices():
     stations = get_stations()
@@ -18,25 +21,10 @@ def get_stations_choices():
     return tuple(result)
         
 def get_all_trips_in_datetime(dt):
-    from models import Service,Trip
-    from django.db.models import Min,Max
-    local_dt = common.ot_utils.get_localtime(dt)
-    normal_time = common.ot_utils.get_normal_time(dt) 
-    date = local_dt.date()
-    services = Service.objects.filter(start_date__gte=date,end_date__lte=date)
-    service_ids = services.values_list('service_id')
-    trips = Trip.objects.filter(service_id__in=service_ids)
-    trips = trips.annotate(total_departure_time=Min('stoptime__departure_time'),total_arrival_time=Max('stoptime__arrival_time'))
-    trips = trips.filter(total_departure_time__lte=normal_time).filter(total_arrival_time__gte=normal_time)
-    trips = trips.order_by('total_departure_time')
-    trips = trips.prefetch_related('stoptime_set','stoptime_set__stop') 
-    return trips
+    return TtTrip.objects.filter(exp_start_time__lte=dt).filter(exp_end_time__gte=dt)
 
 def get_all_trips_in_date(date):
-    from models import Service,Trip
-    services = Service.objects.filter(start_date__gte=date,end_date__lte=date)
-    service_ids = services.values_list('service_id')
-    return Trip.objects.filter(service_id__in=service_ids)
+    return TtTrip.objects.filter(date=date)
 
 def get_expected_location(trip,dt):
     from models import ShapeJson

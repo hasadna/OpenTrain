@@ -63,7 +63,7 @@ class TripIdsForDate(ApiView):
         """
     api_url = r'^trips/trips-for-date/$'
     def get(self,request):
-        import gtfs.logic
+        import timetable.services
         date = request.GET.get('date')
         today = bool(int(request.GET.get('today','0')))
         if not today and not date:
@@ -73,8 +73,8 @@ class TripIdsForDate(ApiView):
         else:
             day,month,year = date.split('/')
             dt = datetime.date(year=int(year),month=int(month),day=int(day))
-        trips = gtfs.logic.get_all_trips_in_date(dt)
-        objects=[trip.trip_id for trip in trips]
+        trips = timetable.services.get_all_trips_in_date(dt)
+        objects=[trip.gtfs_trip_id for trip in trips]
         result = dict(objects=objects,
                       meta=dict(total_count=len(objects)))
         return HttpResponse(status=200,content=json.dumps(result),content_type='application/json')
@@ -83,10 +83,10 @@ class TripDetails(ApiView):
     """ Return details for trip with id trip_id (given in url) 
         details include the points in order to draw the trip on map
     """
-    api_url = r'^trips/(?P<trip_id>\w+)/details/$'
-    def get(self,request,trip_id):
-        from gtfs.models import Trip
-        trip = Trip.objects.get(trip_id=trip_id)
+    api_url = r'^trips/(?P<gtfs_trip_id>\w+)/details/$'
+    def get(self,request,gtfs_trip_id):
+        import timetable.services
+        trip = timetable.services.get_trip(gtfs_trip_id)
         result = trip.to_json_full()
         return HttpResponse(status=200,content=json.dumps(result),content_type='application/json')
 
