@@ -2,6 +2,14 @@ from models import TtStop,TtStopTime,TtTrip
 import gtfs.models
 from timetable.models import TtShape
 import json
+from common import ot_utils
+
+def build_from_gtfs(days=31):
+    build_stops()
+    tomorrow = ot_utils.get_days_after_today(1)
+    tomorrow_plus_days = ot_utils.get_days_after_today(days)
+    clean_trips(tomorrow)
+    build_trips(tomorrow, tomorrow_plus_days)
         
 def build_stops():
     stops = gtfs.models.Stop.objects.all()
@@ -17,16 +25,13 @@ def build_stops():
             
 def clean_trips(from_date):
     if from_date:
-        qs = TtTrip.objects.filter(date__lt=from_date)
+        qs = TtTrip.objects.filter(date__gte=from_date)
     else:
         qs = TtTrip.objects.all()
     print 'Going to delete %s trips' % (qs.count())
     qs.delete()
             
-def build_trips(from_date=None,to_date=None,clean=False):
-    if clean:
-        clean_trips(from_date)
-        
+def build_trips(from_date=None,to_date=None):
     trips = gtfs.models.Trip.objects.all()        
     print 'Total number of trips: %s' % (trips.count())
     if from_date:

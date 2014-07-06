@@ -16,7 +16,7 @@ def get_all_days():
     days = models.Service.objects.all().values_list('start_date', flat=True).distinct()
     return days
 
-def get_shape():
+def get_shape(trip):
     models.Shape.objects.filter(shape_id=trip.shape_id).order_by('shape_pt_sequence')
     
 def get_shape_coords_by_trip(trip):
@@ -39,3 +39,8 @@ def print_trip_stop_times(trip_id):
     print('')
     trip.print_stoptimes()
     print('')
+   
+   
+   
+ 
+    

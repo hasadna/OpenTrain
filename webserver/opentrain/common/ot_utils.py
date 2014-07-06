@@ -31,6 +31,11 @@ def get_utc_time_underscored():
     t = datetime.datetime.utcnow()
     return t.strftime('%Y_%m_%d_%H_%M_%S')
 
+def get_days_after_today(days):
+    t = datetime.date.today()
+    timedelta = datetime.timedelta(days=days)
+    return t + timedelta
+
 
 def get_local_time_underscored():
     """ return time as underscored, to timestamp folders """
