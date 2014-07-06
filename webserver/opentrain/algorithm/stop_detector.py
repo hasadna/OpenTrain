@@ -312,10 +312,8 @@ def add_report(tracker_id, report):
         arrival_unix_timestamp_prev_stop = stop_time[0][1]
         stop_id_and_departure_time_prev_stop = "%s_%d" % (stop_id, unix_timestamp)
         # XXX todo - take care of the case when current_state == detector_states.UNKNOWN
-        arrival_unix_timestamp = report.timestamp
-        departure_unix_timestamp = unix_timestamp
         print 'NOREPORT_TIMEGAP'
-        update_stop_time(tracker_id, prev_report_id, arrival_unix_timestamp, current_state, None, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop, True)        
+        update_stop_time(tracker_id, prev_report_id, report.timestamp, current_state, None, arrival_unix_timestamp_prev_stop, stop_id_and_departure_time_prev_stop, True)        
         
 
     stop_times = get_detected_stop_times(tracker_id)
