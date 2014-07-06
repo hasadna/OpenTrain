@@ -162,8 +162,8 @@ class Trip(GTFSModel):
         stop_times = self.get_stop_times()
         print 'trip ' + self.trip_id
         for stop in stop_times:
-            arrival = common.ot_utils.db_time_to_datetime(stop.arrival_time)
-            departure = common.ot_utils.db_time_to_datetime(stop.departure_time)
+            arrival = common.ot_utils.db_time_to_datetime(stop.arrival_time, self.service.start_date)
+            departure = common.ot_utils.db_time_to_datetime(stop.departure_time, self.service.start_date)
             #delta = common.ot_utils.db_time_to_datetime(stop.departure_time-stop.arrival_time)
             arrival_str = arrival.strftime('%H:%M:%S') if arrival is not None else '--:--:--'
             departure_str = departure.strftime('%H:%M:%S') if departure is not None else '--:--:--'
