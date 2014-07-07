@@ -164,7 +164,7 @@ def get_current_location(trip):
     return load_by_key('current_trip_id:coords:%s' % (trip.gtfs_trip_id))
 
 def is_live(trip):
-    return False
+    return get_current_location(trip)
     
     
 
