@@ -29,6 +29,9 @@ def get_all_trips_in_datetime(dt):
 def get_all_trips_in_date(date):
     return TtTrip.objects.filter(date=date)
 
+def get_trips_by_day(day):
+    return get_all_trips_in_date(day)
+
 def get_expected_location(trip,dt):
     assert isinstance(trip,TtTrip)
     stop_times = list(trip.get_stop_times())
@@ -76,4 +79,31 @@ def do_search_in(in_station,start_time,end_time):
     stops_in_time = stop_times_in_station.filter(exp_arrival__gte=start_time,exp_arrival__lte=end_time)
     return stops_in_time
     
+def get_all_days():
+    return models.TtTrip.objects.all().values_list('date',flat=True).distinct()
 
+    
+def get_shape_coords_by_trip(trip):
+    assert False,'Use trip.get_points()'
+    
+def get_trip_stop_times(trip):
+    assert False,'Use trip.get_stop_times'
+    
+    
+def get_all_shapes():
+    all_shapes = list(models.TtShape.objects.all())
+    return all_shapes
+
+def get_all_stops_ordered_by_id():
+    return models.TtStop.objects.all().order_by('gtfs_stop_id')
+
+def print_trip_stop_times(trip_id):
+    trip = get_trip(trip_id)
+    print('')
+    trip.print_stoptimes()
+    print('')
+   
+   
+   
+ 
+    

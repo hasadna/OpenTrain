@@ -34,6 +34,15 @@ class TtTrip(models.Model):
         import json
         return json.loads(self.shape.points)
     
+    def print_stoptimes(self):
+        stop_times = self.get_stop_times()
+        print 'trip ' + self.gtfs_trip_id
+        for stop in stop_times:
+            arrival_str = stop.exp_arrival.strftime('%H:%M:%S') if stop.exp_arrival is not None else '--:--:--'
+            departure_str = stop.exp_departure.strftime('%H:%M:%S') if stop.exp_departure is not None else '--:--:--'
+            #delta_str =  delta.strftime('%M:%S') if departure is not None else '--:--'
+            print '%s %s %s' % (arrival_str, departure_str, stop.stop.stop_name)
+
     def to_json_full(self,with_shapes=True):
         stop_times = self.get_stop_times()
         stop_times_json = [st.to_json() for st in stop_times]
