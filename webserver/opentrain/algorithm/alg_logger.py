@@ -48,7 +48,7 @@ logger.debug('aaa')
 
 logger.addFilter(MessageExcludeFilter('qps'))
 logger.addFilter(MessageExcludeFilter('skipped because of large loc_ts_delta'))
-logger.addFilter(FilenameLineNumberExcludeFilter('stop_detector_test'))
+#logger.addFilter(FilenameLineNumberExcludeFilter('stop_detector_test'))
 #logger.addFilter(MessageIncludeFilter('No stop for bssids'))
 
 

@@ -136,7 +136,18 @@ class stop_detector_test(TestCase):
 
     def test_stop_detector_on_real_trips(self):
         
-        self._stop_detector_on_real_trip(device_id = 'ofer_995357870c491cad', trip_id = '010414_00168')
+        #self._stop_detector_on_real_trip(device_id = 'ofer_995357870c491cad', trip_id = '010414_00168')
+        #self._stop_detector_on_real_trip(device_id = 'ofer_5b464d8a30e09c06', trip_id = '010414_00168')
+        #self._stop_detector_on_real_trip(device_id = 'eran_cf56f457bf123098', trip_id = '010414_00168')
+        #self._stop_detector_on_real_trip(device_id = 'eran2_cf56f457bf123098', trip_id = '010414_00168')
+        #self._stop_detector_on_real_trip(device_id = 'ofer_d14be784eb8b6c6b', trip_id = '010414_00168')
+        #self._stop_detector_on_real_trip(device_id = 'ofer_ba71880ea2e0212f', trip_id = '010414_00168')
+        #self._stop_detector_on_real_trip(device_id = 'cfd682b654b3f479', trip_id = '010414_00168')
+        #self._stop_detector_on_real_trip(device_id = 'ofer_7f6e334080aa725f', trip_id = '010414_00168')##
+        #self._stop_detector_on_real_trip(device_id = 'eran27_8999f4c57498d973', trip_id = '010414_00168')
+        #self._stop_detector_on_real_trip(device_id = 'noam_8248e502621fa72c', trip_id = '010414_00168')
+        self._stop_detector_on_real_trip(device_id = 'ofer_207fabab5f381476', trip_id = '010414_00168')
+        
         #self._stop_detector_on_real_trip(device_id = 'ofer_b3b994f2ff17f4be', trip_id = '010414_00168')
         #self._stop_detector_on_real_trip(device_id = 'ofer_57dd77efa53ebe59', trip_id = '010414_00168')
         #self._stop_detector_on_real_trip(device_id = '992d69efe920047a', trip_id = '010414_00168')

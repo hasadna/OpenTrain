@@ -79,7 +79,8 @@ class ShapeList(dict):
 
     def query_sampled_points(self, coords, accuracies)   :
         sampled_coord_ids = query_coords(self.sampled_point_tree, coords, accuracies)
-        sampled_coord_ids = [x[0] for x in sampled_coord_ids]
+        if sampled_coord_ids and type(sampled_coord_ids[0]) == list:
+            sampled_coord_ids = [x[0] for x in sampled_coord_ids]
         sampled_coord_coords = self.sampled_point_tree.data[sampled_coord_ids]
         return sampled_coord_ids, sampled_coord_coords
 

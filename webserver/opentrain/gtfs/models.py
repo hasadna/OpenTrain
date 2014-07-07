@@ -117,8 +117,8 @@ class Trip(GTFSModel):
     #total_end_time = models.IntegerField()
         
     def __unicode__(self):
-        return self.trip_id        
-        
+        return self.trip_id
+            
 class Stop(GTFSModel):
     filename = "stops.txt"
     stop_id = models.IntegerField(primary_key=True)

@@ -118,6 +118,6 @@ class RealTimeStop(models.Model):
         except StopTime.DoesNotExist:
             print 'Did not find expected - should stop here?'
             return None
-        return common.ot_utils.db_time_to_datetime(exp_stop_time.arrival_time)
+        return common.ot_utils.db_time_to_datetime(exp_stop_time.arrival_time, self.trip.service.start_date)
 
     

@@ -89,7 +89,7 @@ class train_tracker_test(TestCase):
     def teXXXst_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010714_00115', '010714_00283'], remove_some_locations=True):
         self.test_tracker_on_mock_device(device_id, trip_ids, remove_some_locations)
         
-    def test_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010714_00115'], remove_some_locations=True):
+    def teXXXst_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010714_00115'], remove_some_locations=True):
         if not isinstance(trip_ids, list):
             trip_ids = [trip_ids]
         tracker_id = device_id
@@ -123,8 +123,11 @@ class train_tracker_test(TestCase):
         #trip_suffixes_list.append(['_00287', '_00234'])        
         #device_ids.append('992d69efe920047a') # before gtfs - 16-6
         #trip_suffixes_list.append(['_00073'])    
-        device_ids.append('ofer_995357870c491cad')
-        trip_suffixes_list.append(['_00287', '_00234'])  
+        #device_ids.append('ofer_995357870c491cad')
+        #trip_suffixes_list.append(['_00287', '_00234'])  
+        device_ids.append('ofer_207fabab5f381476')
+        trip_suffixes_list.append(['_00234', '_00271'])          
+        
 
         stop_detector_test.remove_from_redis(device_ids)
         
