@@ -37,7 +37,7 @@ class ShapeList(dict):
         import json
         for gtfs_shape in gtfs_shapes_data:
             shape_coords = json.loads(gtfs_shape.points)
-            shape = Shape(gtfs_shape.shape_id, shape_coords)
+            shape = Shape(gtfs_shape.gtfs_shape_id, shape_coords)
             self[shape.id] = shape
             self.id_list.append(shape.id)
             self.all_unique_coords.extend(shape_coords)

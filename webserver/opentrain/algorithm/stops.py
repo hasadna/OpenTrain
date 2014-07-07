@@ -33,7 +33,7 @@ class StopList(dict):
         stop_coords = []
         for i, gtfs_stop in enumerate(stops):
             coord = (gtfs_stop.stop_lat, gtfs_stop.stop_lon)
-            stop = Stop(gtfs_stop.stop_id, gtfs_stop.stop_name, coord)
+            stop = Stop(gtfs_stop.gtfs_stop_id, gtfs_stop.stop_name, coord)
             stop_coords.append(coord)
             self.id_list.append(stop.id)
             self[stop.id] = stop

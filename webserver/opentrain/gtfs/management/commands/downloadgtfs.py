@@ -36,7 +36,7 @@ class Command(BaseCommand):
                                                                            options['to_days'])
             gtfs.utils.create_all(dirname=dirname,clean=True)
             timetable.utils.build_from_gtfs(options['from_days'],options['to_days']) 
-            #gtfs.logic.clean_all()
+            gtfs.utils.clean_all()
         self.stdout.write('GTFS command completed')
         
 
