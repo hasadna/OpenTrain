@@ -19,7 +19,7 @@ from redis_intf.client import (get_redis_pipeline,
                                save_by_key)
 import stop_detector
 import trip_matcher
-import gtfs.services
+import timetable.services
 
 # Trip edge (a,b): trip a must end before trip b starts
 # They may share at most one station
@@ -141,7 +141,7 @@ def print_trips(tracker_id):
     print 'Trip count = %d' %(len(trips))
     for trip in trips:
         print "trip id: %s" % (trip)        
-        trip_stop_times = gtfs.services.get_trip_stop_times(trip)
+        trip_stop_times = timetable.services.get_trip_stop_times(trip)
         for x in trip_stop_times:
             print db_time_to_datetime(x.arrival_time), db_time_to_datetime(x.departure_time), x.stop
         print

@@ -1,4 +1,4 @@
-import gtfs.services
+import timetable.services
 import os
 import config
 import numpy as np

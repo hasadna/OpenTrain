@@ -19,7 +19,7 @@ from common.ot_utils import *
 from common import ot_utils
 import datetime
 import json
-import gtfs.services
+import timetable.services
 
 GTFS_COSTOP_MATRIX_KEY = 'gtfs:costop_matrix'
 GTFS_TRIP_DATA_KEY = 'gtfs:trip_data'
@@ -118,7 +118,7 @@ def GenerateTripData(day):
   return result
             
 def GetTripsByDay(day):
-  return gtfs.services.get_trips_by_day(day)
+  return timetable.services.get_trips_by_day(day)
 
 def GetRedisData(redis_key, day=None):
   if day:
@@ -184,7 +184,7 @@ def daterange(start_date, end_date):
     yield start_date + datetime.timedelta(n)
 
 def ReloadRedisGTFSData():
-  days = gtfs.services.get_all_days()
+  days = timetable.services.get_all_days()
   days = sorted(days)
   #days_begin_end = [_GTFSDayStrToDay('010414'), datetime.date.today()+datetime.timedelta(1)]
   #days = daterange(days_begin_end[0], days_begin_end[1])

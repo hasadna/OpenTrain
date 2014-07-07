@@ -119,7 +119,7 @@ class stop_detector_test(TestCase):
 
     def evaluate_detected_stop_times(self, device_id, trip_id):
         detected_stop_times = stop_detector.get_detected_stop_times(tracker_id=device_id)
-        gtfs_stop_times = gtfs.services.get_trip_stop_times(trip_id).values_list('stop', 'arrival_time', 'departure_time')
+        gtfs_stop_times = timetable.services.get_trip_stop_times(trip_id).values_list('stop', 'arrival_time', 'departure_time')
         acceptible_time_delta = 60 # one minute
         for detected_stop_time, gtfs_stop_time in zip(detected_stop_times, gtfs_stop_times):
             gtfs_stop_id = gtfs_stop_time[0]

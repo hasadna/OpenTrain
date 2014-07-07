@@ -4,7 +4,7 @@ export DJANGO_SETTINGS_MODULE="opentrain.settings"
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 #/home/oferb/docs/train_project/OpenTrains/webserver
-import gtfs.services
+import timetable.services
 import analysis.models
 import numpy as np
 from scipy import spatial
@@ -107,7 +107,7 @@ class train_tracker_test(TestCase):
         
         matched_trips = self.track_mock_reports(reports, tracker_id)
         for matched_trip in matched_trips:
-            gtfs.services.get_trip(matched_trip).print_stoptimes()
+            timetable.services.get_trip(matched_trip).print_stoptimes()
         self.assertEquals(len(matched_trips), len(trip_ids))        
         self.assertEquals(sorted(matched_trips), sorted(trip_ids))
         stop_detector_test.remove_from_redis(tracker_id)        
@@ -133,7 +133,7 @@ class train_tracker_test(TestCase):
             trip_suffixes = trip_suffixes_list[i]
             tracker_id, trips = self.track_device(device_id, do_preload_reports=True)
             for trip_id in trips:
-                gtfs.services.print_trip_stop_times(trip_id)
+                timetable.services.print_trip_stop_times(trip_id)
             stop_detector.print_tracked_stop_times(device_id)
             
             self.assertEquals(len(trips), len(trip_suffixes))

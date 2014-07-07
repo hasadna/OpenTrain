@@ -4,7 +4,7 @@ export DJANGO_SETTINGS_MODULE="opentrain.settings"
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 #/home/oferb/docs/train_project/OpenTrains/webserver
-import gtfs.services
+import timetable.services
 import analysis.models
 import numpy as np
 from scipy import spatial
@@ -75,7 +75,7 @@ class trip_matcher_test(TestCase):
 
     def load_trip_info_for_matcher(self, trip_id):
         day = datetime.datetime.strptime(trip_id.split('_')[0], '%d%m%y').date()
-        stop_times_gtfs = gtfs.services.get_trip_stop_times(trip_id)
+        stop_times_gtfs = timetable.services.get_trip_stop_times(trip_id)
         detected_stop_times_gtfs = [DetectedStopTime.load_from_gtfs(x, day) for x in stop_times_gtfs]      
         return detected_stop_times_gtfs, day
         
