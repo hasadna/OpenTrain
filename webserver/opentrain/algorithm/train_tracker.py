@@ -94,11 +94,11 @@ def save_stop_times_to_db(tracker_id, detected_stop_time, trip_id):
     stop_id = detected_stop_time.stop_id
     departure_time = detected_stop_time.departure
     arrival_time = detected_stop_time.arrival
-    from analysis.models import RealTimeStop
+    from analysis.models import RtStop
     try:
-        rs = RealTimeStop.objects.get(tracker_id=tracker_id,stop_id=stop_id,trip_id=trip_id)
-    except RealTimeStop.DoesNotExist:
-        rs = RealTimeStop()
+        rs = RtStop.objects.get(tracker_id=tracker_id,stop_id=stop_id,trip_id=trip_id)
+    except RtStop.DoesNotExist:
+        rs = RtStop()
     rs.tracker_id = tracker_id
     rs.trip_id = trip_id
     rs.stop_id = stop_id
