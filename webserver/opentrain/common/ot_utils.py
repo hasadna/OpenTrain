@@ -244,4 +244,16 @@ def find_lastest_in_dir(dirname):
     return None
     
     
-    
+def json_dump_dt(obj):
+    if isinstance(obj, datetime.datetime):
+        serial = obj.isoformat()
+        return serial
+
+def json_hook_dt(obj):
+    import dateutil.parser
+    if 'exp_arrival' in obj:
+        obj['exp_arrival'] = dateutil.parser.parse(obj['exp_arrival'])
+    if 'exp_departure' in obj:
+        obj['exp_departure'] = dateutil.parser.parse(obj['exp_departure'])
+        
+        

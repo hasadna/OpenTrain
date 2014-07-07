@@ -7,5 +7,4 @@ def load():
     gtfs_datastore.ReloadRedisGTFSData()
     
 if __name__ == '__main__':
-    pass
-    #load()
+    load()
