@@ -75,7 +75,6 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 	};
 	$scope.updateTripsList = function() {
         MyHttp.get('/api/1/trips/current/').success(function(data) {
-            $scope.isFake = data.meta.is_fake;
             $scope.trips = data.objects;
         });
     };
@@ -83,7 +82,6 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 		$scope.tripDatas = {};
 		$scope.trips = [];
 		MyHttp.get('/api/1/trips/current/').success(function(data) {
-			$scope.isFake = data.meta.is_fake;
 			$scope.trips = data.objects;
 			$scope.setInitialBox();
 		});
