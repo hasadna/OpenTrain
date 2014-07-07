@@ -1,7 +1,7 @@
 from django.contrib import admin
 import common.ot_utils
 import models
-"""
+
 class ReportAdmin(admin.ModelAdmin):
     list_filter = ('device_id',)
     
@@ -16,7 +16,7 @@ class NonEmptyTripFilter(admin.SimpleListFilter):
     parameter_name = 'trip'
 
     def lookups(self, request, model_admin):
-        return [(x,x) for x in models.RealTimeStop.objects.values_list('trip_id',flat=True).distinct()]
+        return [(x,x) for x in models.RtStop.objects.values_list('trip_id',flat=True).distinct()]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -24,12 +24,11 @@ class NonEmptyTripFilter(admin.SimpleListFilter):
         return queryset
 
 
-class RealTimeStopAdmin(admin.ModelAdmin):
+class RtStopAdmin(admin.ModelAdmin):
     list_filter = (NonEmptyTripFilter,)
     
-admin.site.register(models.RealTimeStop,RealTimeStopAdmin)
+admin.site.register(models.RtStop,RtStopAdmin)
 
 common.ot_utils.autoregister('analysis')
 
 
-"""

@@ -98,8 +98,8 @@ class SingleWifiReport(models.Model):
  
 class RtStop(models.Model):
     tracker_id = models.CharField(max_length=40,db_index=True)
-    trip = models.ForeignKey('timetable.Trip')
-    stop = models.ForeignKey('timetable.Stop')
+    trip = models.ForeignKey('timetable.TtTrip')
+    stop = models.ForeignKey('timetable.TtStop')
     act_arrival = models.DateTimeField()
     act_departure = models.DateTimeField(blank=True,null=True)
     class Meta:
