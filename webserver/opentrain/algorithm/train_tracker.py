@@ -136,16 +136,6 @@ def update_trips(tracker_id, day, detected_stop_times):
     save_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id), trip_delays_ids_list_of_lists)
     return trip_delays_ids_list_of_lists
 
-def print_trips(tracker_id):
-    trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id))
-    print 'Trip count = %d' %(len(trips))
-    for trip in trips:
-        print "trip id: %s" % (trip)        
-        trip_stop_times = timetable.services.get_trip_stop_times(trip)
-        for x in trip_stop_times:
-            print db_time_to_datetime(x.arrival_time), db_time_to_datetime(x.departure_time), x.stop
-        print
-
 def get_trusted_trips(trip_delays_ids_list_of_lists):
     trip_ids = []
     if not trip_delays_ids_list_of_lists:
