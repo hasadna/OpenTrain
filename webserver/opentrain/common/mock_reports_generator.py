@@ -4,7 +4,7 @@ export DJANGO_SETTINGS_MODULE="opentrain.settings"
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 #/home/oferb/docs/train_project/OpenTrains/webserver
-import gtfs.services
+import timetable.services
 import analysis.models
 import numpy as np
 import itertools
@@ -14,9 +14,9 @@ import algorithm.stops as stops
 import ot_utils
 
 def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day=None, from_stop_id=None, to_stop_id=None, nostop_percent=0.2, station_radius_in_meters=300):
-    trip = gtfs.services.get_trip(trip_id)
+    trip = timetable.services.get_trip(trip_id)
     # TODO(oferb): 
-    stop_times = gtfs.services.get_trip_stop_times(trip)
+    stop_times = trip.get_stop_times()
     if not day:
         day = ot_utils.get_localtime_now()
         print 'WARNING: Note that there may be time zone issues'
@@ -24,7 +24,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
         day = ot_utils.get_localtime(day)
     
     # filter stop times by from_stop_id and to_stop_id:
-    trip_stop_ids = [x.stop.stop_id for x in stop_times]
+    trip_stop_ids = [x.stop.gtfs_stop_id for x in stop_times]
     from_stop_ind = 0
     if from_stop_id:
         from_stop_ind = trip_stop_ids.index(from_stop_id)
@@ -32,10 +32,10 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
     if to_stop_id:
         to_stop_ind = trip_stop_ids.index(to_stop_id)+1
     stop_times = stop_times[from_stop_ind:to_stop_ind]
-    trip_stop_ids = set([x.stop.stop_id for x in stop_times])
+    trip_stop_ids = set([x.stop.gtfs_stop_id for x in stop_times])
 
     # get coords:
-    coords = gtfs.services.get_shape_coords_by_trip(trip)
+    coords = trip.get_points()
     coords = np.array(coords)
     accuracies = np.ones((len(coords),1))*ot_utils.meter_distance_to_coord_distance(station_radius_in_meters)
     
@@ -67,7 +67,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
 
     stop_id_to_stop_time_dict = {}
     for stop_time in stop_times:
-        stop_id_to_stop_time_dict[stop_time.stop.stop_id] = stop_time
+        stop_id_to_stop_time_dict[stop_time.stop.gtfs_stop_id] = stop_time
     
     from itertools import groupby
     stop_id_groups = []
@@ -92,17 +92,17 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
             group_index += 1
             if stop_id != stops.NOSTOP_ID:
                 stop_index += 1
-                interval_start = stop_times[stop_index].arrival_time
-                interval_end = stop_times[stop_index].departure_time
+                interval_start = stop_times[stop_index].exp_arrival
+                interval_end = stop_times[stop_index].exp_departure
                 #print '%s %s' % (stop_id, stop_times[stop_index].stop.stop_id)
             else:
-                interval_start = stop_times[stop_index].departure_time
-                interval_end = stop_times[stop_index+1].arrival_time
+                interval_start = stop_times[stop_index].exp_departure
+                interval_end = stop_times[stop_index+1].exp_arrival
         #print i, stop_id       
         counter += 1
         interval_ratio = float(counter)/stop_id_group_lens[group_index]
-        timestamp = int(interval_start + interval_ratio*(interval_end-interval_start))
-        timestamp = day.replace(hour=timestamp/3600, minute=timestamp % 3600 / 60, second=timestamp % 60 / 60)
+        timestamp = interval_start + datetime.timedelta(seconds=interval_ratio*(interval_end-interval_start).total_seconds())
+        #timestamp = day.replace(hour=timestamp/3600, minute=timestamp % 3600 / 60, second=timestamp % 60 / 60)
         
         report = analysis.models.Report()
         reports.append(report)
