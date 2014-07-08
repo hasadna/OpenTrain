@@ -78,5 +78,6 @@ def show_gtfs_files(req):
             zp_url = 'none'
         gtfs_files.append(dict(path=zp,
                                url=zp_url))
+        gtfs_files.sort(key=lambda x : x['path'])
     ctx['gtfs_files'] = gtfs_files
     return render(req,'timetable/gtfs_files.html',ctx)
