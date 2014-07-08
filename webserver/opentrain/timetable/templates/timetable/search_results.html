@@ -13,8 +13,12 @@
 <div class="row">
 	<table class="table-bordered table-hover table-striped col-md-6 results-table">
 		<tr>
-			<td>{% trans 'Route name' %}</td>
-			<td>{% trans result.trip.route.route_long_name %}</td>
+			<td>{% trans 'From' %}</td>
+			<td>{% trans result.trip.from_stoptime.stop.stop_name %}</td>
+		</tr>
+		<tr>
+			<td>{% trans 'To' %}</td>
+			<td>{% trans result.trip.to_stoptime.stop.stop_name %}</td>
 		</tr>
 		<tr>
 			<td>{% trans 'Trip Details' %}</td>
@@ -26,7 +30,7 @@
 				{% trans 'Trip Details' %}
 			</p>
 			<div id="trip_details_{{forloop.counter}}">
-				{% include "gtfs/trip_details.html" with trip=result.trip %}
+				{% include "timetable/trip_details.html" with trip=result.trip %}
 			</div>
 			<script type="text/javascript">
 								$(document).ready(function() {
@@ -36,23 +40,19 @@
 		</tr>
 		<tr>
 			<td>{% trans 'Trip Id' %}</td>
-			<td>{{result.trip.trip_id}}</td>
-		</tr>
-		<tr>
-			<td>{% trans 'Direction' %}</td>
-			<td>{{result.trip.direction_id | direction_to_string }}</td>
+			<td>{{result.trip.gtfs_trip_id}}</td>
 		</tr>
 		<tr>
 			<td>{% trans 'Arrives' %}</td>
-			<td>{{result.arrival_time | denorm_time }}</td>
+			<td>{{result.exp_arrival | timeonly}}</td>
 		</tr>
 		<tr>
 			<td>{% trans 'Departs' %}</td>
-			<td>{{result.departure_time | denorm_time }}</td>
+			<td>{{result.exp_departure | timeonly}}</td>
 		</tr>
 		<tr>
 			<td>{% trans 'Show on Map' %}</td>
-			<td><a target="_blank" href="/gtfs/maps/{{result.trip.trip_id}}/?zoom_stop_id={{result.stop.stop_id}}">{% trans 'Map' %}</a></td>
+			<td><a target="_blank" href="/timetable/maps/{{result.trip.gtfs_trip_id}}/?zoom_stop_id={{result.stop.gtfs_stop_id}}">{% trans 'Map' %}</a></td>
 		</tr>
 	</table>
 </div>

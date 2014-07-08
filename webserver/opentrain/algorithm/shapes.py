@@ -6,7 +6,7 @@ import config
 import numpy as np
 import copy
 from utils import *
-import gtfs.services
+import timetable.services
 
 class Shape(object):
     def __init__( self, id_, coords ) :
@@ -37,7 +37,7 @@ class ShapeList(dict):
         import json
         for gtfs_shape in gtfs_shapes_data:
             shape_coords = json.loads(gtfs_shape.points)
-            shape = Shape(gtfs_shape.shape_id, shape_coords)
+            shape = Shape(gtfs_shape.gtfs_shape_id, shape_coords)
             self[shape.id] = shape
             self.id_list.append(shape.id)
             self.all_unique_coords.extend(shape_coords)
@@ -106,4 +106,4 @@ class ShapeList(dict):
         return inds_to_keep, sampled_all_routes_tree
   
 
-all_shapes = ShapeList(list(gtfs.services.get_all_shapes()))
+all_shapes = ShapeList(list(timetable.services.get_all_shapes()))

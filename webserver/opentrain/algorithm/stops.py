@@ -6,7 +6,7 @@ import config
 import numpy as np
 import copy
 import config
-import gtfs.services
+import timetable.services
 
 from utils import *
 
@@ -26,14 +26,14 @@ class StopList(dict):
     def __init__(self) :
         super(StopList, self).__init__()
         
-        stops = gtfs.services.get_all_stops_ordered_by_id()
+        stops = timetable.services.get_all_stops_ordered_by_id()
         stops = list(stops)
         
         self.id_list = []
         stop_coords = []
         for i, gtfs_stop in enumerate(stops):
             coord = (gtfs_stop.stop_lat, gtfs_stop.stop_lon)
-            stop = Stop(gtfs_stop.stop_id, gtfs_stop.stop_name, coord)
+            stop = Stop(gtfs_stop.gtfs_stop_id, gtfs_stop.stop_name, coord)
             stop_coords.append(coord)
             self.id_list.append(stop.id)
             self[stop.id] = stop

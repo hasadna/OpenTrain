@@ -24,7 +24,7 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 			},
 		};
 		$scope.trips.forEach(function(trip) {
-			var tripId = trip.trip_id;
+			var tripId = trip.gtfs_trip_id;
 			if ($scope.input.showOnMap[tripId]) {
 				if (!$scope.tripsData[tripId]) {
 					MyHttp.get('/api/1/trips/' + tripId + '/details/').success(function(data) {
@@ -51,8 +51,8 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 			});
 			$scope.locationLayers = [];
 			$scope.trips.forEach(function(trip) {
-				if ($scope.input.showOnMap[trip.trip_id]) {
-					$scope.addTripToMap(map, trip.trip_id);
+				if ($scope.input.showOnMap[trip.gtfs_trip_id]) {
+					$scope.addTripToMap(map, trip.gtfs_trip_id);
 				};
 			});
 		});
@@ -75,7 +75,6 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 	};
 	$scope.updateTripsList = function() {
         MyHttp.get('/api/1/trips/current/').success(function(data) {
-            $scope.isFake = data.meta.is_fake;
             $scope.trips = data.objects;
         });
     };
@@ -83,7 +82,6 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 		$scope.tripDatas = {};
 		$scope.trips = [];
 		MyHttp.get('/api/1/trips/current/').success(function(data) {
-			$scope.isFake = data.meta.is_fake;
 			$scope.trips = data.objects;
 			$scope.setInitialBox();
 		});
@@ -127,7 +125,7 @@ function($scope, MyHttp, MyUtils, MyLeaflet, $timeout, leafletData, $window, $in
 		});
 		$scope.locationLayers = [];
 		objects.forEach(function(obj) {
-			var tripData = $scope.tripsData[obj.trip_id];
+			var tripData = $scope.tripsData[obj.gtfs_trip_id];
 			if (tripData) {
 				var cur = MyLeaflet.getTripMarker(obj, tripData, 'cur');
 				var exp = MyLeaflet.getTripMarker(obj, tripData, 'exp');
@@ -161,6 +159,6 @@ app.controller('TripController', ['$scope',
 function($scope) {
 	$scope.firstStopName = $scope.trip.stop_times[0].stop.stop_name;
 	$scope.lastStopName = $scope.trip.stop_times[$scope.trip.stop_times.length - 1].stop.stop_name;
-	$scope.tripId = $scope.trip.trip_id;
+	$scope.tripId = $scope.trip.gtfs_trip_id;
 	$scope.tripData = $scope.tripDatas[$scope.tripId];
 }]);

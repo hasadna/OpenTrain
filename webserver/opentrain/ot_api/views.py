@@ -25,9 +25,19 @@ class ApiView(View):
                 d = req.GET.dict()
                 d['offset'] = info['offset'] + info['limit']
                 meta['next'] = req.path + '?' + urllib.urlencode(d)
-        meta['is_fake'] = settings.FAKE_CUR
         content = dict(objects=items,meta=meta)
         return HttpResponse(content=json.dumps(content),content_type='application/json',status=200)
+    
+    def get_bool(self,key,defval=None):
+        val = self.GET.get(key,None)
+        if val is None:
+            return defval
+        val = val.lower()
+        if val == 'false':
+            return False
+        if val == 'true':
+            return True
+        return bool(int(val))
     
     def get_doc(self):
         return self.__doc__
@@ -63,9 +73,9 @@ class TripIdsForDate(ApiView):
         """
     api_url = r'^trips/trips-for-date/$'
     def get(self,request):
-        import gtfs.logic
+        import timetable.services
         date = request.GET.get('date')
-        today = bool(int(request.GET.get('today','0')))
+        today = self.get_bool('today',False)
         if not today and not date:
             raise Exception('Must have either today or date')
         if today:
@@ -73,8 +83,8 @@ class TripIdsForDate(ApiView):
         else:
             day,month,year = date.split('/')
             dt = datetime.date(year=int(year),month=int(month),day=int(day))
-        trips = gtfs.logic.get_all_trips_in_date(dt)
-        objects=[trip.trip_id for trip in trips]
+        trips = timetable.services.get_all_trips_in_date(dt)
+        objects=[trip.gtfs_trip_id for trip in trips]
         result = dict(objects=objects,
                       meta=dict(total_count=len(objects)))
         return HttpResponse(status=200,content=json.dumps(result),content_type='application/json')
@@ -83,10 +93,10 @@ class TripDetails(ApiView):
     """ Return details for trip with id trip_id (given in url) 
         details include the points in order to draw the trip on map
     """
-    api_url = r'^trips/(?P<trip_id>\w+)/details/$'
-    def get(self,request,trip_id):
-        from gtfs.models import Trip
-        trip = Trip.objects.get(trip_id=trip_id)
+    api_url = r'^trips/(?P<gtfs_trip_id>\w+)/details/$'
+    def get(self,request,gtfs_trip_id):
+        import timetable.services
+        trip = timetable.services.get_trip(gtfs_trip_id)
         result = trip.to_json_full()
         return HttpResponse(status=200,content=json.dumps(result),content_type='application/json')
 
@@ -108,7 +118,7 @@ class TripsLocation(ApiView):
             return HttpResponseBadRequest('Must specify trip_ids')
         live_trips = analysis.logic.get_trips_location(trip_ids.split(','))     
         result = dict(objects=live_trips)
-        result['meta'] = dict(is_fake=settings.FAKE_CUR)
+        result['meta'] = dict()
         return HttpResponse(content=json.dumps(result),content_type='application/json',status=200)
 
 class Devices(ApiView): 
@@ -137,4 +147,14 @@ class DeviceReports(ApiView):
         reports = analysis.logic.get_device_reports(device_id,info)
         return self._prepare_list_resp(request,reports,info)
 
+class BssidToStop(ApiView):
+    """ Returns stop info for each bssid 
+    get bssids as paramter
+    """
+    api_url = r'^analysis/bssid-info/'
+    def get(self,request):
+        bssids = self.GET.get('bssids').split(',')
+        all = self.get_bool('all',False)
+        pass
     
+     

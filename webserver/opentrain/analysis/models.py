@@ -96,28 +96,25 @@ class SingleWifiReport(models.Model):
         ts = self.timestamp.isoformat() if self.timestamp else None
         return dict(SSID=self.SSID,key=self.key,frequency=self.frequency,signal=self.signal,timestamp=ts)
  
-class RealTimeStop(models.Model):
+class RtStop(models.Model):
     tracker_id = models.CharField(max_length=40,db_index=True)
-    trip = models.ForeignKey('gtfs.Trip')
-    stop = models.ForeignKey('gtfs.Stop')
-    arrival_time = models.DateTimeField()
-    departure_time = models.DateTimeField(blank=True,null=True)
+    trip = models.ForeignKey('timetable.TtTrip')
+    stop = models.ForeignKey('timetable.TtStop')
+    act_arrival = models.DateTimeField()
+    act_departure = models.DateTimeField(blank=True,null=True)
     class Meta:
         unique_together = (('tracker_id','trip','stop'),)
         
     def __unicode__(self):
         import common.ot_utils
-        local_at = common.ot_utils.get_localtime(self.arrival_time).time().replace(microsecond=0)
+        local_at = common.ot_utils.get_localtime(self.act_arrival).time().replace(microsecond=0)
         return '%s %s @%s (exp=%s)' % (self.tracker_id,self.stop,local_at,self.get_expected())
     
     def get_expected(self):
-        from gtfs.models import StopTime
-        import common.ot_utils
+        from timetable.models import TtStopTime
         try:
-            exp_stop_time = self.trip.stoptime_set.get(stop=self.stop)
-        except StopTime.DoesNotExist:
+            exp_stop_time = self.trip.ttstoptime_set.get(stop=self.stop)
+        except TtStopTime.DoesNotExist:
             print 'Did not find expected - should stop here?'
             return None
-        return common.ot_utils.db_time_to_datetime(exp_stop_time.arrival_time, self.trip.service.start_date)
-
-    
+        return exp_stop_time.exp_arrival

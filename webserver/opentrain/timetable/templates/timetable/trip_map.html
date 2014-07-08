@@ -11,14 +11,17 @@
 	<link rel="stylesheet" href="{% static 'common/leaflet/leaflet.css' %}" />
 </head>
 <body onload="initMap()">
-	<h2>{% trans 'Trip Map for' %} {{trip.trip_id}}</h2>
-	<h2>{% trans 'From' %} {% trans trip.get_first_stop.stop_name %} {% trans 'To' %} {% trans trip.get_last_stop.stop_name %}</h2>
+	<h2>{% trans 'Trip Map for' %} {{trip.gtfs_trip_id}}</h2>
+	<h2>{% trans 'From' %} 
+		{% trans trip.from_stoptime.stop.stop_name %}
+		{% trans 'To' %} 
+		{% trans trip.to_stoptime.stop.stop_name %}</h2>
 	<div id="tripMap" style="width: 600px; height: 400px"></div>
 	<script src="{% static 'jsi18n/he/django.js' %}"></script>
 	<script src="{% static 'common/leaflet/leaflet-src.js' %}"></script>
 	<script src="{% static 'common/js/ot_map_utils.js' %}"></script>
 	<script>
-		{% include 'gtfs/trip_map.js' %}
+		{% include 'timetable/trip_map.js' %}
 	</script>
 </body>
 </html>

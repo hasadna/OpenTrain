@@ -131,23 +131,11 @@ def get_device_reports(device_id,info):
         result.append(obj.to_api_dict(full=info['full']))
     return result
      
-@common.ot_utils.benchit
-def test4():
-    import gtfs.models
-    import gtfs.logic
-    secs = 1391451464.94
-    dt = common.ot_utils.unix_time_to_localtime(secs)
-    trip_id = '030214_00089'
-    trip = gtfs.models.Trip.objects.get(trip_id=trip_id)
-    exp_shape=gtfs.logic.get_expected_location(trip, dt)
-    assert exp_shape.shape_pt_lat == 32.10497517
-    assert exp_shape.shape_pt_lon == 34.80547358
- 
 def get_current_trips(dt=None):
-    import gtfs.logic
+    import timetable.services
     if not dt:
         dt = common.ot_utils.get_localtime_now()
-    current_trips = gtfs.logic.get_all_trips_in_datetime(dt)
+    current_trips = timetable.services.get_all_trips_in_datetime(dt)
     result = []
     for trip in current_trips:
         trip_dict = trip.to_json_full(with_shapes=False)
@@ -156,17 +144,15 @@ def get_current_trips(dt=None):
     return result
  
 def get_trips_location(trip_ids):
-    import gtfs.logic
+    import timetable.services
     result = []
     dt = common.ot_utils.get_localtime_now()
-    current_trips = gtfs.models.Trip.objects.filter(trip_id__in=trip_ids)
+    current_trips = timetable.services.get_trips(trip_ids) 
     for trip in current_trips:
-        trip_id = trip.trip_id
-        (exp_shape,cur_shape)=gtfs.logic.get_expected_location(trip, dt)
-        res = dict(trip_id=trip_id,
+        trip_id = trip.gtfs_trip_id
+        exp_shape=timetable.services.get_expected_location(trip, dt)
+        res = dict(gtfs_trip_id=trip_id,
                    exp_point = exp_shape)
-        if cur_shape and settings.FAKE_CUR:
-            res['cur_point'] = cur_shape
         cur_loc = get_current_location(trip)
         if cur_loc:
             res['cur_point'] = cur_loc
@@ -175,13 +161,10 @@ def get_trips_location(trip_ids):
 
 def get_current_location(trip):
     from redis_intf.client import load_by_key
-    return load_by_key('current_trip_id:coords:%s' % (trip.trip_id))
+    return load_by_key('current_trip_id:coords:%s' % (trip.gtfs_trip_id))
 
 def is_live(trip):
-    import gtfs.logic
-    if get_current_location(trip):
-        return True
-    return gtfs.logic.fake_cur_location(trip)
+    return get_current_location(trip)
     
     
 

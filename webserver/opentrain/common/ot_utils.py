@@ -31,6 +31,11 @@ def get_utc_time_underscored():
     t = datetime.datetime.utcnow()
     return t.strftime('%Y_%m_%d_%H_%M_%S')
 
+def get_days_after_today(days):
+    t = datetime.date.today()
+    timedelta = datetime.timedelta(days=days)
+    return t + timedelta
+
 
 def get_local_time_underscored():
     """ return time as underscored, to timestamp folders """
@@ -239,4 +244,16 @@ def find_lastest_in_dir(dirname):
     return None
     
     
-    
+def json_dump_dt(obj):
+    if isinstance(obj, datetime.datetime):
+        serial = obj.isoformat()
+        return serial
+
+def json_hook_dt(obj):
+    import dateutil.parser
+    if 'exp_arrival' in obj:
+        obj['exp_arrival'] = dateutil.parser.parse(obj['exp_arrival'])
+    if 'exp_departure' in obj:
+        obj['exp_departure'] = dateutil.parser.parse(obj['exp_departure'])
+        
+        

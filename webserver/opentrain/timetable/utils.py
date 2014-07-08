@@ -2,12 +2,20 @@ from models import TtStop,TtStopTime,TtTrip
 import gtfs.models
 from timetable.models import TtShape
 import json
+from common import ot_utils
+
+def build_from_gtfs(start_offset=1,end_offset=31):
+    build_stops()
+    start_day = ot_utils.get_days_after_today(start_offset)
+    end_day = ot_utils.get_days_after_today(end_offset)
+    clean_trips(start_day)
+    build_trips(start_day, end_day)
         
 def build_stops():
     stops = gtfs.models.Stop.objects.all()
     for stop in stops:
-        if not TtStop.objects.filter(stop_id=stop.stop_id).exists():
-            new_stop = TtStop(stop_id = stop.stop_id,
+        if not TtStop.objects.filter(gtfs_stop_id=stop.stop_id).exists():
+            new_stop = TtStop(gtfs_stop_id = stop.stop_id,
                               stop_name = stop.stop_name,
                               stop_lat = stop.stop_lat,
                               stop_lon = stop.stop_lon,
@@ -17,16 +25,13 @@ def build_stops():
             
 def clean_trips(from_date):
     if from_date:
-        qs = TtTrip.objects.filter(date__lt=from_date)
+        qs = TtTrip.objects.filter(date__gte=from_date)
     else:
         qs = TtTrip.objects.all()
     print 'Going to delete %s trips' % (qs.count())
     qs.delete()
             
-def build_trips(from_date=None,to_date=None,clean=False):
-    if clean:
-        clean_trips(from_date)
-        
+def build_trips(from_date=None,to_date=None):
     trips = gtfs.models.Trip.objects.all()        
     print 'Total number of trips: %s' % (trips.count())
     if from_date:
@@ -39,12 +44,16 @@ def build_trips(from_date=None,to_date=None,clean=False):
         print 'Building trip %s/%s' % (idx,trips_count)
         trip_date = trip.service.start_date
         new_trip = TtTrip()
-        new_trip.trip_id = trip.trip_id
+        new_trip.gtfs_trip_id = trip.trip_id
         new_trip.date = trip_date
         assert trip.service.start_date == trip.service.end_date
         new_trip.shape = _get_or_build_shape(trip.shape_id)
         new_trip.save()
         _build_stoptimes(new_trip,trip)
+        stops = list(new_trip.get_stop_times())
+        new_trip.from_stoptime = stops[0]
+        new_trip.to_stoptime = stops[-1]
+        new_trip.save()
      
 def _get_or_build_shape(gtfs_shape_id):
     try:
@@ -65,13 +74,12 @@ def _build_shape(gtfs_shape_id):
     return ttshape
         
 def _build_stoptimes(new_trip,trip):
-    import common.ot_utils
     stoptimes = trip.stoptime_set.all().order_by('stop_sequence')
     new_stoptimes = []
     for stoptime in stoptimes:
-        new_stop = TtStop.objects.get(stop_id=stoptime.stop.stop_id)
-        exp_arrival = common.ot_utils.db_time_to_datetime(stoptime.arrival_time,new_trip.date)
-        exp_departure = common.ot_utils.db_time_to_datetime(stoptime.departure_time,new_trip.date)
+        new_stop = TtStop.objects.get(gtfs_stop_id=stoptime.stop.stop_id)
+        exp_arrival = ot_utils.db_time_to_datetime(stoptime.arrival_time,new_trip.date)
+        exp_departure = ot_utils.db_time_to_datetime(stoptime.departure_time,new_trip.date)
         new_stoptime = TtStopTime(stop=new_stop,
                                   stop_sequence=stoptime.stop_sequence,
                                   trip=new_trip,
@@ -79,6 +87,6 @@ def _build_stoptimes(new_trip,trip):
                                   exp_departure=exp_departure)
 
         new_stoptimes.append(new_stoptime)
-        TtStopTime.objects.bulk_create(new_stoptimes)
+    TtStopTime.objects.bulk_create(new_stoptimes)
 
     

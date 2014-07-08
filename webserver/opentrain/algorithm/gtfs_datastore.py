@@ -19,7 +19,7 @@ from common.ot_utils import *
 from common import ot_utils
 import datetime
 import json
-import gtfs.services
+import timetable.services
 
 GTFS_COSTOP_MATRIX_KEY = 'gtfs:costop_matrix'
 GTFS_TRIP_DATA_KEY = 'gtfs:trip_data'
@@ -102,29 +102,26 @@ def GenerateTripData(day):
   trips = GetTripsByDay(day)
   result = {}
   for i, trip in enumerate(trips):
-    result[trip.trip_id] = {}
-    result[trip.trip_id]['trip_id'] = trip.trip_id
-    result[trip.trip_id]['stops'] = {}
-    result[trip.trip_id]['stop_inds'] = []
-    # eran: sort locally to avoid DB access
-    #stop_times = trip.get_stop_times()
-    stop_times = list(trip.stoptime_set.all())
-    stop_times.sort(key=lambda x : x.stop_sequence)
+    result[trip.gtfs_trip_id] = {}
+    result[trip.gtfs_trip_id]['trip_id'] = trip.gtfs_trip_id
+    result[trip.gtfs_trip_id]['stops'] = {}
+    result[trip.gtfs_trip_id]['stop_inds'] = []
+    stop_times = list(trip.get_stop_times())
     for stop_time in stop_times:
-      result[trip.trip_id]['stops'][str(stop_time.stop.stop_id)] = (stop_time.stop_sequence, stop_time.arrival_time, stop_time.departure_time)
-      result[trip.trip_id]['stop_inds'].append(stops.all_stops.id_list.index(stop_time.stop.stop_id))
-      result[trip.trip_id]['start_time'] = stop_times[0].arrival_time
-      result[trip.trip_id]['end_time'] = stop_times[-1].departure_time        
+      result[trip.gtfs_trip_id]['stops'][str(stop_time.stop.gtfs_stop_id)] = (stop_time.stop_sequence, stop_time.exp_arrival, stop_time.exp_departure)
+      result[trip.gtfs_trip_id]['stop_inds'].append(stops.all_stops.id_list.index(stop_time.stop.gtfs_stop_id))
+      result[trip.gtfs_trip_id]['start_time'] = stop_times[0].exp_arrival
+      result[trip.gtfs_trip_id]['end_time'] = stop_times[-1].exp_departure
   return result
             
 def GetTripsByDay(day):
-  return gtfs.services.get_trips_by_day(day)
+  return timetable.services.get_trips_by_day(day)
 
 def GetRedisData(redis_key, day=None):
   if day:
     redis_key += ':' + _DayToDayStr(day)
   data_json = load_by_key(redis_key)
-  data = json.loads(data_json)
+  data = json.loads(data_json,object_hook=json_hook_dt)
   return data
 
 def GetCostopMatrix(day):
@@ -150,7 +147,7 @@ def GetTripData(day):
 def SetRedisData(value, redis_key, day=None):
   if day:
     redis_key += ':' + _DayToDayStr(day)
-  value_json = json.dumps(value)
+  value_json = json.dumps(value,default=json_dump_dt)
   save_by_key(redis_key, value_json)
   return value_json
 
@@ -184,7 +181,7 @@ def daterange(start_date, end_date):
     yield start_date + datetime.timedelta(n)
 
 def ReloadRedisGTFSData():
-  days = gtfs.services.get_all_days()
+  days = timetable.services.get_all_days()
   days = sorted(days)
   #days_begin_end = [_GTFSDayStrToDay('010414'), datetime.date.today()+datetime.timedelta(1)]
   #days = daterange(days_begin_end[0], days_begin_end[1])

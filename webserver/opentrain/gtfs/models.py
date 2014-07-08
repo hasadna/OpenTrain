@@ -55,21 +55,7 @@ class GTFSModel(models.Model):
             print('%s: Saved %d rows so far' % (cls.__name__,index))
             objs_to_save = []
         
-            
                     
-    def to_json(self):
-        result = dict()
-        for f in self.__class__._meta.fields:
-            jsoner = getattr(self,'json_%s' % (f.name),None)
-            if jsoner:
-                result[f.name] = jsoner()
-            else:
-                if isinstance(f,models.ForeignKey):
-                    result[f.name] = getattr(self,f.name).to_json()
-                else:
-                    result[f.name] = getattr(self,f.name)
-        return result
-            
 class Agency(GTFSModel):
     filename = "agency.txt"
     agency_id = models.IntegerField(primary_key=True,default=1,max_length=255)
@@ -130,47 +116,9 @@ class Trip(GTFSModel):
     #total_start_time = models.IntegerField()
     #total_end_time = models.IntegerField()
         
-    def get_stop_times(self):
-        return list(self.stoptime_set.all().order_by('stop_sequence'))
-        
-    def get_first_stop(self):
-        return self.get_stop_times()[0].stop
-    
-    def get_last_stop(self):
-        return self.get_stop_times()[-1].stop
-             
-    def get_shapes(self):
-        return Shape.objects.filter(shape_id=self.shape_id).order_by('shape_pt_sequence')
-    
-    def get_stop_times_qs(self):
-        return self.stoptime_set.all().order_by('stop_sequence')
-    
-    def to_json_full(self,with_shapes=True):
-        import json
-        stop_times = self.get_stop_times_qs().select_related('stop')
-        stop_times_json = [st.to_json() for st in stop_times]
-        result = dict(trip_id=self.trip_id,
-                      stop_times=stop_times_json)
-        if with_shapes:
-            result['shapes'] = json.loads(ShapeJson.objects.get(shape_id=self.shape_id).points)
-        return result
-    
     def __unicode__(self):
         return self.trip_id
-    
-    def print_stoptimes(self):
-        stop_times = self.get_stop_times()
-        print 'trip ' + self.trip_id
-        for stop in stop_times:
-            arrival = common.ot_utils.db_time_to_datetime(stop.arrival_time, self.service.start_date)
-            departure = common.ot_utils.db_time_to_datetime(stop.departure_time, self.service.start_date)
-            #delta = common.ot_utils.db_time_to_datetime(stop.departure_time-stop.arrival_time)
-            arrival_str = arrival.strftime('%H:%M:%S') if arrival is not None else '--:--:--'
-            departure_str = departure.strftime('%H:%M:%S') if departure is not None else '--:--:--'
-            #delta_str =  delta.strftime('%M:%S') if departure is not None else '--:--'
-            print '%s %s %s' % (arrival_str, departure_str, stop.stop.stop_name)
-        
-        
+            
 class Stop(GTFSModel):
     filename = "stops.txt"
     stop_id = models.IntegerField(primary_key=True)
@@ -180,10 +128,6 @@ class Stop(GTFSModel):
     stop_url = models.URLField()
     location_type = models.IntegerField()
     
-    def to_json(self):
-        return dict(stop_name=self.stop_name,
-                    latlon=[self.stop_lat,self.stop_lon])
-
     def __unicode__(self):
         return self.stop_name
 
@@ -196,13 +140,6 @@ class StopTime(GTFSModel):
     stop_sequence = models.IntegerField() 
     def set_arrival_time(self,value):
         self.arrival_time = common.ot_utils.normalize_time(value)
-        
-    def to_json(self):
-        return dict(arrival_time=self.arrival_time,
-                    departure_time=self.departure_time,
-                    stop_sequence=self.stop_sequence,
-                    stop=self.stop.to_json()
-                    )
         
     def json_arrival_time(self):
         return common.ot_utils.denormalize_time_to_string(self.arrival_time) 

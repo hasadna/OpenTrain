@@ -19,7 +19,7 @@ from redis_intf.client import (get_redis_pipeline,
                                save_by_key)
 import stop_detector
 import trip_matcher
-import gtfs.services
+import timetable.services
 
 # Trip edge (a,b): trip a must end before trip b starts
 # They may share at most one station
@@ -94,11 +94,11 @@ def save_stop_times_to_db(tracker_id, detected_stop_time, trip_id):
     stop_id = detected_stop_time.stop_id
     departure_time = detected_stop_time.departure
     arrival_time = detected_stop_time.arrival
-    from analysis.models import RealTimeStop
+    from analysis.models import RtStop
     try:
-        rs = RealTimeStop.objects.get(tracker_id=tracker_id,stop_id=stop_id,trip_id=trip_id)
-    except RealTimeStop.DoesNotExist:
-        rs = RealTimeStop()
+        rs = RtStop.objects.get(tracker_id=tracker_id,stop_id=stop_id,trip_id=trip_id)
+    except RtStop.DoesNotExist:
+        rs = RtStop()
     rs.tracker_id = tracker_id
     rs.trip_id = trip_id
     rs.stop_id = stop_id
@@ -135,16 +135,6 @@ def update_trips(tracker_id, day, detected_stop_times):
     trip_delays_ids_list_of_lists = trip_matcher.get_matched_trips(tracker_id, detected_stop_times, day)
     save_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id), trip_delays_ids_list_of_lists)
     return trip_delays_ids_list_of_lists
-
-def print_trips(tracker_id):
-    trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id))
-    print 'Trip count = %d' %(len(trips))
-    for trip in trips:
-        print "trip id: %s" % (trip)        
-        trip_stop_times = gtfs.services.get_trip_stop_times(trip)
-        for x in trip_stop_times:
-            print db_time_to_datetime(x.arrival_time), db_time_to_datetime(x.departure_time), x.stop
-        print
 
 def get_trusted_trips(trip_delays_ids_list_of_lists):
     trip_ids = []
