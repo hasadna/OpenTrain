@@ -1,0 +1,8 @@
+<h1>GTFS FILES</h1>
+{% for gf in gtfs_files %}
+<hr/>
+<ul>
+	<li><a href="{{gf.url}}">{{gf.url}}</a></li>
+</ul>
+
+{% endfor %}

@@ -60,4 +60,23 @@ class TimeTableSearchIn(View):
             return HttpResponseRedirect('%s?%s' % (url,qs))
         raise Exception('Illegal Form')
 
-
+def show_gtfs_files(req):
+    import glob
+    from django.conf import settings
+    import os.path
+    ctx = dict()
+    base_dirs = [os.path.join(settings.BASE_DIR,'tmp_data/gtfs/zip_data/'),
+                 os.path.join(settings.BASE_DIR,'tmp_data/gtfs/data')]
+    zip_files = []
+    for bd in base_dirs:
+        zip_files.extend(glob.glob(os.path.join(bd,'*/*.zip')))
+    gtfs_files = []
+    for zp in zip_files:
+        if zp.startswith(settings.BASE_DIR):
+            zp_url = zp[len(settings.BASE_DIR):].replace('tmp_data','timetable/old-gtfs-files')
+        else:
+            zp_url = 'none'
+        gtfs_files.append(dict(path=zp,
+                               url=zp_url))
+    ctx['gtfs_files'] = gtfs_files
+    return render(req,'timetable/gtfs_files.html',ctx)
