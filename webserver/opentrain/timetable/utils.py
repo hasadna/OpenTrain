@@ -8,7 +8,7 @@ def build_from_gtfs(start_offset=1,end_offset=31):
     build_stops()
     start_day = ot_utils.get_days_after_today(start_offset)
     end_day = ot_utils.get_days_after_today(end_offset)
-    clean_trips(start_day)
+    clean_trips(start_day, end_day)
     build_trips(start_day, end_day)
         
 def build_stops():
@@ -23,12 +23,9 @@ def build_stops():
             new_stop.save()
             print 'Added stop %s' % (new_stop)
             
-def clean_trips(from_date):
-    if from_date:
-        qs = TtTrip.objects.filter(date__gte=from_date)
-    else:
-        qs = TtTrip.objects.all()
-    print 'Going to delete %s trips' % (qs.count())
+def clean_trips(from_date,to_date):
+    qs = TtTrip.objects.filter(date__gte=from_date).filter(date__lte=to_date)
+    print 'Going to delete %s trips of dates %s to %s (incl)' % (qs.count(),from_date,to_date)
     qs.delete()
             
 def build_trips(from_date=None,to_date=None):
