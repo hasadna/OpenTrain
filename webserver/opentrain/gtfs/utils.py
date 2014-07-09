@@ -19,7 +19,7 @@ def download_gtfs_file(force=False,gtfs_url=None):
     if not gtfs_url:     
         ot_utils.ftp_get_file(MOT_FTP,FILE_NAME,tmp_file)
     else:
-        ot_utils.download_url(gtfs_url,tmp_file)
+        ot_utils.download_url(gtfs_url,tmp_file) 
     if not force:
         tmp_md5 = ot_utils.md5_for_file(tmp_file)
         last_dir = ot_utils.find_lastest_in_dir(GTFS_DATA_DIR)

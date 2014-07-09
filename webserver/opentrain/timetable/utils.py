@@ -3,13 +3,16 @@ import gtfs.models
 from timetable.models import TtShape
 import json
 from common import ot_utils
+import datetime
 
-def build_from_gtfs(start_offset=1,end_offset=31):
+def build_from_gtfs(start_date,days=30):
     build_stops()
-    start_day = ot_utils.get_days_after_today(start_offset)
-    end_day = ot_utils.get_days_after_today(end_offset)
-    clean_trips(start_day, end_day)
-    build_trips(start_day, end_day)
+    end_date = start_date + datetime.timedelta(days=days-1)
+    print '=' * 50
+    print 'Start day = %s' % (start_date)
+    print 'End day = %s' % (end_date)
+    clean_trips(start_date, end_date)
+    build_trips(start_date, end_date)
         
 def build_stops():
     stops = gtfs.models.Stop.objects.all()
