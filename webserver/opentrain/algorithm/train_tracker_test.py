@@ -23,7 +23,7 @@ import time
 from display_utils import *
 from export_utils import *
 import shapes
-from train_tracker import add_report, print_trips, get_trusted_trips, get_train_tracker_trip_delays_ids_list_of_lists_key
+from train_tracker import add_report, get_trusted_trips, get_train_tracker_trip_delays_ids_list_of_lists_key
 import stops
 from common.mock_reports_generator import generate_mock_reports
 from analysis.models import SingleWifiReport

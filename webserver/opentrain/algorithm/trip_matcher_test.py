@@ -20,7 +20,7 @@ import unittest
 import time
 from display_utils import *
 from export_utils import *
-from train_tracker import add_report, print_trips, get_trusted_trips
+from train_tracker import add_report, get_trusted_trips
 
 import stops
 from common.mock_reports_generator import generate_mock_reports
@@ -75,7 +75,8 @@ class trip_matcher_test(TestCase):
 
     def load_trip_info_for_matcher(self, trip_id):
         day = datetime.datetime.strptime(trip_id.split('_')[0], '%d%m%y').date()
-        stop_times_gtfs = timetable.services.get_trip_stop_times(trip_id)
+        trip = timetable.services.get_trip(trip_id)
+        stop_times_gtfs = trip.get_stop_times()
         detected_stop_times_gtfs = [DetectedStopTime.load_from_gtfs(x, day) for x in stop_times_gtfs]      
         return detected_stop_times_gtfs, day
         

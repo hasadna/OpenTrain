@@ -65,9 +65,9 @@ class DetectedStopTime(object):
 
     @staticmethod
     def load_from_gtfs(gtfs_stop_time, date):
-        arrival = ot_utils.db_time_to_datetime(gtfs_stop_time.arrival_time, date)
+        arrival = ot_utils.db_time_to_datetime(gtfs_stop_time.exp_arrival, date)
         arrival = ot_utils.get_localtime(arrival)
-        departure = ot_utils.db_time_to_datetime(gtfs_stop_time.departure_time, date)
+        departure = ot_utils.db_time_to_datetime(gtfs_stop_time.exp_departure, date)
         departure = ot_utils.get_localtime(departure)        
         return DetectedStopTime(gtfs_stop_time.stop.stop_id, arrival, departure)        
 

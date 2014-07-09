@@ -3,7 +3,7 @@ import gtfs_datastore
 import bssid_tracker
 
 def load():
-    bssid_tracker.calc_tracker()
+    #bssid_tracker.calc_tracker()
     gtfs_datastore.ReloadRedisGTFSData()
     
 if __name__ == '__main__':
