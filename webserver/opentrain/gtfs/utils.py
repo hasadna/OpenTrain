@@ -8,15 +8,18 @@ MOT_FTP = "gtfs.mot.gov.il"
 FILE_NAME = "irw_gtfs.zip"
 GTFS_DATA_DIR = os.path.join(settings.DATA_DIR,'gtfs','data')
 
-def download_gtfs_file(force=False):
+def download_gtfs_file(force=False,gtfs_url=None):
     """ download gtfs zip file from mot, and put it in DATA_DIR in its own subfolder """
     import shutil
     time_suffix = ot_utils.get_utc_time_underscored()
     if not os.path.exists(GTFS_DATA_DIR):
         ot_utils.mkdir_p(GTFS_DATA_DIR)
     tmp_file = '/tmp/%s_tmp.zip' % (time_suffix)
-    print 'downloading GTFS to tmp file'     
-    ot_utils.ftp_get_file(MOT_FTP,FILE_NAME,tmp_file)
+    print 'downloading GTFS to tmp file'
+    if not gtfs_url:     
+        ot_utils.ftp_get_file(MOT_FTP,FILE_NAME,tmp_file)
+    else:
+        ot_utils.download_url(gtfs_url,tmp_file)
     if not force:
         tmp_md5 = ot_utils.md5_for_file(tmp_file)
         last_dir = ot_utils.find_lastest_in_dir(GTFS_DATA_DIR)

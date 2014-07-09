@@ -54,6 +54,14 @@ def rmf(path):
         print 'Deleting path %s' %(path)
         shutil.rmtree(path)
     
+def download_url(url,local_path):
+    import requests
+    resp = requests.get(url)
+    with open(local_path,'w') as fh:
+        fh.write(resp.content)
+    print 'Copied %s to %s' % (url,local_path)
+    
+    
 def ftp_get_file(host,remote_name,local_path):
     """ get file remote_name from FTP host host and copied it inot local_path"""
     from ftplib import FTP

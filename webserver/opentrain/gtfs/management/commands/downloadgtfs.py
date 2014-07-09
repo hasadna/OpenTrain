@@ -22,20 +22,23 @@ class Command(BaseCommand):
                      dest='forcegtfs',
                      action='store_true',
                      default=False,
-                     help='ignore checksum check and force download gtfs')                        
+                     help='ignore checksum check and force download gtfs'),
+        make_option('--gtfs',
+                     dest='gtfs',
+                     help='gtfs url'),
         )
     def handle(self, *args, **options):
         self.stdout.write('=' * 50)
         self.stdout.write('UTC Time: %s' % (common.ot_utils.get_utc_now()))
         self.stdout.write('Starting download_gtfs_file')
-        dirname = gtfs.utils.download_gtfs_file(force=options['forcegtfs'])
+        dirname = gtfs.utils.download_gtfs_file(force=options['forcegtfs'],gtfs_url=options['gtfs'])
         if not dirname:
             print 'No new gtfs info'
         if dirname:
             print 'Building timetable info from_days = %s to_days = %s' % (options['from_days'],
                                                                            options['to_days'])
-            gtfs.utils.create_all(dirname=dirname,clean=True)
-            timetable.utils.build_from_gtfs(options['from_days'],options['to_days']) 
+            gtfs.utils.create_all(dirname=dirname, clean=True)
+            timetable.utils.build_from_gtfs(options['from_days'], options['to_days']) 
             gtfs.utils.clean_all()
         self.stdout.write('GTFS command completed')
         
