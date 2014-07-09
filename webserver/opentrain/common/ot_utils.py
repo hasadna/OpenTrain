@@ -263,5 +263,5 @@ def json_hook_dt(obj):
         obj['exp_arrival'] = dateutil.parser.parse(obj['exp_arrival'])
     if 'exp_departure' in obj:
         obj['exp_departure'] = dateutil.parser.parse(obj['exp_departure'])
-        
+    return obj
         
