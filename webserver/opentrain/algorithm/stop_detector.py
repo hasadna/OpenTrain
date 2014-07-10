@@ -98,7 +98,12 @@ class DetectorState(object):
         else:
             current_stop_id = None
             current_timestamp = None
-        return current_stop_id, current_timestamp
+        if not current_stop_id:
+            state = DetectorState.states.INITIAL   
+        else:
+            state = current_stop_id
+
+        return state, current_stop_id, current_timestamp
     
     def set_current(self, stop_id, timestamp):
         cl.set(get_train_tracker_current_stop_id_and_timestamp_key(self.tracker_id), str(stop_id) + "_" + str(timestamp))
@@ -261,16 +266,13 @@ def get_last_detected_stop_time(tracker_id):
 
 def add_report(tracker_id, report):
     detector_state = DetectorState(tracker_id)
-    prev_stop_id, prev_timestamp = detector_state.get_current()
+    prev_state, prev_stop_id, prev_timestamp = detector_state.get_current()
 
     detector_state_transition = DetectorState.transitions.NORMAL
-    if not prev_stop_id:
-        prev_state = DetectorState.states.INITIAL
-    else:
+    if prev_state != DetectorState.states.INITIAL:
         data = detector_state.get_prev_stop_data()
         if report.timestamp - ot_utils.unix_time_to_localtime(data[0][-1][1]) > config.no_report_timegap:
             detector_state_transition = DetectorState.transitions.NOREPORT_TIMEGAP
-        prev_state = prev_stop_id
 
     stop_id = try_get_stop_id(report)
     current_state = stop_id if stop_id else DetectorState.states.UNKNOWN_STOP
