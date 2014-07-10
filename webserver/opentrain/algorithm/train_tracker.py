@@ -91,21 +91,24 @@ def add_report_to_tracker(tracker_id, report):
                 save_stop_times_to_db(tracker_id, stop_time, trip_id)
 
 def save_stop_times_to_db(tracker_id, detected_stop_time, trip_id):
-    stop_id = detected_stop_time.stop_id
-    departure_time = detected_stop_time.departure
-    arrival_time = detected_stop_time.arrival
-    from analysis.models import RtStop
-    try:
-        rs = RtStop.objects.get(tracker_id=tracker_id,stop_id=stop_id,trip_id=trip_id)
-    except RtStop.DoesNotExist:
-        rs = RtStop()
-    rs.tracker_id = tracker_id
-    rs.trip_id = trip_id
-    rs.stop_id = stop_id
-    rs.arrival_time = arrival_time
-    rs.departure_time = departure_time
-    rs.save() 
-    logger.debug(str(rs))  
+    logger.warn('RtStop saving disabled!!! XXX: invalid literal for int() with base 10: ''030714_00232''')
+    pass
+
+    #stop_id = detected_stop_time.stop_id
+    #departure_time = detected_stop_time.departure
+    #arrival_time = detected_stop_time.arrival
+    #from analysis.models import RtStop
+    #try:
+        #rs = RtStop.objects.get(tracker_id=tracker_id,stop_id=stop_id,trip=trip_id)
+    #except RtStop.DoesNotExist:
+        #rs = RtStop()
+    #rs.tracker_id = tracker_id
+    #rs.trip_id = trip_id
+    #rs.stop_id = stop_id
+    #rs.arrival_time = arrival_time
+    #rs.departure_time = departure_time
+    #rs.save() 
+    #logger.debug(str(rs))  
 
 def update_coords(report, tracker_id):
     loc = report.get_my_loc()

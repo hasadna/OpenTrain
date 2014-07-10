@@ -37,7 +37,7 @@ import trip_matcher
 
 class train_tracker_test(TestCase):
 
-    def track_device(self, device_id, do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=True):
+    def track_device(self, device_id, do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=False):
         #device_coords, device_timestamps, device_accuracies_in_meters, device_accuracies_in_coords = get_location_info_from_device_id(device_id)
         now = ot_utils.get_localtime_now()
         reports_queryset = stop_detector_test.get_device_id_reports(device_id)

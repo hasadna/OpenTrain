@@ -80,7 +80,8 @@ def do_search_in(in_station,start_time,end_time):
     return stops_in_time
     
 def get_all_days():
-    return models.TtTrip.objects.all().values_list('date',flat=True).distinct()
+    dates = models.TtTrip.objects.all().values_list('date',flat=True).distinct()
+    return [common.ot_utils.get_localtime(x) for x in dates]
 
     
 def get_shape_coords_by_trip(trip):

@@ -1,4 +1,5 @@
 from django.db import models
+import common.ot_utils as ot_utils
 
 class TtStop(models.Model):
     gtfs_stop_id = models.IntegerField(db_index=True,null=True)
@@ -38,8 +39,8 @@ class TtTrip(models.Model):
         stop_times = self.get_stop_times()
         print 'trip ' + self.gtfs_trip_id
         for stop in stop_times:
-            arrival_str = stop.exp_arrival.strftime('%H:%M:%S') if stop.exp_arrival is not None else '--:--:--'
-            departure_str = stop.exp_departure.strftime('%H:%M:%S') if stop.exp_departure is not None else '--:--:--'
+            arrival_str = ot_utils.get_localtime(stop.exp_arrival).strftime('%H:%M:%S') if ot_utils.get_localtime(stop.exp_arrival) is not None else '--:--:--'
+            departure_str = ot_utils.get_localtime(stop.exp_departure).strftime('%H:%M:%S') if ot_utils.get_localtime(stop.exp_departure) is not None else '--:--:--'
             #delta_str =  delta.strftime('%M:%S') if departure is not None else '--:--'
             print '%s %s %s' % (arrival_str, departure_str, stop.stop.stop_name)
 

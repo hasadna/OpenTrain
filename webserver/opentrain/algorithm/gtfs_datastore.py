@@ -120,8 +120,25 @@ def GetTripsByDay(day):
 def GetRedisData(redis_key, day=None):
   if day:
     redis_key += ':' + _DayToDayStr(day)
+  if redis_key in redis_cache:
+    return redis_cache[redis_key]
+  
   data_json = load_by_key(redis_key)
   data = json.loads(data_json,object_hook=json_hook_dt)
+  
+  import dateutil.parser
+  if type(data) == dict:
+    for trip_id in data.keys():
+      if type(data[trip_id]) == dict and 'start_time' in data[trip_id].keys():
+        data[trip_id]['start_time'] = ot_utils.get_localtime(dateutil.parser.parse(data[trip_id]['start_time']))
+        data[trip_id]['end_time'] = ot_utils.get_localtime(dateutil.parser.parse(data[trip_id]['end_time']))
+        for stop_id in data[trip_id]['stops']:
+          stop_data = data[trip_id]['stops'][stop_id]
+          stop_data[1] = ot_utils.get_localtime(dateutil.parser.parse(stop_data[1]))
+          stop_data[2] = ot_utils.get_localtime(dateutil.parser.parse(stop_data[2]))
+          data[trip_id]['stops'][stop_id][2] = stop_data
+  
+  redis_cache[redis_key] = data
   return data
 
 def GetCostopMatrix(day):
@@ -193,6 +210,8 @@ def ReloadRedisGTFSData():
     trip_data = SetTripData(day) 
     costop_matrix = SetCostopMatrix(day, trip_data)
     SetTripStopMatrix(day, costop_matrix, trip_data)
+
+redis_cache = {}
 
 if __name__ == '__main__':
   ReloadRedisGTFSData()

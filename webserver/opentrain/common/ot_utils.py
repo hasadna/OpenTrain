@@ -263,5 +263,17 @@ def json_hook_dt(obj):
         obj['exp_arrival'] = dateutil.parser.parse(obj['exp_arrival'])
     if 'exp_departure' in obj:
         obj['exp_departure'] = dateutil.parser.parse(obj['exp_departure'])
+    
+    #if type(obj) == dict:
+        #for key in obj.keys():
+            #obj[key] = json_hook_dt(obj[key])
+    #elif type(obj) == list:
+        #obj = [json_hook_dt(x) for x in obj]
+    #elif isinstance(obj, basestring):
+        #try:
+            #obj = json_hook_dt(obj)
+        #except:
+            #pass
+        
     return obj
         

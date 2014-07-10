@@ -55,7 +55,7 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
 
         detected_stop_times_in_time_range = []
         for i, x in enumerate(detected_stop_times):
-            arrival = ot_utils.datetime_to_db_time(x.arrival.time())
+            arrival = x.arrival
             if start_time <= arrival and arrival <= end_time:
                 detected_stop_times_in_time_range.append(x)
         filtered_detected_stop_times_stop_inds = [all_stops.id_list.index(x.stop_id) for x in detected_stop_times_in_time_range]
@@ -72,7 +72,7 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
             # if checks for:
             # - stops that are detected and are in trip:
             # - stops that are in trip time range:
-            arrival = ot_utils.datetime_to_db_time(x.arrival.time())
+            arrival = x.arrival
             if x.stop_id in stops_dict and start_time <= arrival and arrival <= end_time:
                 trip_stop_tuples.append(stops_dict[x.stop_id])
                 filtered_detected_stop_times.append(x)
@@ -95,8 +95,8 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
                 for detected_stop_time in filtered_detected_stop_times:
                     stop_and_arrival_gtfs = stops_dict.get(detected_stop_time.stop_id)
                     if stop_and_arrival_gtfs:
-                        arrival_delta_seconds = stop_and_arrival_gtfs[1] - datetime_to_db_time(detected_stop_time.arrival)
-                        arrival_delta_abs_sum += abs(arrival_delta_seconds)
+                        arrival_delta_seconds = stop_and_arrival_gtfs[1] - detected_stop_time.arrival
+                        arrival_delta_abs_sum += abs(arrival_delta_seconds).total_seconds()
                 arrival_delta_abs_mean = arrival_delta_abs_sum/len(filtered_detected_stop_times_inds)
                 arrival_delta_abs_means_seconds.append(arrival_delta_abs_mean)                
     
