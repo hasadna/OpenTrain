@@ -242,13 +242,16 @@ def try_get_stop_id(report):
         # check all wifis show same station:
         if len(wifi_stops_ids) > 0 and np.all(wifi_stops_ids == wifi_stops_ids[0]):
             stop_id = wifi_stops_ids[0]
+            state = DetectorState.states.STOP            
         else:
             logger.debug('No stop for bssids: %s' % ','.join([x.key for x in wifis]))
             stop_id = None
+            state = DetectorState.states.UNKNOWN_STOP
     else:
         stop_id = stops.NOSTOP_ID
+        state = DetectorState.states.NOSTOP   
            
-    return stop_id
+    return stop_id, state
 
 def get_detected_stop_times(tracker_id):
     stop_times_redis = cl.zrange(get_train_tracker_tracked_stops_key(\
@@ -269,7 +272,7 @@ def get_last_detected_stop_time(tracker_id):
 def add_report(tracker_id, report):
     detector_state = DetectorState(tracker_id)
     prev_state, prev_stop_id, prev_timestamp = detector_state.get_current()
-    stop_id = try_get_stop_id(report)
+    stop_id, current_state2 = try_get_stop_id(report)
     current_state = stop_id if stop_id else DetectorState.states.UNKNOWN_STOP
 
     if prev_timestamp and report.timestamp - prev_timestamp > config.no_report_timegap:
