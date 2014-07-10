@@ -55,7 +55,7 @@ def find_index_of_first_consecutive_value(values, start_index):
     
     return res
 
-def get_reports_and_dates():
+def get_report_counts_and_dates():
     result = []
     device_ids = analysis.models.Report.objects.values_list('device_id', flat=True).distinct()
     for device_id in device_ids:
@@ -63,8 +63,7 @@ def get_reports_and_dates():
         report = analysis.models.Report.objects.filter(device_id=device_id).order_by('timestamp')[:1].get()
         result.append((report.timestamp.date(), count, device_id))
     result = sorted(result)
-    for x in result:
-        print x[0], x[1], x[2]
+    return result        
     
         
 

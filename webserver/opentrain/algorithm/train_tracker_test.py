@@ -35,6 +35,7 @@ import stop_detector_test
 import stop_detector
 import trip_matcher
 
+
 class train_tracker_test(TestCase):
 
     def track_device(self, device_id, do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=False):
@@ -115,14 +116,6 @@ class train_tracker_test(TestCase):
     def test_tracker_on_real_devices(self):    
         device_ids = []
         trip_suffixes_list = []
-        #device_ids.append('ofer_b3b994f2ff17f4be')
-        #trip_suffixes_list.append(['_00234'])
-        #device_ids.append('ofer_57dd77efa53ebe59') # before gtfs - 16-6
-        #trip_suffixes_list.append(['_00073'])
-        #device_ids.append('ofer_d64213d3f844903d')
-        #trip_suffixes_list.append(['_00287', '_00234'])        
-        #device_ids.append('992d69efe920047a') # before gtfs - 16-6
-        #trip_suffixes_list.append(['_00073'])    
         #device_ids.append('ofer_995357870c491cad')
         #trip_suffixes_list.append(['_00234', '_00266', '_00277'])  
         device_ids.append('ofer_207fabab5f381476')
