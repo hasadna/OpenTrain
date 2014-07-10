@@ -270,11 +270,10 @@ def add_report(tracker_id, report):
     stop_id = try_get_stop_id(report)
     current_state = stop_id if stop_id else DetectorState.states.UNKNOWN_STOP
 
-    state_transition = DetectorState.transitions.NORMAL
-    if prev_state != DetectorState.states.INITIAL:
-        data = detector_state.get_prev_stop_data()
-        if report.timestamp - prev_timestamp > config.no_report_timegap:
-            state_transition = DetectorState.transitions.NOREPORT_TIMEGAP    
+    if prev_timestamp and report.timestamp - prev_timestamp > config.no_report_timegap:
+        state_transition = DetectorState.transitions.NOREPORT_TIMEGAP
+    else:
+        state_transition = DetectorState.transitions.NORMAL
     handled = False
     if prev_state in [DetectorState.states.INITIAL, DetectorState.states.NOSTOP]:
         if current_state == DetectorState.states.NOSTOP:
