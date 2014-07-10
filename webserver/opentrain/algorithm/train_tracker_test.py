@@ -34,6 +34,7 @@ from redis_intf.client import (get_redis_pipeline,
 import stop_detector_test
 import stop_detector
 import trip_matcher
+import trip_ground_truth
 
 
 class train_tracker_test(TestCase):
@@ -116,10 +117,10 @@ class train_tracker_test(TestCase):
     def test_tracker_on_real_devices(self):    
         device_ids = []
         trip_suffixes_list = []
-        #device_ids.append('ofer_995357870c491cad')
-        #trip_suffixes_list.append(['_00234', '_00266', '_00277'])  
+        device_ids.append('ofer_995357870c491cad')
         device_ids.append('ofer_207fabab5f381476')
-        trip_suffixes_list.append(['_00234', '_00271'])          
+        for device_id in device_ids:
+            trip_suffixes_list.append(trip_ground_truth.data[device_id])
         
 
         stop_detector_test.remove_from_redis(device_ids)

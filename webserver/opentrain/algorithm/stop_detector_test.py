@@ -70,7 +70,7 @@ class stop_detector_test(TestCase):
         remove_from_redis([device_id])
         print 'done'
 
-    def _stop_detector_on_real_trip(self, device_id = '1cb87f1e', trip_id = '010414_00168', do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=True, do_show_fig=False):
+    def _stop_detector_on_real_trip(self, device_id = '1cb87f1e', do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=True, do_show_fig=False):
         remove_from_redis([device_id])
         now = ot_utils.get_localtime_now()
         reports_queryset = get_device_id_reports(device_id)
@@ -135,9 +135,7 @@ class stop_detector_test(TestCase):
                 self.assertAlmostEquals(detected_departure, gtfs_departure, msg=msg, delta=acceptible_time_delta)
 
     def test_stop_detector_on_real_trips(self):
-        
-
-        self._stop_detector_on_real_trip(device_id = 'ofer_207fabab5f381476', trip_id = '010414_00168')
+        self._stop_detector_on_real_trip(device_id = 'ofer_207fabab5f381476')
         
             
 if __name__ == '__main__':

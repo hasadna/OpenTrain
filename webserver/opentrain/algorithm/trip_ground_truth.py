@@ -106,10 +106,11 @@ data['ofer_e402a16800ea3cc9'] = []
 data['ofer_f8bb14c1c44712e9'] = []
 data['tttt_4538a4b4118a6c80'] = []
 
-#print data info:
-import utils
-report_counts_and_dates = utils.get_report_counts_and_dates()
-for x in report_counts_and_dates:
-    if x[2] in data:
-        # date, report count, bssid, gtfs_trip_ids
-        print x[0], x[1], x[2], data[x[2]]
+if __name__ == '__main__':
+    #print data info:
+    import utils
+    report_counts_and_dates = utils.get_report_counts_and_dates()
+    for x in report_counts_and_dates:
+        if x[2] in data:
+            # date, report count, bssid, gtfs_trip_ids
+            print x[0], x[1], x[2], data[x[2]]
