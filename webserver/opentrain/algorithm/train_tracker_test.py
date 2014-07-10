@@ -124,7 +124,7 @@ class train_tracker_test(TestCase):
         #device_ids.append('992d69efe920047a') # before gtfs - 16-6
         #trip_suffixes_list.append(['_00073'])    
         #device_ids.append('ofer_995357870c491cad')
-        #trip_suffixes_list.append(['_00287', '_00234'])  
+        #trip_suffixes_list.append(['_00234', '_00266', '_00277'])  
         device_ids.append('ofer_207fabab5f381476')
         trip_suffixes_list.append(['_00234', '_00271'])          
         
