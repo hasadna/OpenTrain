@@ -23,8 +23,8 @@ from alg_logger import logger
 
 HISTORY_LENGTH = 100000
 
-def get_train_tracker_current_stop_id_and_timestamp_key(tracker_id):
-    return "train_tracker:%s:current_stop_id_and_timestamp" % (tracker_id)
+def get_train_tracker_current_state_stop_id_and_timestamp_key(tracker_id):
+    return "train_tracker:%s:current_state_stop_id_and_timestamp" % (tracker_id)
 
 def get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id):
     return "train_tracker:%s:timestamp_sorted_stop_ids" % (tracker_id)
@@ -88,7 +88,7 @@ class DetectorState(object):
     
     def get_current(self):
         current_stop_id_and_timestamp = cl.get(\
-            get_train_tracker_current_stop_id_and_timestamp_key(self.tracker_id))
+            get_train_tracker_current_state_stop_id_and_timestamp_key(self.tracker_id))
         if current_stop_id_and_timestamp:
             current_stop_id = current_stop_id_and_timestamp.split("_")[0]
             current_timestamp = current_stop_id_and_timestamp.split("_")[1]
@@ -101,7 +101,7 @@ class DetectorState(object):
         return current_stop_id, current_timestamp
     
     def set_current(self, stop_id, timestamp):
-        cl.set(get_train_tracker_current_stop_id_and_timestamp_key(self.tracker_id), str(stop_id) + "_" + str(timestamp))
+        cl.set(get_train_tracker_current_state_stop_id_and_timestamp_key(self.tracker_id), str(stop_id) + "_" + str(timestamp))
     
     def get_prev_stop_data(self):
         tracker_id = self.tracker_id
