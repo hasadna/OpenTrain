@@ -31,6 +31,7 @@ import cProfile
 from stop_detector import add_report
 import stop_detector
 import display_utils
+import stop_detector_ground_truth
 
 def remove_from_redis(device_ids):
     if isinstance(device_ids, basestring):
@@ -113,6 +114,11 @@ class stop_detector_test(TestCase):
                 logger.debug(str(stop_times[-1]))
         
         stop_detector.print_tracked_stop_times(device_id)
+        detected_stop_times = stop_detector.get_detected_stop_times(device_id)
+        ground_truth_stops = stop_detector_ground_truth.data[device_id]
+        for x, y in zip(detected_stop_times, ground_truth_stops):
+            self.assertEquals(x.__str__(), y.__str__())
+        
         remove_from_redis([device_id])
         print 'done'
         return tracker_id
