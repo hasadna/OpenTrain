@@ -284,7 +284,7 @@ def print_tracked_stop_times(tracker_id):
         departure = ot_utils.unix_time_to_localtime(int(cur_0_split[1])) if cur_0_split[1] != '' else None
         print DetectedStopTime.get_str(arrival, departure, name)
 
-def try_get_stop_id(report):
+def get_state_and_stop_id(report):
     if report.is_station():
         wifis = [x for x in report.get_wifi_set_all() if x.SSID == 'S-ISRAEL-RAILWAYS']
         wifi_stops_ids = set()
@@ -298,13 +298,16 @@ def try_get_stop_id(report):
         # check all wifis show same station:
         if len(wifi_stops_ids) > 0 and np.all(wifi_stops_ids == wifi_stops_ids[0]):
             stop_id = wifi_stops_ids[0]
+            state = DetectorState.states.STOP
         else:
             logger.debug('No stop for bssids: %s' % ','.join([x.key for x in wifis]))
             stop_id = None
+            state = DetectorState.states.UNKNOWN_STOP
     else:
         stop_id = stops.NOSTOP_ID
+        state = DetectorState.states.NOSTOP
            
-    return stop_id
+    return state, stop_id
 
 def get_detected_stop_times(tracker_id):
     stop_times_redis = cl.zrange(get_train_tracker_tracked_stops_key(\
@@ -334,17 +337,13 @@ def add_report(tracker_id, report):
     else:
         detector_state_transition = DetectorState.transitions.NORMAL
 
-    stop_id = try_get_stop_id(report)
-    state = stop_id if stop_id else DetectorState.states.UNKNOWN_STOP
-    if state == stops.NOSTOP_ID:
-        state = DetectorState.states.NOSTOP
+    state, stop_id = get_state_and_stop_id(report)
     if state != DetectorState.states.UNKNOWN_STOP:
         timestamp = report.get_timestamp_israel_time()
         prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
         detector_state.set_current(state, stop_id, timestamp)
         
         if prev_stop_id != stop_id:
-
             prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
     
             if state == DetectorState.states.NOSTOP:
@@ -356,23 +355,23 @@ def add_report(tracker_id, report):
                     stop_time = get_last_detected_stop_time(tracker_id)
                     end_stop_time(tracker_id, prev_report_id, prev_stop_id, stop_time.arrival, timestamp)
             else: # current_state == tracker_states.STOP
-                arrival_unix_timestamp_prev_stop = None
+                arrival_time_prev_stop = None
                 stop_id_prev_stop = None
                 departure_time_prev_stop = None
                 if (prev_state != DetectorState.states.INITIAL and prev_state != DetectorState.states.NOSTOP):
                     stop_time = get_last_detected_stop_time(tracker_id)
                     departure_time_prev_stop = prev_timestamp
-                    arrival_unix_timestamp_prev_stop = stop_time.arrival
+                    arrival_time_prev_stop = stop_time.arrival
                 stop_id, timestamp = detector_state.get_oldest_current_state_data(detector_state_transition)
 
-                if arrival_unix_timestamp_prev_stop == None:
+                if arrival_time_prev_stop == None:
                     start_stop_time(tracker_id, prev_report_id, stop_id, 
                                  timestamp)
                 else:
                     end_stop_time_then_start_stop_time(tracker_id, 
                                                       prev_report_id, 
                                                       stop_id, 
-                                                      arrival_unix_timestamp_prev_stop,
+                                                      arrival_time_prev_stop,
                                                       timestamp,
                                                       stop_id, 
                                                       departure_time_prev_stop)
