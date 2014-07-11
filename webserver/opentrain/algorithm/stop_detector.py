@@ -333,9 +333,10 @@ def add_report(tracker_id, report):
     detector_state = DetectorState(tracker_id)
     prev_state, prev_stop_id, prev_timestamp = detector_state.get_current()
 
-    detector_state_transition = DetectorState.transitions.NORMAL
     if prev_timestamp and report.timestamp - prev_timestamp > config.no_report_timegap:
         detector_state_transition = DetectorState.transitions.NOREPORT_TIMEGAP
+    else:
+        detector_state_transition = DetectorState.transitions.NORMAL
 
     stop_id = try_get_stop_id(report)
     current_state = stop_id if stop_id else DetectorState.states.UNKNOWN_STOP
@@ -343,10 +344,7 @@ def add_report(tracker_id, report):
     if current_state != DetectorState.states.UNKNOWN_STOP:
         timestamp = report.get_timestamp_israel_time()
         prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
-    prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
-    current_state = stops.all_stops.id_list[prev_stop_int_ids[-1]]
     detector_state.set_current(current_state, timestamp)
-
 
     if current_state != DetectorState.states.UNKNOWN_STOP and prev_state != current_state:
 
