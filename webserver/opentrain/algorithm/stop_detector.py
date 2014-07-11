@@ -4,6 +4,7 @@ import config
 import numpy as np
 import stops
 import shapes
+import dateutil
 from utils import *
 from common.ot_utils import *
 from common import ot_utils
@@ -20,6 +21,7 @@ from redis_intf.client import (get_redis_pipeline,
 from utils import enum
 from redis import WatchError
 from alg_logger import logger
+import json
 
 HISTORY_LENGTH = 100000
 
@@ -90,23 +92,17 @@ class DetectorState(object):
         redis_data = cl.get(\
             get_train_tracker_current_state_stop_id_and_timestamp_key(self.tracker_id))
         if redis_data:
-            stop_id = redis_data.split("_")[0]
-            timestamp = redis_data.split("_")[1]
-            stop_id = int(stop_id)
-            timestamp = float(timestamp)
-            timestamp = ot_utils.unix_time_to_localtime(timestamp)
+            (state, stop_id, timestamp) = json.loads(redis_data)
+            timestamp = ot_utils.isoformat_to_localtime(timestamp)
         else:
             stop_id = None
             timestamp = None
-        if not stop_id:
             state = DetectorState.states.INITIAL   
-        else:
-            state = stop_id
 
         return state, stop_id, timestamp
     
-    def set_current(self, stop_id, timestamp):
-        cl.set(get_train_tracker_current_state_stop_id_and_timestamp_key(self.tracker_id), str(stop_id) + "_" + str(ot_utils.dt_time_to_unix_time(timestamp)))
+    def set_current(self, state, stop_id, timestamp):
+        cl.set(get_train_tracker_current_state_stop_id_and_timestamp_key(self.tracker_id), json.dumps((state, stop_id, timestamp.isoformat())))
     
     def get_prev_stop_data(self):
         tracker_id = self.tracker_id
@@ -344,7 +340,7 @@ def add_report(tracker_id, report):
     if state != DetectorState.states.UNKNOWN_STOP:
         timestamp = report.get_timestamp_israel_time()
         prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
-        detector_state.set_current(state, timestamp)
+        detector_state.set_current(state, stop_id, timestamp)
         
         if prev_stop_id != stop_id:
 

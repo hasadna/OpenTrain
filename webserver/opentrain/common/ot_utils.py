@@ -1,10 +1,14 @@
 import datetime
+import dateutil
 import zipfile
 import os
 import time
 from django.conf import settings
 from django.utils import timezone
 import pytz
+
+def isoformat_to_localtime(isoformat):
+    return get_localtime(dateutil.parser.parse(isoformat))
 
 def datetime_to_db_time(adatetime):
     if adatetime.hour < 3: # if it's a night train, add 24 hours:
