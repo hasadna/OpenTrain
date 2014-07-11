@@ -23,8 +23,8 @@ from alg_logger import logger
 
 HISTORY_LENGTH = 100000
 
-def get_train_tracker_current_stop_id_and_timestamp_key(tracker_id):
-    return "train_tracker:%s:current_stop_id_and_timestamp" % (tracker_id)
+def get_train_tracker_current_state_stop_id_and_timestamp_key(tracker_id):
+    return "train_tracker:%s:current_state_stop_id_and_timestamp" % (tracker_id)
 
 def get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id):
     return "train_tracker:%s:timestamp_sorted_stop_ids" % (tracker_id)
@@ -87,26 +87,26 @@ class DetectorState(object):
         self.tracker_id = tracker_id
     
     def get_current(self):
-        current_stop_id_and_timestamp = cl.get(\
-            get_train_tracker_current_stop_id_and_timestamp_key(self.tracker_id))
-        if current_stop_id_and_timestamp:
-            current_stop_id = current_stop_id_and_timestamp.split("_")[0]
-            current_timestamp = current_stop_id_and_timestamp.split("_")[1]
-            current_stop_id = int(current_stop_id)
-            current_timestamp = float(current_timestamp)
-            current_timestamp = ot_utils.unix_time_to_localtime(current_timestamp)
+        redis_data = cl.get(\
+            get_train_tracker_current_state_stop_id_and_timestamp_key(self.tracker_id))
+        if redis_data:
+            stop_id = redis_data.split("_")[0]
+            timestamp = redis_data.split("_")[1]
+            stop_id = int(stop_id)
+            timestamp = float(timestamp)
+            timestamp = ot_utils.unix_time_to_localtime(timestamp)
         else:
-            current_stop_id = None
-            current_timestamp = None
-        if not current_stop_id:
+            stop_id = None
+            timestamp = None
+        if not stop_id:
             state = DetectorState.states.INITIAL   
         else:
-            state = current_stop_id
+            state = stop_id
 
-        return state, current_stop_id, current_timestamp
+        return state, stop_id, timestamp
     
     def set_current(self, stop_id, timestamp):
-        cl.set(get_train_tracker_current_stop_id_and_timestamp_key(self.tracker_id), str(stop_id) + "_" + str(timestamp))
+        cl.set(get_train_tracker_current_state_stop_id_and_timestamp_key(self.tracker_id), str(stop_id) + "_" + str(timestamp))
     
     def get_prev_stop_data(self):
         tracker_id = self.tracker_id
@@ -269,6 +269,9 @@ def get_last_detected_stop_time(tracker_id):
         return None
     return DetectedStopTime.load_from_redis(redis_stop_time)
 
+#TODO: Add state to detector_state.get_current and set_current
+#      Use state and stop_id and not just stop_id
+#      Remove all unix timestamps and replace with human-readible timestamps
 def add_report(tracker_id, report):
     detector_state = DetectorState(tracker_id)
     prev_state, prev_stop_id, prev_timestamp = detector_state.get_current()
@@ -288,7 +291,6 @@ def add_report(tracker_id, report):
         timestamp = report.get_timestamp_israel_time()
         prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
     
-        # calculate hmm to get state_sequence, update stop_times and current_stop if needed
         if  current_state != DetectorState.states.UNKNOWN_STOP and prev_state != current_state:
     
             detector_state.set_current(current_state, str(ot_utils.dt_time_to_unix_time(timestamp)))
