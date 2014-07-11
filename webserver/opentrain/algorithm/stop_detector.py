@@ -339,21 +339,18 @@ def add_report(tracker_id, report):
         detector_state_transition = DetectorState.transitions.NORMAL
 
     stop_id = try_get_stop_id(report)
-    current_state = stop_id if stop_id else DetectorState.states.UNKNOWN_STOP
+    state = stop_id if stop_id else DetectorState.states.UNKNOWN_STOP
 
-    if current_state != DetectorState.states.UNKNOWN_STOP:
+    if state != DetectorState.states.UNKNOWN_STOP:
         timestamp = report.get_timestamp_israel_time()
         prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
-    detector_state.set_current(current_state, timestamp)
+        detector_state.set_current(state, timestamp)
+        
+        if prev_stop_id != stop_id:
 
-    if current_state != DetectorState.states.UNKNOWN_STOP and prev_state != current_state:
-
-        prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
-
-
-
-        if prev_state != current_state: # change in state
-            if current_state == stops.NOSTOP_ID:
+            prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
+    
+            if state == stops.NOSTOP_ID:
                 stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
 
                 if prev_state == DetectorState.states.INITIAL:
@@ -372,28 +369,28 @@ def add_report(tracker_id, report):
                 stop_id, timestamp = detector_state.get_oldest_current_state_data(detector_state_transition)
 
                 if arrival_unix_timestamp_prev_stop == None:
-                    start_stop_time(tracker_id, prev_report_id, current_state, 
+                    start_stop_time(tracker_id, prev_report_id, stop_id, 
                                  timestamp)
                 else:
                     end_stop_time_then_start_stop_time(tracker_id, 
                                                       prev_stop_id, 
-                                                      current_state, 
+                                                      stop_id, 
                                                       timestamp, 
                                                       arrival_unix_timestamp_prev_stop,
                                                       prev_stop_id, 
                                                       departure_time_prev_stop)
             prev_timestamp = timestamp
-    elif detector_state_transition == DetectorState.transitions.NOREPORT_TIMEGAP:
-        stop_time = get_last_detected_stop_time(tracker_id)
-        prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
-        stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
-        # XXX todo - take care of the case when current_state == DetectorState.states.UNKNOWN
-        print 'NOREPORT_TIMEGAP'
-        update_stop_time(tracker_id, prev_report_id, report.timestamp, current_state, None, stop_time.arrival, stop_id, ot_utils.dt_time_to_unix_time(timestamp), True)        
+        elif detector_state_transition == DetectorState.transitions.NOREPORT_TIMEGAP:
+            stop_time = get_last_detected_stop_time(tracker_id)
+            prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
+            stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
+            # XXX todo - take care of the case when current_state == DetectorState.states.UNKNOWN
+            print 'NOREPORT_TIMEGAP'
+            update_stop_time(tracker_id, prev_report_id, report.timestamp, stop_id, None, stop_time.arrival, stop_id, ot_utils.dt_time_to_unix_time(timestamp), True)        
         
 
     stop_times = get_detected_stop_times(tracker_id)
-    is_stops_updated = (prev_state != current_state) and current_state != DetectorState.states.UNKNOWN_STOP and len(stop_times) > 0
+    is_stops_updated = (prev_stop_id != stop_id) and state != DetectorState.states.UNKNOWN_STOP and len(stop_times) > 0
     return stop_times, is_stops_updated
 
 
