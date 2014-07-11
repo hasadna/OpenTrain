@@ -331,59 +331,65 @@ def get_last_detected_stop_time(tracker_id):
 def add_report(tracker_id, report):
     detector_state = DetectorState(tracker_id)
     prev_state, prev_stop_id, prev_timestamp = detector_state.get_current()
-
+    state, stop_id = get_state_and_stop_id(report)
     if prev_timestamp and report.timestamp - prev_timestamp > config.no_report_timegap:
         detector_state_transition = DetectorState.transitions.NOREPORT_TIMEGAP
     else:
         detector_state_transition = DetectorState.transitions.NORMAL
 
-    state, stop_id = get_state_and_stop_id(report)
-    if state != DetectorState.states.UNKNOWN_STOP:
-        timestamp = report.get_timestamp_israel_time()
-        prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
-        detector_state.set_current(state, stop_id, timestamp)
+    handled = False
+    if prev_state in [DetectorState.states.INITIAL, DetectorState.states.NOSTOP]:
+        if state == DetectorState.states.NOSTOP:
+            handled = True
+
+    if not handled:    
+
+        if state != DetectorState.states.UNKNOWN_STOP:
+            timestamp = report.get_timestamp_israel_time()
+            prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
+            detector_state.set_current(state, stop_id, timestamp)
+            
+            if prev_stop_id != stop_id:
+                prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
         
-        if prev_stop_id != stop_id:
-            prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
+                if state == DetectorState.states.NOSTOP:
+                    stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
     
-            if state == DetectorState.states.NOSTOP:
+                    if prev_state == DetectorState.states.INITIAL:
+                        pass #do nothing
+                    else: # previous_state == tracker_states.STOP - need to set stop_time departure
+                        stop_time = get_last_detected_stop_time(tracker_id)
+                        end_stop_time(tracker_id, prev_report_id, prev_stop_id, stop_time.arrival, timestamp)
+                else: # current_state == tracker_states.STOP
+                    arrival_time_prev_stop = None
+                    stop_id_prev_stop = None
+                    departure_time_prev_stop = None
+                    if (prev_state != DetectorState.states.INITIAL and prev_state != DetectorState.states.NOSTOP):
+                        stop_time = get_last_detected_stop_time(tracker_id)
+                        departure_time_prev_stop = prev_timestamp
+                        arrival_time_prev_stop = stop_time.arrival
+                    stop_id, timestamp = detector_state.get_oldest_current_state_data(detector_state_transition)
+    
+                    if arrival_time_prev_stop == None:
+                        start_stop_time(tracker_id, prev_report_id, stop_id, 
+                                     timestamp)
+                    else:
+                        end_stop_time_then_start_stop_time(tracker_id, 
+                                                          prev_report_id, 
+                                                          stop_id, 
+                                                          arrival_time_prev_stop,
+                                                          timestamp,
+                                                          stop_id, 
+                                                          departure_time_prev_stop)
+                prev_timestamp = timestamp
+            elif detector_state_transition == DetectorState.transitions.NOREPORT_TIMEGAP:
+                stop_time = get_last_detected_stop_time(tracker_id)
+                prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
                 stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
-
-                if prev_state == DetectorState.states.INITIAL:
-                    pass #do nothing
-                else: # previous_state == tracker_states.STOP - need to set stop_time departure
-                    stop_time = get_last_detected_stop_time(tracker_id)
-                    end_stop_time(tracker_id, prev_report_id, prev_stop_id, stop_time.arrival, timestamp)
-            else: # current_state == tracker_states.STOP
-                arrival_time_prev_stop = None
-                stop_id_prev_stop = None
-                departure_time_prev_stop = None
-                if (prev_state != DetectorState.states.INITIAL and prev_state != DetectorState.states.NOSTOP):
-                    stop_time = get_last_detected_stop_time(tracker_id)
-                    departure_time_prev_stop = prev_timestamp
-                    arrival_time_prev_stop = stop_time.arrival
-                stop_id, timestamp = detector_state.get_oldest_current_state_data(detector_state_transition)
-
-                if arrival_time_prev_stop == None:
-                    start_stop_time(tracker_id, prev_report_id, stop_id, 
-                                 timestamp)
-                else:
-                    end_stop_time_then_start_stop_time(tracker_id, 
-                                                      prev_report_id, 
-                                                      stop_id, 
-                                                      arrival_time_prev_stop,
-                                                      timestamp,
-                                                      stop_id, 
-                                                      departure_time_prev_stop)
-            prev_timestamp = timestamp
-        elif detector_state_transition == DetectorState.transitions.NOREPORT_TIMEGAP:
-            stop_time = get_last_detected_stop_time(tracker_id)
-            prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
-            stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
-            # XXX todo - take care of the case when current_state == DetectorState.states.UNKNOWN
-            print 'NOREPORT_TIMEGAP'
-            update_stop_time(tracker_id, prev_report_id, report.timestamp, stop_id, None, stop_time.arrival, stop_id, ot_utils.dt_time_to_unix_time(timestamp), True)        
-        
+                # XXX todo - take care of the case when current_state == DetectorState.states.UNKNOWN
+                print 'NOREPORT_TIMEGAP'
+                update_stop_time(tracker_id, prev_report_id, report.timestamp, stop_id, None, stop_time.arrival, stop_id, ot_utils.dt_time_to_unix_time(timestamp), True)        
+            
 
     stop_times = get_detected_stop_times(tracker_id)
     is_stops_updated = (prev_stop_id != stop_id) and state != DetectorState.states.UNKNOWN_STOP and len(stop_times) > 0
