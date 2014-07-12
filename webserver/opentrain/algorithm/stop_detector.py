@@ -284,7 +284,19 @@ def add_report(tracker_id, report):
     if prev_state in [DetectorState.states.INITIAL, DetectorState.states.NOSTOP]:
         if state == DetectorState.states.NOSTOP:
             handled = True
+        elif state == DetectorState.states.STOP:
+            handled = True
+            timestamp = report.get_timestamp_israel_time()
+            prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
+            detector_state.set_current(state, stop_id, timestamp)            
+            prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
 
+            stop_id, timestamp = detector_state.get_oldest_current_state_data(detector_state_transition)
+
+            start_stop_time(tracker_id, prev_report_id, stop_id, 
+                           timestamp)
+            
+            
     if not handled:    
 
         if state != DetectorState.states.UNKNOWN_STOP:
