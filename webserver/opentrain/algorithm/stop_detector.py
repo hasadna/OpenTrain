@@ -26,10 +26,6 @@ def get_train_tracker_current_state_stop_id_and_timestamp_key(tracker_id):
     return 'train_tracker:%s:current_state_stop_id_and_timestamp' % (tracker_id)
 
 
-def get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id):
-    return 'train_tracker:%s:timestamp_sorted_stop_ids' % (tracker_id)
-
-
 def get_train_tracker_tracked_stops_key(tracker_id):
     return 'train_tracker:%s:tracked_stops' % (tracker_id)
 
@@ -117,18 +113,17 @@ class DetectorState(object):
     transitions = enum(NORMAL='normal', NOREPORT_TIMEGAP='noreport_timegap')
 
 
-def end_stop_time(tracker_id, prev_stop_id, stop_id, arrival_timestamp, departure_timestamp):
-    update_stop_time(tracker_id, prev_stop_id, arrival_timestamp,
-                     stop_id, departure_timestamp)
+def end_stop_time(tracker_id, report_id, stop_id, arrival_time, departure_time):
+    update_stop_time(tracker_id, report_id, arrival_time, stop_id, departure_time)
 
 
-def end_stop_time_then_start_stop_time(tracker_id, prev_stop_id, stop_id, arrival_timestamp, departure_timestamp, stop_id2, arrival_timestamp2):
-    update_stop_time(tracker_id, prev_stop_id, arrival_timestamp,
-                     stop_id, departure_timestamp, arrival_timestamp2, stop_id2)
+def end_stop_time_then_start_stop_time(tracker_id, report_id, stop_id, arrival_time, departure_time, stop_id2, arrival_time2):
+    update_stop_time(tracker_id, report_id, arrival_time,
+                     stop_id, departure_time, arrival_time2, stop_id2)
 
 
-def start_stop_time(tracker_id, prev_stop_id, stop_id, arrival_timestamp):
-    update_stop_time(tracker_id, prev_stop_id, arrival_timestamp,
+def start_stop_time(tracker_id, report_id, stop_id, arrival_time):
+    update_stop_time(tracker_id, report_id, arrival_time,
                      stop_id, None)
 
 
@@ -225,9 +220,9 @@ def get_report_data(report):
     return state, stop_id, timestamp
 
 
-def get_detected_stop_times(tracker_id):
+def get_detected_stop_times(tracker_id, last_n=0):
     stop_times_redis = cl.zrange(get_train_tracker_tracked_stops_key(
-        tracker_id), 0, -1, withscores=True)
+        tracker_id), last_n*-1, -1, withscores=True)
     stop_times = []
     for cur in stop_times_redis:
         stop_times.append(DetectedStopTime.load_from_redis(cur))
@@ -235,10 +230,9 @@ def get_detected_stop_times(tracker_id):
 
 
 def get_last_detected_stop_time(tracker_id):
-    redis_stop_time = cl.zrange(
-        get_train_tracker_tracked_stops_key(tracker_id), -1, -1, withscores=True)
-    if len(redis_stop_time) > 0:
-        return DetectedStopTime.load_from_redis(redis_stop_time[0])
+    stop_times = get_detected_stop_times(tracker_id, last_n=1)
+    if len(stop_times) > 0:
+        return stop_times[0]
     else:
         return None
 
