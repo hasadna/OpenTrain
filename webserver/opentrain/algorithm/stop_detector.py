@@ -22,21 +22,21 @@ HISTORY_LENGTH = 100000
 ISRAEL_RAILWAYS_SSID = 'S-ISRAEL-RAILWAYS'
 
 
-def get_train_tracker_current_state_stop_id_and_timestamp_key(tracker_id):
-    return 'train_tracker:%s:current_state_stop_id_and_timestamp' % (tracker_id)
+def get_train_tracker_data_key(tracker_id):
+    return 'train_tracker:%s:data' % (tracker_id)
 
 
-def get_train_tracker_tracked_stops_key(tracker_id):
-    return 'train_tracker:%s:tracked_stops' % (tracker_id)
+def get_train_tracker_tracked_stop_times_key(tracker_id):
+    return 'train_tracker:%s:tracked_stop_times' % (tracker_id)
 
 
-def get_train_tracker_tracked_stops_prev_stops_counter_key(tracker_id):
-    return 'train_tracker:%s:tracked_stops:prev_stops_counter' % \
-           (tracker_id)
+# This key is used for the check-and-set transaction:
+def get_train_tracker_report_id_key(tracker_id):
+    return 'train_tracker:%s:report_id' % (tracker_id)
 
-
-def get_train_tracker_prev_stops_counter_key(tracker_id):
-    return 'train_tracker:%s:prev_stops_counter' % (tracker_id)
+# This key is used for the check-and-set transaction:
+def get_train_tracker_updated_report_id_key(tracker_id):
+    return 'train_tracker:%s:updated_report_id' % (tracker_id)
 
 
 class DetectedStopTime(object):
@@ -91,7 +91,7 @@ class DetectorState(object):
 
     def get_current(self):
         redis_data = cl.get(
-            get_train_tracker_current_state_stop_id_and_timestamp_key(self.tracker_id))
+            get_train_tracker_data_key(self.tracker_id))
         if redis_data:
             (state, stop_id, timestamp) = json.loads(redis_data)
             timestamp = ot_utils.isoformat_to_localtime(timestamp)
@@ -103,7 +103,7 @@ class DetectorState(object):
         return state, stop_id, timestamp
 
     def set_current(self, state, stop_id, timestamp):
-        key = get_train_tracker_current_state_stop_id_and_timestamp_key(
+        key = get_train_tracker_data_key(
             self.tracker_id)
         value = (state, stop_id, timestamp.isoformat())
         save_by_key(key, value)
@@ -127,7 +127,7 @@ def start_stop_time(tracker_id, report_id, stop_id, arrival_time):
                      stop_id, None)
 
 
-def update_stop_time(tracker_id, prev_stop_id, arrival_timestamp, stop_id, departure_time, arrival_timestamp2=None, stop_id2=None, departure_time2=None, is_report_timegap=False):
+def update_stop_time(tracker_id, report_id, arrival_timestamp, stop_id, departure_time, arrival_timestamp2=None, stop_id2=None, departure_time2=None, is_report_timegap=False):
     arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(arrival_timestamp)
     if arrival_timestamp2:
         arrival_unix_timestamp2 = ot_utils.dt_time_to_unix_time(
@@ -151,7 +151,7 @@ def update_stop_time(tracker_id, prev_stop_id, arrival_timestamp, stop_id, depar
         if not stop_times or arrival_timestamp - stop_times[-1].arrival < config.no_stop_timegap:
             arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(
                 stop_times[-1].arrival)
-    prev_stops_counter_key = get_train_tracker_tracked_stops_prev_stops_counter_key(
+    prev_stops_counter_key = get_train_tracker_updated_report_id_key(
         tracker_id)
     done = False
     # we try to update a stop_time only if no stop_time was updated since we
@@ -159,22 +159,23 @@ def update_stop_time(tracker_id, prev_stop_id, arrival_timestamp, stop_id, depar
     # all:
     arrival_unix_timestamp = int(arrival_unix_timestamp)
 
+    # do check-and-set (see http://redis.io/topics/transactions)
     while not done:
         p.watch(prev_stops_counter_key)
         prev_stops_counter_value = cl.get(prev_stops_counter_key)
-        if prev_stops_counter_value is None or int(prev_stops_counter_value) < prev_stop_id:
+        if prev_stops_counter_value is None or int(prev_stops_counter_value) < report_id:
             try:
                 p.multi()
-                p.zremrangebyscore(get_train_tracker_tracked_stops_key(
+                p.zremrangebyscore(get_train_tracker_tracked_stop_times_key(
                     tracker_id), arrival_unix_timestamp, arrival_unix_timestamp)
-                p.zadd(get_train_tracker_tracked_stops_key(tracker_id),
+                p.zadd(get_train_tracker_tracked_stop_times_key(tracker_id),
                        arrival_unix_timestamp, stop_id_and_departure_time)
                 if arrival_timestamp2:
-                    p.zremrangebyscore(get_train_tracker_tracked_stops_key(
+                    p.zremrangebyscore(get_train_tracker_tracked_stop_times_key(
                         tracker_id), arrival_unix_timestamp2, arrival_unix_timestamp2)
-                    p.zadd(get_train_tracker_tracked_stops_key(
+                    p.zadd(get_train_tracker_tracked_stop_times_key(
                         tracker_id), arrival_unix_timestamp2, stop_id_and_departure_time2)
-                p.set(prev_stops_counter_key, prev_stop_id)
+                p.set(prev_stops_counter_key, report_id)
                 p.execute()
                 done = True
             except WatchError:
@@ -221,7 +222,7 @@ def get_report_data(report):
 
 
 def get_detected_stop_times(tracker_id, last_n=0):
-    stop_times_redis = cl.zrange(get_train_tracker_tracked_stops_key(
+    stop_times_redis = cl.zrange(get_train_tracker_tracked_stop_times_key(
         tracker_id), last_n*-1, -1, withscores=True)
     stop_times = []
     for cur in stop_times_redis:
@@ -239,7 +240,7 @@ def get_last_detected_stop_time(tracker_id):
 
 def add_report(tracker_id, report):
     is_updated_stop_time = False
-    report_id = cl.incr(get_train_tracker_prev_stops_counter_key(tracker_id))
+    report_id = cl.incr(get_train_tracker_report_id_key(tracker_id))
     detector_state = DetectorState(tracker_id)
     prev_state, prev_stop_id, prev_timestamp = detector_state.get_current()
     # new report is older than last report:
