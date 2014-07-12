@@ -4,10 +4,10 @@ import numpy as np
 import stops
 from common import ot_utils
 from utils import find_index_of_first_consecutive_value
-try:
-    import matplotlib.pyplot as plt
-except ImportError:
-    pass
+# try:
+#import matplotlib.pyplot as plt
+# except ImportError:
+# pass
 import bssid_tracker
 from redis_intf.client import (get_redis_pipeline,
                                get_redis_client,
@@ -107,8 +107,10 @@ class DetectorState(object):
         return state, stop_id, timestamp
 
     def set_current(self, state, stop_id, timestamp):
-        cl.set(get_train_tracker_current_state_stop_id_and_timestamp_key(
-            self.tracker_id), json.dumps((state, stop_id, timestamp.isoformat())))
+        key = get_train_tracker_current_state_stop_id_and_timestamp_key(
+            self.tracker_id)
+        value = (state, stop_id, timestamp.isoformat())
+        save_by_key(key, value)
 
     def get_prev_stop_data(self):
         tracker_id = self.tracker_id
@@ -248,8 +250,8 @@ def add_prev_stop(tracker_id, stop_id, timestamp):
 
 def print_tracked_stop_times(tracker_id):
     stop_times = get_detected_stop_times(tracker_id)
-    for x in stop_times:
-        print x
+    for stop_time in stop_times:
+        print stop_time
 
 
 def get_state_and_stop_id(report):
