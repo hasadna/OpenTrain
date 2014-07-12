@@ -62,7 +62,7 @@ class DetectedStopTime(object):
         redis_data_0_split = redis_data[0].split('_')
         stop_id = int(redis_data_0_split[0])
         name = stops.all_stops[stop_id].name
-        departure = ot_utils.unix_time_to_localtime(int(redis_data_0_split[1])) if redis_data_0_split[1] != '' else None    
+        departure = ot_utils.isoformat_to_localtime(redis_data_0_split[1]) if redis_data_0_split[1] != '' else None    
         return DetectedStopTime(stop_id, arrival, departure)
 
     @staticmethod
@@ -159,27 +159,18 @@ def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id, 
     arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(arrival_unix_timestamp)    
     if arrival_unix_timestamp2:
         arrival_unix_timestamp2 = ot_utils.dt_time_to_unix_time(arrival_unix_timestamp2)    
-    departure_time = ot_utils.dt_time_to_unix_time(departure_time) if departure_time else None
+    if departure_time2:
+        departure_time2 = departure_time2.isoformat()
+    departure_time = departure_time.isoformat() if departure_time else None
     if departure_time:
-        stop_id_and_departure_time = "%s_%d" % (stop_id, departure_time)
+        stop_id_and_departure_time = "%s_%s" % (stop_id, departure_time)
     else:
         stop_id_and_departure_time = "%s_" % stop_id
     if stop_id2:
         if departure_time2:
-            stop_id_and_departure_time2 = "%s_%d" % (stop_id2, departure_time2)
+            stop_id_and_departure_time2 = "%s_%s" % (stop_id2, departure_time2)
         else:
             stop_id_and_departure_time2 = "%s_" % stop_id2       
-    
-    print_tracked_stop_times(tracker_id)
-    print 'stop', stop_id_and_departure_time.split('_')[0]
-    print 'arrival', ot_utils.unix_time_to_localtime(arrival_unix_timestamp)
-    if stop_id_and_departure_time.split('_')[1]:
-        print 'departure', ot_utils.unix_time_to_localtime(int(stop_id_and_departure_time.split('_')[1]))
-    else:
-        print 'no departure'
-    if arrival_unix_timestamp2:    
-        print 'arrival2', ot_utils.unix_time_to_localtime(arrival_unix_timestamp2)
-        print 'departure2', ot_utils.unix_time_to_localtime(int(stop_id_and_departure_time2.split('_')[1]))
     
     stop_times = get_detected_stop_times(tracker_id)
     if len(stop_times) > 0 and stop_times[-1].stop_id == int(stop_id_and_departure_time.split('_')[0]) and not is_report_timegap: # if last station is same station
@@ -235,7 +226,7 @@ def print_tracked_stop_times(tracker_id):
         arrival = ot_utils.unix_time_to_localtime(int(cur[1]))
         cur_0_split = cur[0].split('_')
         name = stops.all_stops[int(cur_0_split[0])].name
-        departure = ot_utils.unix_time_to_localtime(int(cur_0_split[1])) if cur_0_split[1] != '' else None
+        departure = ot_utils.isoformat_to_localtime(cur_0_split[1]) if cur_0_split[1] != '' else None
         print DetectedStopTime.get_str(arrival, departure, name)
 
 def get_state_and_stop_id(report):
@@ -340,7 +331,7 @@ def add_report(tracker_id, report):
                 stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
                 # XXX todo - take care of the case when current_state == DetectorState.states.UNKNOWN
                 print 'NOREPORT_TIMEGAP'
-                update_stop_time(tracker_id, prev_report_id, report.timestamp, stop_id, None, stop_time.arrival, stop_id, ot_utils.dt_time_to_unix_time(timestamp), True)        
+                update_stop_time(tracker_id, prev_report_id, report.timestamp, stop_id, None, stop_time.arrival, stop_id, timestamp, True)        
             
 
     stop_times = get_detected_stop_times(tracker_id)
