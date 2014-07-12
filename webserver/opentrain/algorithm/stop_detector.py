@@ -124,8 +124,7 @@ def start_stop_time(tracker_id, report_id, stop_id, arrival_time):
 def update_stop_time(tracker_id, report_id, arrival_timestamp, stop_id, departure_time, arrival_timestamp2=None, stop_id2=None, departure_time2=None, is_report_timegap=False):
     arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(arrival_timestamp)
     if arrival_timestamp2:
-        arrival_unix_timestamp2 = ot_utils.dt_time_to_unix_time(
-            arrival_timestamp2)
+        arrival_unix_timestamp2 = ot_utils.dt_time_to_unix_time(arrival_timestamp2)
     departure_time = departure_time.isoformat() if departure_time else None
     departure_time2 = departure_time2.isoformat() if departure_time2 else None
 
