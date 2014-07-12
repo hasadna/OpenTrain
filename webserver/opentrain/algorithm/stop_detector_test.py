@@ -108,9 +108,9 @@ class stop_detector_test(TestCase):
                 plt.scatter(report.my_loc.lat, report.my_loc.lon)
                 plt.show()
             print i, ot_utils.get_localtime(report.timestamp)
-            stop_times, is_stops_updated = add_report(tracker_id, report)
-            if is_stops_updated:
-                logger.debug(str(stop_times[-1]))
+            updated_stop_time = add_report(tracker_id, report)
+            if updated_stop_time:
+                logger.debug(str(updated_stop_time))
 
         stop_detector.print_tracked_stop_times(device_id)
         detected_stop_times = stop_detector.get_detected_stop_times(device_id)

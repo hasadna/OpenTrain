@@ -70,10 +70,11 @@ def add_report_to_tracker(tracker_id, report):
     if report.get_my_loc():
         update_coords(report, tracker_id)
     
-    stop_times, is_stops_updated = stop_detector.add_report(tracker_id,\
+    updated_stop_time = stop_detector.add_report(tracker_id,\
                                                               report)
     
-    if is_stops_updated:
+    if updated_stop_time:
+        stop_times = stop_detector.get_detected_stop_times(tracker_id)
         trip_delays_ids_list_of_lists = update_trips(tracker_id, day, stop_times)
         trip_ids = get_trusted_trips(trip_delays_ids_list_of_lists)
         for trip_id in trip_ids:
