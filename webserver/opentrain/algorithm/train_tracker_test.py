@@ -118,11 +118,10 @@ class train_tracker_test(TestCase):
         device_ids = []
         trip_suffixes_list = []
         device_ids.append('ofer_995357870c491cad')
-        #device_ids.append('ofer_207fabab5f381476')
+        device_ids.append('ofer_207fabab5f381476')
         for device_id in device_ids:
             trip_suffixes_list.append(trip_ground_truth.data[device_id])
         
-
         stop_detector_test.remove_from_redis(device_ids)
         
         for i in xrange(len(device_ids)):

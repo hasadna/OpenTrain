@@ -116,12 +116,12 @@ class DetectorState(object):
         tracker_id = self.tracker_id
         prev_stops_and_timestamps = cl.zrange(
             get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id), 0, -1, withscores=True)
-        prev_stop_ids_order = [int(x[0].split('_')[0])
+        prev_stop_ids_order = [json.loads(x[0])[0]
                                for x in prev_stops_and_timestamps]
         prev_stops_and_timestamps = [
             x for (_, x) in sorted(zip(prev_stop_ids_order, prev_stops_and_timestamps))]
 
-        prev_stop_ids = [int(x[0].split('_')[1])
+        prev_stop_ids = [json.loads(x[0])[1]
                          for x in prev_stops_and_timestamps]
 
         prev_stop_int_ids = np.array(
@@ -241,7 +241,7 @@ def add_prev_stop(tracker_id, stop_id, timestamp):
     next_id = cl.incr(get_train_tracker_prev_stops_counter_key(tracker_id))
     unix_timestamp = ot_utils.dt_time_to_unix_time(timestamp)
     p.zadd(get_train_tracker_timestamp_sorted_stop_ids_key(
-        tracker_id), unix_timestamp, '%d_%s' % (next_id, stop_id))
+        tracker_id), unix_timestamp, json.dumps((next_id, stop_id)))
     p.zremrangebyrank(get_train_tracker_timestamp_sorted_stop_ids_key(
         tracker_id), 0, -HISTORY_LENGTH - 1)
     p.execute()
