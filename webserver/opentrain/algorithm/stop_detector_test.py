@@ -26,7 +26,6 @@ from analysis.models import SingleWifiReport
 from redis_intf.client import get_redis_pipeline, get_redis_client
 from stop_detector import DetectedStopTime
 from trip_matcher import get_matched_trips
-import random
 import cProfile
 from stop_detector import add_report
 import stop_detector
