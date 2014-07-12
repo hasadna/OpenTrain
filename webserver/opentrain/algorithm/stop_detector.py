@@ -116,16 +116,12 @@ class DetectorState(object):
         tracker_id = self.tracker_id
         prev_stops_and_timestamps = cl.zrange(
             get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id), 0, -1, withscores=True)
-        prev_stop_ids_order = [json.loads(x[0])[0]
-                               for x in prev_stops_and_timestamps]
-        prev_stops_and_timestamps = [
-            x for (_, x) in sorted(zip(prev_stop_ids_order, prev_stops_and_timestamps))]
-
-        prev_stop_ids = [json.loads(x[0])[1]
-                         for x in prev_stops_and_timestamps]
+        prev_stops_data = [json.loads(x[0]) for x in prev_stops_and_timestamps]
+        prev_stop_ids_order = [x[0] for x in prev_stops_data]
+        prev_stops_and_timestamps = [x for (_, x) in sorted(zip(prev_stop_ids_order, prev_stops_and_timestamps))]
 
         prev_stop_int_ids = np.array(
-            [stops.all_stops.id_list.index(x) for x in prev_stop_ids])
+            [stops.all_stops.id_list.index(x[1]) for x in prev_stops_data])
         self.prev_stop_int_ids = prev_stop_int_ids
         self.prev_stops_and_timestamps = prev_stops_and_timestamps
         return prev_stops_and_timestamps, prev_stop_int_ids
@@ -325,9 +321,6 @@ def add_report(tracker_id, report):
         if state == DetectorState.states.NOSTOP:
             pass
         elif state == DetectorState.states.STOP:
-            detector_state.get_prev_stop_data()
-            stop_id, timestamp = detector_state.get_oldest_current_state_data(
-                detector_state_transition)
             start_stop_time(tracker_id, prev_report_id, stop_id,
                             timestamp)
         elif state == DetectorState.states.UNKNOWN_STOP:
