@@ -57,14 +57,14 @@ class DetectedStopTime(object):
     @staticmethod
     def load_from_redis(redis_data):
         arrival = ot_utils.unix_time_to_localtime(int(redis_data[1]))
-        redis_data_0_split = redis_data[0].split('_')
-        stop_id = int(redis_data_0_split[0])
-        departure = ot_utils.isoformat_to_localtime(
-            redis_data_0_split[1]) if redis_data_0_split[1] != '' else None
+        data = json.loads(redis_data[0])
+        stop_id = data[0]
+        departure = ot_utils.isoformat_to_localtime(data[1]) if data[1] else None
         return DetectedStopTime(stop_id, arrival, departure)
 
     @staticmethod
     def load_from_gtfs(gtfs_stop_time, date):
+        # TODO: Update this with timetable db changes
         arrival = ot_utils.db_time_to_datetime(
             gtfs_stop_time.exp_arrival, date)
         arrival = ot_utils.get_localtime(arrival)
@@ -134,23 +134,18 @@ def update_stop_time(tracker_id, report_id, arrival_timestamp, stop_id, departur
             arrival_timestamp2)
     departure_time = departure_time.isoformat() if departure_time else None
     departure_time2 = departure_time2.isoformat() if departure_time2 else None
-    if departure_time:
-        stop_id_and_departure_time = '%s_%s' % (stop_id, departure_time)
-    else:
-        stop_id_and_departure_time = '%s_' % stop_id
-    if stop_id2:
-        if departure_time2:
-            stop_id_and_departure_time2 = '%s_%s' % (stop_id2, departure_time2)
-        else:
-            stop_id_and_departure_time2 = '%s_' % stop_id2
 
-    stop_times = get_detected_stop_times(tracker_id)
+    stop_id_and_departure_time = json.dumps((stop_id, departure_time))
+    if stop_id2:
+        stop_id_and_departure_time2 = json.dumps((stop_id2, departure_time2))
+
+    stop_time = get_last_detected_stop_time(tracker_id)
     # if last station is same station
-    if len(stop_times) > 0 and stop_times[-1].stop_id == int(stop_id_and_departure_time.split('_')[0]) and not is_report_timegap:
+    if stop_time and stop_time.stop_id == stop_id and not is_report_timegap:
         # no timegap
-        if not stop_times or arrival_timestamp - stop_times[-1].arrival < config.no_stop_timegap:
+        if not stop_time or arrival_timestamp - stop_time.arrival < config.no_stop_timegap:
             arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(
-                stop_times[-1].arrival)
+                stop_time.arrival)
     prev_stops_counter_key = get_train_tracker_updated_report_id_key(
         tracker_id)
     done = False
