@@ -25,10 +25,8 @@ ISRAEL_RAILWAYS_SSID = 'S-ISRAEL-RAILWAYS'
 def get_train_tracker_data_key(tracker_id):
     return 'train_tracker:%s:data' % (tracker_id)
 
-
 def get_train_tracker_tracked_stop_times_key(tracker_id):
     return 'train_tracker:%s:tracked_stop_times' % (tracker_id)
-
 
 # This key is used for the check-and-set transaction:
 def get_train_tracker_report_id_key(tracker_id):
@@ -90,17 +88,13 @@ class DetectorState(object):
         self.tracker_id = tracker_id
 
     def get_current(self):
-        redis_data = cl.get(
-            get_train_tracker_data_key(self.tracker_id))
-        if redis_data:
-            (state, stop_id, timestamp) = json.loads(redis_data)
+        data = load_by_key(get_train_tracker_data_key(self.tracker_id))
+        if data:
+            (state, stop_id, timestamp) = data
             timestamp = ot_utils.isoformat_to_localtime(timestamp)
+            return state, stop_id, timestamp
         else:
-            stop_id = None
-            timestamp = None
-            state = DetectorState.states.INITIAL
-
-        return state, stop_id, timestamp
+            return DetectorState.states.INITIAL, None, None
 
     def set_current(self, state, stop_id, timestamp):
         key = get_train_tracker_data_key(
