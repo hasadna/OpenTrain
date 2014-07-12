@@ -155,13 +155,12 @@ def start_stop_time(tracker_id, prev_stop_id, stop_id, arrival_timestamp):
     update_stop_time(tracker_id, prev_stop_id, arrival_timestamp, 
                      stop_id, None)
 
-def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id, departure_time, arrival_unix_timestamp2=None, stop_id2=None, departure_time2=None, is_report_timegap=False):
-    arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(arrival_unix_timestamp)    
-    if arrival_unix_timestamp2:
-        arrival_unix_timestamp2 = ot_utils.dt_time_to_unix_time(arrival_unix_timestamp2)    
-    if departure_time2:
-        departure_time2 = departure_time2.isoformat()
+def update_stop_time(tracker_id, prev_stop_id, arrival_timestamp, stop_id, departure_time, arrival_timestamp2=None, stop_id2=None, departure_time2=None, is_report_timegap=False):
+    arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(arrival_timestamp)    
+    if arrival_timestamp2:
+        arrival_unix_timestamp2 = ot_utils.dt_time_to_unix_time(arrival_timestamp2)    
     departure_time = departure_time.isoformat() if departure_time else None
+    departure_time2 = departure_time2.isoformat() if departure_time2 else None
     if departure_time:
         stop_id_and_departure_time = "%s_%s" % (stop_id, departure_time)
     else:
@@ -174,7 +173,6 @@ def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id, 
     
     stop_times = get_detected_stop_times(tracker_id)
     if len(stop_times) > 0 and stop_times[-1].stop_id == int(stop_id_and_departure_time.split('_')[0]) and not is_report_timegap: # if last station is same station
-        arrival_timestamp = ot_utils.unix_time_to_localtime(arrival_unix_timestamp)
         if not stop_times or arrival_timestamp - stop_times[-1].arrival < config.no_stop_timegap:  # no timegap
             arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(stop_times[-1].arrival)
     prev_stops_counter_key = get_train_tracker_tracked_stops_prev_stops_counter_key(tracker_id)
@@ -190,7 +188,7 @@ def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id, 
                 p.multi()
                 p.zremrangebyscore(get_train_tracker_tracked_stops_key(tracker_id), arrival_unix_timestamp, arrival_unix_timestamp)
                 p.zadd(get_train_tracker_tracked_stops_key(tracker_id), arrival_unix_timestamp, stop_id_and_departure_time)
-                if arrival_unix_timestamp2:
+                if arrival_timestamp2:
                     p.zremrangebyscore(get_train_tracker_tracked_stops_key(tracker_id), arrival_unix_timestamp2, arrival_unix_timestamp2)
                     p.zadd(get_train_tracker_tracked_stops_key(tracker_id), arrival_unix_timestamp2, stop_id_and_departure_time2)
                 p.set(prev_stops_counter_key, prev_stop_id)
@@ -208,26 +206,16 @@ def update_stop_time(tracker_id, prev_stop_id, arrival_unix_timestamp, stop_id, 
  
 def add_prev_stop(tracker_id, stop_id, timestamp):
     next_id = cl.incr(get_train_tracker_prev_stops_counter_key(tracker_id))
-    #p = get_redis_pipeline()
-    #p.set("train_tracker:%s:%d:stop_id:" % (tracker_id, next_id), stop_id)
     unix_timestamp = ot_utils.dt_time_to_unix_time(timestamp)
     p.zadd(get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id), unix_timestamp, "%d_%s" % (next_id, stop_id))
     p.zremrangebyrank(get_train_tracker_timestamp_sorted_stop_ids_key(tracker_id), 0, -HISTORY_LENGTH-1)
     p.execute()
-    #p.set("train_tracker:%s:%d:timestamp:" % (tracker_id, next_id), timestamp)
-    #p.execute()
     return next_id
 
 def print_tracked_stop_times(tracker_id):
-    #for tracked_stop_time in self.stop_times:
-    #    print tracked_stop_time
-    res = cl.zrange(get_train_tracker_tracked_stops_key(tracker_id), 0, -1, withscores=True)
-    for cur in res:
-        arrival = ot_utils.unix_time_to_localtime(int(cur[1]))
-        cur_0_split = cur[0].split('_')
-        name = stops.all_stops[int(cur_0_split[0])].name
-        departure = ot_utils.isoformat_to_localtime(cur_0_split[1]) if cur_0_split[1] != '' else None
-        print DetectedStopTime.get_str(arrival, departure, name)
+    stop_times = get_detected_stop_times(tracker_id)
+    for x in stop_times:
+        print x
 
 def get_state_and_stop_id(report):
     if report.is_station():
