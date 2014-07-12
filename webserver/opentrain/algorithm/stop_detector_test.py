@@ -35,12 +35,9 @@ def remove_from_redis(device_ids):
 
 
 def get_device_id_reports(device_id):
-    # ,my_loc__isnull=False)
     qs = analysis.models.Report.objects.filter(device_id=device_id)
-    #qs = qs.filter(timestamp__day=device_date_day,timestamp__month=device_date_month,timestamp__year=device_date_year)
     qs = qs.order_by('timestamp')
     qs = qs.prefetch_related('wifi_set', 'my_loc')
-    # reports = list(qs) takes a long time
     return qs
 
 

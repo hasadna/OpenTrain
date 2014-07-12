@@ -1,13 +1,7 @@
-import os
 import config
 import numpy as np
 import stops
 from common import ot_utils
-from utils import find_index_of_first_consecutive_value
-# try:
-#import matplotlib.pyplot as plt
-# except ImportError:
-# pass
 import bssid_tracker
 from redis_intf.client import (get_redis_pipeline,
                                get_redis_client,
@@ -100,28 +94,28 @@ class DetectorState(object):
         key = get_train_tracker_data_key(
             self.tracker_id)
         value = (state, stop_id, timestamp.isoformat())
-        save_by_key(key, value)
+        save_by_key(key, value, cl=p)
 
     states = enum(INITIAL='initial', NOSTOP='nostop',
                   STOP='stop', UNKNOWN_STOP='unknown_stop')
     transitions = enum(NORMAL='normal', NOREPORT_TIMEGAP='noreport_timegap')
 
 
-def end_stop_time(tracker_id, report_id, stop_id, arrival_time, departure_time):
-    update_stop_time(tracker_id, report_id, arrival_time, stop_id, departure_time)
+def end_stop_time(tracker_id, stop_id, arrival_time, departure_time):
+    update_stop_time(tracker_id, arrival_time, stop_id, departure_time)
 
 
-def end_stop_time_then_start_stop_time(tracker_id, report_id, stop_id, arrival_time, departure_time, stop_id2, arrival_time2):
-    update_stop_time(tracker_id, report_id, arrival_time,
+def end_stop_time_then_start_stop_time(tracker_id, stop_id, arrival_time, departure_time, stop_id2, arrival_time2):
+    update_stop_time(tracker_id, arrival_time,
                      stop_id, departure_time, arrival_time2, stop_id2)
 
 
-def start_stop_time(tracker_id, report_id, stop_id, arrival_time):
-    update_stop_time(tracker_id, report_id, arrival_time,
+def start_stop_time(tracker_id, stop_id, arrival_time):
+    update_stop_time(tracker_id, arrival_time,
                      stop_id, None)
 
 
-def update_stop_time(tracker_id, report_id, arrival_timestamp, stop_id, departure_time, arrival_timestamp2=None, stop_id2=None, departure_time2=None, is_report_timegap=False):
+def update_stop_time(tracker_id, arrival_timestamp, stop_id, departure_time, arrival_timestamp2=None, stop_id2=None, departure_time2=None, is_report_timegap=False):
     arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(arrival_timestamp)
     if arrival_timestamp2:
         arrival_unix_timestamp2 = ot_utils.dt_time_to_unix_time(arrival_timestamp2)
@@ -139,39 +133,17 @@ def update_stop_time(tracker_id, report_id, arrival_timestamp, stop_id, departur
         if not stop_time or arrival_timestamp - stop_time.arrival < config.no_stop_timegap:
             arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(
                 stop_time.arrival)
-    prev_stops_counter_key = get_train_tracker_updated_report_id_key(
-        tracker_id)
-    done = False
-    # we try to update a stop_time only if no stop_time was updated since we
-    # started the report processing. If one was updated, we don't update at
-    # all:
     arrival_unix_timestamp = int(arrival_unix_timestamp)
 
-    # do check-and-set (see http://redis.io/topics/transactions)
-    while not done:
-        p.watch(prev_stops_counter_key)
-        prev_stops_counter_value = cl.get(prev_stops_counter_key)
-        if prev_stops_counter_value is None or int(prev_stops_counter_value) < report_id:
-            try:
-                p.multi()
-                p.zremrangebyscore(get_train_tracker_tracked_stop_times_key(
-                    tracker_id), arrival_unix_timestamp, arrival_unix_timestamp)
-                p.zadd(get_train_tracker_tracked_stop_times_key(tracker_id),
-                       arrival_unix_timestamp, stop_id_and_departure_time)
-                if arrival_timestamp2:
-                    p.zremrangebyscore(get_train_tracker_tracked_stop_times_key(
-                        tracker_id), arrival_unix_timestamp2, arrival_unix_timestamp2)
-                    p.zadd(get_train_tracker_tracked_stop_times_key(
-                        tracker_id), arrival_unix_timestamp2, stop_id_and_departure_time2)
-                p.set(prev_stops_counter_key, report_id)
-                p.execute()
-                done = True
-            except WatchError:
-                done = False
-                p.unwatch()
-        else:
-            done = True
-            p.unwatch()
+    p.zremrangebyscore(get_train_tracker_tracked_stop_times_key(
+        tracker_id), arrival_unix_timestamp, arrival_unix_timestamp)
+    p.zadd(get_train_tracker_tracked_stop_times_key(tracker_id),
+           arrival_unix_timestamp, stop_id_and_departure_time)
+    if arrival_timestamp2:
+        p.zremrangebyscore(get_train_tracker_tracked_stop_times_key(
+            tracker_id), arrival_unix_timestamp2, arrival_unix_timestamp2)
+        p.zadd(get_train_tracker_tracked_stop_times_key(
+            tracker_id), arrival_unix_timestamp2, stop_id_and_departure_time2)
 
 
 def print_tracked_stop_times(tracker_id):
@@ -229,6 +201,34 @@ def get_last_detected_stop_time(tracker_id):
 def add_report(tracker_id, report):
     is_updated_stop_time = False
     report_id = cl.incr(get_train_tracker_report_id_key(tracker_id))
+    updated_report_id_key = get_train_tracker_updated_report_id_key(
+        tracker_id)
+    # We try to update a report only if no report was updated with a more recent 
+    # report_id than us. If one was updated, we don't update at all. 
+    # This is done using check-and-set (see http://redis.io/topics/transactions)
+    done = False
+    while not done:
+        p.watch(updated_report_id_key)
+        updated_report_id = load_by_key(updated_report_id_key)
+        if not updated_report_id or updated_report_id < report_id:
+            try:
+                p.multi()
+                is_updated_stop_time = try_add_report(tracker_id, report)
+                p.set(updated_report_id_key, report_id)
+                p.execute()
+                done = True
+            except WatchError:
+                done = False
+                p.unwatch()
+        else:
+            done = True
+            p.unwatch()
+    return is_updated_stop_time and done
+
+
+def try_add_report(tracker_id, report):
+    is_updated_stop_time = False
+    
     detector_state = DetectorState(tracker_id)
     prev_state, prev_stop_id, prev_timestamp = detector_state.get_current()
     # new report is older than last report:
@@ -247,7 +247,7 @@ def add_report(tracker_id, report):
         if state == DetectorState.states.NOSTOP:
             pass
         elif state == DetectorState.states.STOP:
-            start_stop_time(tracker_id, report_id, stop_id,
+            start_stop_time(tracker_id, stop_id,
                             timestamp)
             is_updated_stop_time = True
         elif state == DetectorState.states.UNKNOWN_STOP:
@@ -259,27 +259,23 @@ def add_report(tracker_id, report):
             # departure
             stop_time = get_last_detected_stop_time(tracker_id)
             end_stop_time(
-                tracker_id, report_id, prev_stop_id, stop_time.arrival, prev_timestamp)
+                tracker_id, prev_stop_id, stop_time.arrival, prev_timestamp)
             is_updated_stop_time = True
         elif state == DetectorState.states.STOP:
             if detector_state_transition == DetectorState.transitions.NOREPORT_TIMEGAP:
                 stop_time = get_last_detected_stop_time(tracker_id)
                 print 'NOREPORT_TIMEGAP'
-                update_stop_time(tracker_id, report_id, timestamp,
+                update_stop_time(tracker_id, timestamp,
                                  prev_stop_id, None, stop_time.arrival, prev_stop_id, prev_timestamp, True)
                 is_updated_stop_time = True
             elif prev_stop_id != stop_id:
                 assert False, 'check this code works'
-                detector_state.get_prev_stop_data()
-                stop_id, timestamp = detector_state.get_oldest_current_state_data(
-                    detector_state_transition)
                 stop_time = get_last_detected_stop_time(tracker_id)
                 end_stop_time_then_start_stop_time(tracker_id,
-                                                   report_id,
-                                                   stop_id,
+                                                   prev_stop_id,
                                                    stop_time.arrival,
-                                                   timestamp,
-                                                   stop_id,
+                                                   prev_timestamp,
+                                                   prev_stop_id,
                                                    prev_timestamp)
                 is_updated_stop_time = True
         elif state == DetectorState.states.UNKNOWN_STOP:
