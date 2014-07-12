@@ -274,12 +274,15 @@ def get_last_detected_stop_time(tracker_id):
 def add_report(tracker_id, report):
     detector_state = DetectorState(tracker_id)
     prev_state, prev_stop_id, prev_timestamp = detector_state.get_current()
+    if prev_timestamp and report.timestamp < prev_timestamp: # new report is older than last report:
+        stop_times = get_detected_stop_times(tracker_id)
+        return stop_times, False
+    
     state, stop_id = get_state_and_stop_id(report)
     if prev_timestamp and report.timestamp - prev_timestamp > config.no_report_timegap:
         detector_state_transition = DetectorState.transitions.NOREPORT_TIMEGAP
     else:
         detector_state_transition = DetectorState.transitions.NORMAL
-
 
     timestamp = report.get_timestamp_israel_time()
     prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
@@ -314,15 +317,13 @@ def add_report(tracker_id, report):
                 prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
                 stop_id, timestamp = detector_state.get_oldest_current_state_data(detector_state_transition)                
                 stop_time = get_last_detected_stop_time(tracker_id)
-                departure_time_prev_stop = prev_timestamp
-                arrival_time_prev_stop = stop_time.arrival
                 end_stop_time_then_start_stop_time(tracker_id, 
                                                   prev_report_id, 
                                                   stop_id, 
-                                                  arrival_time_prev_stop,
+                                                  stop_time.arrival,
                                                   timestamp,
                                                   stop_id, 
-                                                  departure_time_prev_stop) 
+                                                  prev_timestamp) 
         elif state == DetectorState.states.UNKNOWN_STOP:
             # TODO: Add handling of UNKNOWN_STOP stop_time
             pass
