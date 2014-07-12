@@ -1,17 +1,13 @@
-from scipy import spatial
 import os
 import config
 import numpy as np
 import stops
-import shapes
-import dateutil
 from common import ot_utils
 from utils import find_index_of_first_consecutive_value
 try:
     import matplotlib.pyplot as plt
 except ImportError:
     pass
-import datetime
 import bssid_tracker
 from redis_intf.client import (get_redis_pipeline,
                                get_redis_client,
@@ -229,7 +225,7 @@ def update_stop_time(tracker_id, prev_stop_id, arrival_timestamp, stop_id, depar
                     p.zadd(get_train_tracker_tracked_stops_key(
                         tracker_id), arrival_unix_timestamp2, stop_id_and_departure_time2)
                 p.set(prev_stops_counter_key, prev_stop_id)
-                res = p.execute()
+                p.execute()
                 done = True
             except WatchError:
                 done = False
@@ -327,7 +323,7 @@ def add_report(tracker_id, report):
         if state == DetectorState.states.NOSTOP:
             pass
         elif state == DetectorState.states.STOP:
-            prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
+            detector_state.get_prev_stop_data()
             stop_id, timestamp = detector_state.get_oldest_current_state_data(
                 detector_state_transition)
             start_stop_time(tracker_id, prev_report_id, stop_id,
