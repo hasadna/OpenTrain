@@ -280,15 +280,17 @@ def add_report(tracker_id, report):
     else:
         detector_state_transition = DetectorState.transitions.NORMAL
 
+
+    timestamp = report.get_timestamp_israel_time()
+    prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
+    detector_state.set_current(state, stop_id, timestamp)
+
     handled = False
     if prev_state in [DetectorState.states.INITIAL, DetectorState.states.NOSTOP]:
         if state == DetectorState.states.NOSTOP:
             handled = True
         elif state == DetectorState.states.STOP:
             handled = True
-            timestamp = report.get_timestamp_israel_time()
-            prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
-            detector_state.set_current(state, stop_id, timestamp)            
             prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
             stop_id, timestamp = detector_state.get_oldest_current_state_data(detector_state_transition)
             start_stop_time(tracker_id, prev_report_id, stop_id, 
@@ -314,20 +316,14 @@ def add_report(tracker_id, report):
             handled = True            
             
     if not handled:    
-
-        timestamp = report.get_timestamp_israel_time()
-        prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
-        detector_state.set_current(state, stop_id, timestamp)
-        
         if prev_stop_id != stop_id:
             prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
     
             if state == DetectorState.states.NOSTOP:
                 stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
 
-                if prev_state == DetectorState.states.INITIAL:
-                    pass #do nothing
-                else: # previous_state == tracker_states.STOP - need to set stop_time departure
+                if prev_state == DetectorState.states.STOP:
+                    # previous_state == tracker_states.STOP - need to set stop_time departure
                     stop_time = get_last_detected_stop_time(tracker_id)
                     end_stop_time(tracker_id, prev_report_id, prev_stop_id, stop_time.arrival, timestamp)
             else: # current_state == tracker_states.STOP
