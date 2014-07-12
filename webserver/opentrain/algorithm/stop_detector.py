@@ -290,11 +290,15 @@ def add_report(tracker_id, report):
             prev_report_id = add_prev_stop(tracker_id, stop_id, timestamp)
             detector_state.set_current(state, stop_id, timestamp)            
             prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
-
             stop_id, timestamp = detector_state.get_oldest_current_state_data(detector_state_transition)
-
             start_stop_time(tracker_id, prev_report_id, stop_id, 
                            timestamp)
+        elif state == DetectorState.states.UNKNOWN_STOP:
+            # TODO: Add handling of UNKNOWN_STOP stop_time
+            handled = True
+    elif prev_state == DetectorState.states.STOP:
+        pass
+        
             
             
     if not handled:    
