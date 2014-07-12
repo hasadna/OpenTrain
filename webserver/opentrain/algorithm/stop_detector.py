@@ -24,6 +24,7 @@ from alg_logger import logger
 import json
 
 HISTORY_LENGTH = 100000
+ISRAEL_RAILWAYS_SSID = 'S-ISRAEL-RAILWAYS'
 
 def get_train_tracker_current_state_stop_id_and_timestamp_key(tracker_id):
     return "train_tracker:%s:current_state_stop_id_and_timestamp" % (tracker_id)
@@ -74,7 +75,7 @@ class DetectedStopTime(object):
         return DetectedStopTime(gtfs_stop_time.stop.stop_id, arrival, departure)        
 
     def save_to_redis():
-        # TODO - implement
+        # TODO: implement
         pass
 
     @staticmethod
@@ -201,9 +202,6 @@ def update_stop_time(tracker_id, prev_stop_id, arrival_timestamp, stop_id, depar
             done = True
             p.unwatch()
 
-
-        
- 
 def add_prev_stop(tracker_id, stop_id, timestamp):
     next_id = cl.incr(get_train_tracker_prev_stops_counter_key(tracker_id))
     unix_timestamp = ot_utils.dt_time_to_unix_time(timestamp)
@@ -219,7 +217,7 @@ def print_tracked_stop_times(tracker_id):
 
 def get_state_and_stop_id(report):
     if report.is_station():
-        wifis = [x for x in report.get_wifi_set_all() if x.SSID == 'S-ISRAEL-RAILWAYS']
+        wifis = [x for x in report.get_wifi_set_all() if x.SSID == ISRAEL_RAILWAYS_SSID]
         wifi_stops_ids = set()
         for wifi in wifis:
             if bssid_tracker.tracker.has_bssid_high_confidence(wifi.key):
