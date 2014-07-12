@@ -297,9 +297,13 @@ def add_report(tracker_id, report):
             # TODO: Add handling of UNKNOWN_STOP stop_time
             handled = True
     elif prev_state == DetectorState.states.STOP:
-        pass
-        
-            
+        if state == DetectorState.states.NOSTOP:
+            pass
+        elif state == DetectorState.states.STOP:
+            pass 
+        elif state == DetectorState.states.UNKNOWN_STOP:
+            # TODO: Add handling of UNKNOWN_STOP stop_time
+            handled = True
             
     if not handled:    
 
