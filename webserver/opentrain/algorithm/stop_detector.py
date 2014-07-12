@@ -300,7 +300,12 @@ def add_report(tracker_id, report):
             handled = True
     elif prev_state == DetectorState.states.STOP:
         if state == DetectorState.states.NOSTOP:
-            pass
+            handled = True
+            prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
+            stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
+            # previous_state == tracker_states.STOP - need to set stop_time departure
+            stop_time = get_last_detected_stop_time(tracker_id)
+            end_stop_time(tracker_id, prev_report_id, prev_stop_id, stop_time.arrival, timestamp)
         elif state == DetectorState.states.STOP:
             pass 
         elif state == DetectorState.states.UNKNOWN_STOP:
@@ -320,12 +325,8 @@ def add_report(tracker_id, report):
             prev_stops_and_timestamps, prev_stop_int_ids = detector_state.get_prev_stop_data()
     
             if state == DetectorState.states.NOSTOP:
-                stop_id, timestamp = detector_state.get_most_recent_previous_state_data(detector_state_transition)
+                pass
 
-                if prev_state == DetectorState.states.STOP:
-                    # previous_state == tracker_states.STOP - need to set stop_time departure
-                    stop_time = get_last_detected_stop_time(tracker_id)
-                    end_stop_time(tracker_id, prev_report_id, prev_stop_id, stop_time.arrival, timestamp)
             else: # current_state == tracker_states.STOP
                 arrival_time_prev_stop = None
                 stop_id_prev_stop = None
