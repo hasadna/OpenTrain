@@ -1,20 +1,18 @@
-import config
 import numpy as np
-import stops
-from common import ot_utils
-import bssid_tracker
+from redis import WatchError
 from redis_intf.client import (get_redis_pipeline,
                                get_redis_client,
                                load_by_key,
                                save_by_key)
-from utils import enum
-from redis import WatchError
-from alg_logger import logger
+import bssid_tracker
+import config
 import json
+import stops
+from alg_logger import logger
+from common import ot_utils
+from utils import enum
 
-HISTORY_LENGTH = 100000
 ISRAEL_RAILWAYS_SSID = 'S-ISRAEL-RAILWAYS'
-
 
 def get_train_tracker_data_key(tracker_id):
     return 'train_tracker:%s:data' % (tracker_id)
@@ -101,37 +99,7 @@ class DetectorState(object):
     transitions = enum(NORMAL='normal', NOREPORT_TIMEGAP='noreport_timegap')
 
 
-def end_stop_time(tracker_id, stop_id, arrival_time, departure_time, prev_stop_time=None):
-    update_stop_time(tracker_id, arrival_time, stop_id, departure_time, prev_stop_time)
-
-
-def start_stop_time(tracker_id, stop_id, arrival_time, prev_stop_time=None, is_report_timegap=False):
-    update_stop_time(tracker_id, arrival_time, stop_id, None, prev_stop_time, is_report_timegap)
-
-
-def update_stop_time(tracker_id, arrival_timestamp, stop_id, departure_time, prev_stop_time, is_report_timegap=False):
-    if not prev_stop_time:
-        prev_stop_time = get_last_detected_stop_time(tracker_id)
-    if prev_stop_time and prev_stop_time.stop_id == stop_id and not is_report_timegap:
-        arrival_timestamp = prev_stop_time.arrival
-
-    arrival_unix_timestamp = int(ot_utils.dt_time_to_unix_time(arrival_timestamp))
-    departure_time = departure_time.isoformat() if departure_time else None
-    stop_id_and_departure_time = json.dumps((stop_id, departure_time))
-
-    p.zremrangebyscore(get_train_tracker_tracked_stop_times_key(
-        tracker_id), arrival_unix_timestamp, arrival_unix_timestamp)
-    p.zadd(get_train_tracker_tracked_stop_times_key(tracker_id),
-           arrival_unix_timestamp, stop_id_and_departure_time)
-
-
-def print_tracked_stop_times(tracker_id):
-    stop_times = get_detected_stop_times(tracker_id)
-    for stop_time in stop_times:
-        print stop_time
-
-
-def get_report_data(report):
+def _get_report_data(report):
     if report.is_station():
         wifis = [
             x for x in report.get_wifi_set_all() if x.SSID == ISRAEL_RAILWAYS_SSID]
@@ -160,6 +128,30 @@ def get_report_data(report):
     return state, stop_id, timestamp
 
 
+def _start_stop_time(tracker_id, stop_id, arrival_time, prev_stop_time=None, is_report_timegap=False):
+    _update_stop_time(tracker_id, arrival_time, stop_id, None, prev_stop_time, is_report_timegap)
+    
+
+def _end_stop_time(tracker_id, stop_id, arrival_time, departure_time, prev_stop_time=None):
+    _update_stop_time(tracker_id, arrival_time, stop_id, departure_time, prev_stop_time)
+
+
+def _update_stop_time(tracker_id, arrival_timestamp, stop_id, departure_time, prev_stop_time, is_report_timegap=False):
+    if not prev_stop_time:
+        prev_stop_time = get_last_detected_stop_time(tracker_id)
+    if prev_stop_time and prev_stop_time.stop_id == stop_id and not is_report_timegap:
+        arrival_timestamp = prev_stop_time.arrival
+
+    arrival_unix_timestamp = int(ot_utils.dt_time_to_unix_time(arrival_timestamp))
+    departure_time = departure_time.isoformat() if departure_time else None
+    stop_id_and_departure_time = json.dumps((stop_id, departure_time))
+
+    p.zremrangebyscore(get_train_tracker_tracked_stop_times_key(
+        tracker_id), arrival_unix_timestamp, arrival_unix_timestamp)
+    p.zadd(get_train_tracker_tracked_stop_times_key(tracker_id),
+           arrival_unix_timestamp, stop_id_and_departure_time)
+
+
 def get_detected_stop_times(tracker_id, last_n=0):
     stop_times_redis = cl.zrange(get_train_tracker_tracked_stop_times_key(
         tracker_id), last_n*-1, -1, withscores=True)
@@ -171,10 +163,13 @@ def get_detected_stop_times(tracker_id, last_n=0):
 
 def get_last_detected_stop_time(tracker_id):
     stop_times = get_detected_stop_times(tracker_id, last_n=1)
-    if len(stop_times) > 0:
-        return stop_times[0]
-    else:
-        return None
+    return stop_times[0] if len(stop_times) > 0 else None
+
+
+def print_tracked_stop_times(tracker_id):
+    stop_times = get_detected_stop_times(tracker_id)
+    for stop_time in stop_times:
+        print stop_time
 
 
 def add_report(tracker_id, report):
@@ -192,7 +187,7 @@ def add_report(tracker_id, report):
         if not updated_report_id or updated_report_id < report_id:
             try:
                 p.multi()
-                is_updated_stop_time = try_add_report(tracker_id, report)
+                is_updated_stop_time = _try_add_report(tracker_id, report)
                 p.set(updated_report_id_key, report_id)
                 p.execute()
                 done = True
@@ -205,7 +200,7 @@ def add_report(tracker_id, report):
     return is_updated_stop_time and done
 
 
-def try_add_report(tracker_id, report):
+def _try_add_report(tracker_id, report):
     is_updated_stop_time = False
     
     detector_state = DetectorState(tracker_id)
@@ -214,7 +209,9 @@ def try_add_report(tracker_id, report):
     if prev_timestamp and report.timestamp < prev_timestamp:
         return None
 
-    state, stop_id, timestamp = get_report_data(report)
+    state, stop_id, timestamp = _get_report_data(report)
+    if stop_id == stops.NOSTOP_ID: #XXX
+        return None
     if prev_timestamp and timestamp - prev_timestamp > config.no_report_timegap:
         detector_state_transition = DetectorState.transitions.NOREPORT_TIMEGAP
     else:
@@ -226,7 +223,7 @@ def try_add_report(tracker_id, report):
         if state == DetectorState.states.NOSTOP:
             pass
         elif state == DetectorState.states.STOP:
-            start_stop_time(tracker_id, stop_id, timestamp)
+            _start_stop_time(tracker_id, stop_id, timestamp)
             is_updated_stop_time = True
         elif state == DetectorState.states.UNKNOWN_STOP:
             # TODO: Add handling of UNKNOWN_STOP stop_time
@@ -234,22 +231,20 @@ def try_add_report(tracker_id, report):
     elif prev_state == DetectorState.states.STOP:
         if state == DetectorState.states.NOSTOP:
             stop_time = get_last_detected_stop_time(tracker_id)
-            end_stop_time(
+            _end_stop_time(
                 tracker_id, prev_stop_id, stop_time.arrival, prev_timestamp, stop_time)
             is_updated_stop_time = True
         elif state == DetectorState.states.STOP:
             if detector_state_transition == DetectorState.transitions.NOREPORT_TIMEGAP:
                 stop_time = get_last_detected_stop_time(tracker_id)
                 print 'NOREPORT_TIMEGAP'
-                end_stop_time(tracker_id, prev_stop_id, stop_time.arrival, prev_timestamp, stop_time)
-                start_stop_time(tracker_id, prev_stop_id, timestamp, stop_time, True)
+                _end_stop_time(tracker_id, prev_stop_id, stop_time.arrival, prev_timestamp, stop_time)
+                _start_stop_time(tracker_id, prev_stop_id, timestamp, stop_time, True)
                 is_updated_stop_time = True
             elif prev_stop_id != stop_id:
-                assert False, 'check this code works'
                 stop_time = get_last_detected_stop_time(tracker_id)
-                
-                end_stop_time(tracker_id, prev_stop_id, stop_time.arrival, prev_timestamp, stop_time)
-                start_stop_time(tracker_id, prev_stop_id, prev_timestamp, stop_time)                
+                _end_stop_time(tracker_id, prev_stop_id, stop_time.arrival, prev_timestamp, stop_time)
+                _start_stop_time(tracker_id, stop_id, timestamp, stop_time)                
                 is_updated_stop_time = True
         elif state == DetectorState.states.UNKNOWN_STOP:
             # TODO: Add handling of UNKNOWN_STOP stop_time
