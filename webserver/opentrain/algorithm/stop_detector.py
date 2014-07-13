@@ -105,9 +105,13 @@ def end_stop_time(tracker_id, stop_id, arrival_time, departure_time):
     update_stop_time(tracker_id, arrival_time, stop_id, departure_time)
 
 
-def end_stop_time_then_start_stop_time(tracker_id, stop_id, arrival_time, departure_time, stop_id2, arrival_time2):
-    update_stop_time(tracker_id, arrival_time,
-                     stop_id, departure_time, arrival_time2, stop_id2)
+def end_stop_time_then_start_stop_time(tracker_id, stop_id, arrival_time, departure_time, stop_id2, arrival_time2, is_report_timegap=False):
+    if not is_report_timegap:
+        end_stop_time(tracker_id, stop_id, arrival_time, departure_time)
+        start_stop_time(tracker_id, stop_id2, arrival_time2)
+    else:
+        update_stop_time(tracker_id, arrival_time,
+                         stop_id, departure_time, arrival_time2, stop_id2, is_report_timegap=is_report_timegap)
 
 
 def start_stop_time(tracker_id, stop_id, arrival_time):
@@ -265,8 +269,14 @@ def try_add_report(tracker_id, report):
             if detector_state_transition == DetectorState.transitions.NOREPORT_TIMEGAP:
                 stop_time = get_last_detected_stop_time(tracker_id)
                 print 'NOREPORT_TIMEGAP'
-                update_stop_time(tracker_id, timestamp,
-                                 prev_stop_id, None, stop_time.arrival, prev_stop_id, prev_timestamp, True)
+                end_stop_time_then_start_stop_time(tracker_id, prev_stop_id, 
+                                                   stop_time.arrival,
+                                                   prev_timestamp,
+                                                   prev_stop_id, 
+                                                   timestamp, 
+                                                   True)
+                #update_stop_time(tracker_id, timestamp,
+                                 #prev_stop_id, None, stop_time.arrival, prev_stop_id, prev_timestamp, True)
                 is_updated_stop_time = True
             elif prev_stop_id != stop_id:
                 assert False, 'check this code works'
