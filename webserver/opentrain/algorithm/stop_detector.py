@@ -105,11 +105,6 @@ def end_stop_time(tracker_id, stop_id, arrival_time, departure_time):
     update_stop_time(tracker_id, arrival_time, stop_id, departure_time)
 
 
-def end_stop_time_then_start_stop_time(tracker_id, stop_id, arrival_time, departure_time, stop_id2, arrival_time2, is_report_timegap=False):
-    end_stop_time(tracker_id, stop_id, arrival_time, departure_time)
-    start_stop_time(tracker_id, stop_id2, arrival_time2, is_report_timegap)
-
-
 def start_stop_time(tracker_id, stop_id, arrival_time, is_report_timegap=False):
     #stop_time = get_last_detected_stop_time(tracker_id)
     # if last station is same station
@@ -130,6 +125,7 @@ def update_stop_time(tracker_id, arrival_timestamp, stop_id, departure_time, is_
     if stop_time and stop_time.stop_id == stop_id and not is_report_timegap:
         # no timegap
         if arrival_timestamp - stop_time.arrival < config.no_stop_timegap:
+            logger.debug('updating arrival')
             arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(
                 stop_time.arrival)
         else:
@@ -238,7 +234,7 @@ def try_add_report(tracker_id, report):
         detector_state_transition = DetectorState.transitions.NORMAL
 
     detector_state.set_current(state, stop_id, timestamp)
-
+    logger.debug('prev=%s, current=%s' % (prev_state, state))
     if prev_state in [DetectorState.states.INITIAL, DetectorState.states.NOSTOP]:
         if state == DetectorState.states.NOSTOP:
             pass
@@ -261,22 +257,15 @@ def try_add_report(tracker_id, report):
             if detector_state_transition == DetectorState.transitions.NOREPORT_TIMEGAP:
                 stop_time = get_last_detected_stop_time(tracker_id)
                 print 'NOREPORT_TIMEGAP'
-                end_stop_time_then_start_stop_time(tracker_id, prev_stop_id, 
-                                                   stop_time.arrival,
-                                                   prev_timestamp,
-                                                   prev_stop_id, 
-                                                   timestamp, 
-                                                   True)
+                end_stop_time(tracker_id, prev_stop_id, stop_time.arrival, prev_timestamp)
+                start_stop_time(tracker_id, prev_stop_id, timestamp, True)
                 is_updated_stop_time = True
             elif prev_stop_id != stop_id:
                 assert False, 'check this code works'
                 stop_time = get_last_detected_stop_time(tracker_id)
-                end_stop_time_then_start_stop_time(tracker_id,
-                                                   prev_stop_id,
-                                                   stop_time.arrival,
-                                                   prev_timestamp,
-                                                   prev_stop_id,
-                                                   prev_timestamp)
+                
+                end_stop_time(tracker_id, prev_stop_id, stop_time.arrival, prev_timestamp)
+                start_stop_time(tracker_id, prev_stop_id, prev_timestamp)                
                 is_updated_stop_time = True
         elif state == DetectorState.states.UNKNOWN_STOP:
             # TODO: Add handling of UNKNOWN_STOP stop_time
