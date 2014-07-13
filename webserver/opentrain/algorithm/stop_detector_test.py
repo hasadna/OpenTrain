@@ -125,23 +125,19 @@ class stop_detector_test(TestCase):
             tracker_id=device_id)
         trip = timetable.services.get_trip(trip_id)
         gtfs_stop_times = trip.get_stop_times().values_list('stop', 'exp_arrival', 'exp_departure')
-        acceptible_time_delta = 60  # one minute
+        acceptible_time_delta = datetime.timedelta(minutes = 1)
         for detected_stop_time, gtfs_stop_time in zip(detected_stop_times, gtfs_stop_times):
             gtfs_arrival = gtfs_stop_time[1]
             gtfs_departure = gtfs_stop_time[2]
             msg = str(detected_stop_time)
-            detected_arrival = ot_utils.datetime_to_db_time(
-                detected_stop_time.arrival)
             self.assertAlmostEquals(
-                detected_arrival, gtfs_arrival, msg=msg, delta=acceptible_time_delta)
+                detected_stop_time.arrival, gtfs_arrival, msg=msg, delta=acceptible_time_delta)
             is_last_detected_stop = detected_stop_time == detected_stop_times[
                 -1]
             # allow for last stop to not have departure
             if detected_stop_time.departure or not is_last_detected_stop:
-                detected_departure = ot_utils.datetime_to_db_time(
-                    detected_stop_time.departure)
                 self.assertAlmostEquals(
-                    detected_departure, gtfs_departure, msg=msg, delta=acceptible_time_delta)
+                    detected_stop_time.departure, gtfs_departure, msg=msg, delta=acceptible_time_delta)
 
     def test_stop_detector_on_real_trips(self):
         self._stop_detector_on_real_trip(device_id='ofer_207fabab5f381476')

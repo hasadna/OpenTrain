@@ -35,6 +35,7 @@ import stop_detector_test
 import stop_detector
 import trip_matcher
 import trip_ground_truth
+from alg_logger import MessageExcludeFilter
 
 
 class train_tracker_test(TestCase):
@@ -88,10 +89,10 @@ class train_tracker_test(TestCase):
         trips = get_trusted_trips(trip_delays_ids_list_of_lists)
         return trips
     
-    def teXXXst_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010714_00115', '010714_00283'], remove_some_locations=True):
+    def test_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010714_00115', '010714_00283'], remove_some_locations=True):
         self.test_tracker_on_mock_device(device_id, trip_ids, remove_some_locations)
         
-    def teXXXst_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010714_00115'], remove_some_locations=True):
+    def test_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010714_00115'], remove_some_locations=True):
         if not isinstance(trip_ids, list):
             trip_ids = [trip_ids]
         tracker_id = device_id
@@ -103,9 +104,11 @@ class train_tracker_test(TestCase):
             day = now.replace(year=day.year, month=day.month, day=day.day)
             trip_reports = generate_mock_reports(device_id=device_id, trip_id=trip_id, nostop_percent=0.05, day=day)
             reports += trip_reports
-
-        for report in reports[::2]:
-            del report.my_loc_mock
+            
+        if remove_some_locations:
+            for report in reports[::2]:
+                del report.my_loc_mock
+            logger.addFilter(MessageExcludeFilter('skipped because it has not location data'))
         
         matched_trips = self.track_mock_reports(reports, tracker_id)
         for matched_trip in matched_trips:

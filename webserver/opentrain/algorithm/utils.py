@@ -27,7 +27,7 @@ def get_XY_pos(relativeNullPoint, p):
 
 def query_coords(point_tree, query_coords, query_accuracies):
     if isinstance( query_accuracies, ( int, long, float ) ):
-        res = point_tree.query_ball_point(query_coords, query_accuracies)
+        res = list(point_tree.query_ball_point(query_coords, query_accuracies))
     else:
         res = [point_tree.query_ball_point(query_coords[i], query_accuracies[i]) for i in xrange(len(query_accuracies))]
     return res

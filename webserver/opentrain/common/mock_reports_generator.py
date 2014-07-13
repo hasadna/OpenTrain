@@ -38,7 +38,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
 
     # get coords:
     coords = trip.get_points()
-    coords = np.array(coords)
+    #coords = np.array(coords)
     accuracies = np.ones((len(coords),1))*ot_utils.meter_distance_to_coord_distance(station_radius_in_meters)
     
     # map shape-points to stops:
@@ -111,8 +111,8 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
         loc = analysis.models.LocationInfo()
         #loc.report = report
         loc.accuracy = 0.1
-        loc.lat = coords[0]
-        loc.lon = coords[1]
+        loc.lat = coord[0]
+        loc.lon = coord[1]
         loc.provider = 'mock'
         loc.timestamp = timestamp
         report.my_loc_mock = loc

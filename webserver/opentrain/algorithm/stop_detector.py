@@ -218,7 +218,6 @@ def _try_add_report(tracker_id, report):
         detector_state_transition = DetectorState.transitions.NORMAL
 
     detector_state.set_current(state, stop_id, timestamp)
-    logger.debug('prev=%s, current=%s' % (prev_state, state))
     if prev_state in [DetectorState.states.INITIAL, DetectorState.states.NOSTOP]:
         if state == DetectorState.states.NOSTOP:
             pass
