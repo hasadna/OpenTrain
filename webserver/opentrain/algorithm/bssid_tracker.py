@@ -18,8 +18,10 @@ from alg_logger import logger
 import json
 from django.conf import settings
 import math
+import common.mock_reports_generator
 
 USE_FILE = True
+FAKE_BSSID_PREFIX = common.mock_reports_generator.FAKE_BSSID_PREFIX
 
 class BSSIDTracker(object):
     def __init__(self) :
@@ -54,7 +56,8 @@ class BSSIDTracker(object):
                     self.wifis_near_two_or_more_stations.append(wifi)
 
     def get_stop_id(self, bssid):
-        if USE_FILE:
+        
+        if USE_FILE and not bssid.startswith(FAKE_BSSID_PREFIX):
             if file_map.has_key(bssid):
                 return file_map[bssid], 1, 1
             else:
@@ -83,14 +86,14 @@ class BSSIDTracker(object):
 
     
     def has_bssid(self, bssid):
-        if USE_FILE:
+        if USE_FILE and not bssid.startswith(FAKE_BSSID_PREFIX):
             return file_map.has_key(bssid)
         else:
             cl = get_redis_client()
             return cl.exists("bssid:%s:total" % (bssid))
     
     def has_bssid_high_confidence(self, bssid):
-        if USE_FILE:
+        if USE_FILE and not bssid.startswith(FAKE_BSSID_PREFIX):
             return file_map.has_key(bssid)
         else:        
             if not self.has_bssid(bssid):

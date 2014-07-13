@@ -13,6 +13,8 @@ import algorithm.shapes as shapes
 import algorithm.stops as stops
 import ot_utils
 
+FAKE_BSSID_PREFIX = 'FAKE'
+
 def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day=None, from_stop_id=None, to_stop_id=None, nostop_percent=0.2, station_radius_in_meters=300):
     trip = timetable.services.get_trip(trip_id)
     # TODO(oferb): 
@@ -120,7 +122,7 @@ def generate_mock_reports(device_id='fake_device_1', trip_id='010714_00115', day
         wifi_report_train.SSID = TRAIN_SSID
         wifi_report_train.frequency = -13
         wifi_report_train.signal = 13
-        wifi_report_train.key = 'FAKE_%s' % (device_id)    
+        wifi_report_train.key = '%s_%s' % (FAKE_BSSID_PREFIX, device_id)    
         report.wifi_set_mock = [wifi_report_train]
     
         if stop_id != stops.NOSTOP_ID:

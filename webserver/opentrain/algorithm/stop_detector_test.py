@@ -21,6 +21,7 @@ import stop_detector
 import display_utils
 import stop_detector_ground_truth
 import common.ot_utils as ot_utils
+import timetable.services
 
 
 def remove_from_redis(device_ids):
@@ -43,7 +44,7 @@ def get_device_id_reports(device_id):
 
 class stop_detector_test(TestCase):
 
-    def teXst_stop_detector_on_mock_trip(self, device_id='fake_device_1', trip_id='010714_00115'):
+    def test_stop_detector_on_mock_trip(self, device_id='fake_device_1', trip_id='010714_00115'):
         remove_from_redis([device_id])
         day = datetime.datetime.strptime(trip_id.split('_')[0], '%d%m%y')
         # we want to get the correct timezone so we take it from
@@ -122,8 +123,8 @@ class stop_detector_test(TestCase):
     def evaluate_detected_stop_times(self, device_id, trip_id):
         detected_stop_times = stop_detector.get_detected_stop_times(
             tracker_id=device_id)
-        gtfs_stop_times = timetable.services.get_trip_stop_times(
-            trip_id).values_list('stop', 'arrival_time', 'departure_time')
+        trip = timetable.services.get_trip(trip_id)
+        gtfs_stop_times = trip.get_stop_times().values_list('stop', 'exp_arrival', 'exp_departure')
         acceptible_time_delta = 60  # one minute
         for detected_stop_time, gtfs_stop_time in zip(detected_stop_times, gtfs_stop_times):
             gtfs_arrival = gtfs_stop_time[1]
