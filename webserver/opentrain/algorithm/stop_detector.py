@@ -106,17 +106,18 @@ def end_stop_time(tracker_id, stop_id, arrival_time, departure_time):
 
 
 def end_stop_time_then_start_stop_time(tracker_id, stop_id, arrival_time, departure_time, stop_id2, arrival_time2, is_report_timegap=False):
-    if not is_report_timegap:
-        end_stop_time(tracker_id, stop_id, arrival_time, departure_time)
-        start_stop_time(tracker_id, stop_id2, arrival_time2)
-    else:
-        update_stop_time(tracker_id, arrival_time,
-                         stop_id, departure_time, arrival_time2, stop_id2, is_report_timegap=is_report_timegap)
+    end_stop_time(tracker_id, stop_id, arrival_time, departure_time)
+    start_stop_time(tracker_id, stop_id2, arrival_time2, is_report_timegap)
 
 
-def start_stop_time(tracker_id, stop_id, arrival_time):
-    update_stop_time(tracker_id, arrival_time,
-                     stop_id, None)
+def start_stop_time(tracker_id, stop_id, arrival_time, is_report_timegap=False):
+    stop_time = get_last_detected_stop_time(tracker_id)
+    # if last station is same station
+    if stop_time and stop_time.stop_id == stop_id and not is_report_timegap:
+        # no timegap
+        if not stop_time or arrival_time - stop_time.arrival < config.no_stop_timegap:
+            arrival_time = stop_time.arrival
+    update_stop_time(tracker_id, arrival_time, stop_id, None)
 
 
 def update_stop_time(tracker_id, arrival_timestamp, stop_id, departure_time, arrival_timestamp2=None, stop_id2=None, departure_time2=None, is_report_timegap=False):
