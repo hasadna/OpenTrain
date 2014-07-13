@@ -129,9 +129,11 @@ def update_stop_time(tracker_id, arrival_timestamp, stop_id, departure_time, is_
     # if last station is same station
     if stop_time and stop_time.stop_id == stop_id and not is_report_timegap:
         # no timegap
-        if not stop_time or arrival_timestamp - stop_time.arrival < config.no_stop_timegap:
+        if arrival_timestamp - stop_time.arrival < config.no_stop_timegap:
             arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(
                 stop_time.arrival)
+        else:
+            print 'aha!'
     arrival_unix_timestamp = int(arrival_unix_timestamp)
 
     p.zremrangebyscore(get_train_tracker_tracked_stop_times_key(
