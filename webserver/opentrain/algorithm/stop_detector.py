@@ -111,25 +111,19 @@ def end_stop_time_then_start_stop_time(tracker_id, stop_id, arrival_time, depart
 
 
 def start_stop_time(tracker_id, stop_id, arrival_time, is_report_timegap=False):
-    stop_time = get_last_detected_stop_time(tracker_id)
+    #stop_time = get_last_detected_stop_time(tracker_id)
     # if last station is same station
-    if stop_time and stop_time.stop_id == stop_id and not is_report_timegap:
-        # no timegap
-        if not stop_time or arrival_time - stop_time.arrival < config.no_stop_timegap:
-            arrival_time = stop_time.arrival
+    #if stop_time and stop_time.stop_id == stop_id and not is_report_timegap:
+        ## no timegap
+        #if not stop_time or arrival_time - stop_time.arrival < config.no_stop_timegap:
+            #arrival_time = stop_time.arrival
     update_stop_time(tracker_id, arrival_time, stop_id, None)
 
 
-def update_stop_time(tracker_id, arrival_timestamp, stop_id, departure_time, arrival_timestamp2=None, stop_id2=None, departure_time2=None, is_report_timegap=False):
+def update_stop_time(tracker_id, arrival_timestamp, stop_id, departure_time, is_report_timegap=False):
     arrival_unix_timestamp = ot_utils.dt_time_to_unix_time(arrival_timestamp)
-    if arrival_timestamp2:
-        arrival_unix_timestamp2 = ot_utils.dt_time_to_unix_time(arrival_timestamp2)
     departure_time = departure_time.isoformat() if departure_time else None
-    departure_time2 = departure_time2.isoformat() if departure_time2 else None
-
     stop_id_and_departure_time = json.dumps((stop_id, departure_time))
-    if stop_id2:
-        stop_id_and_departure_time2 = json.dumps((stop_id2, departure_time2))
 
     stop_time = get_last_detected_stop_time(tracker_id)
     # if last station is same station
@@ -144,11 +138,6 @@ def update_stop_time(tracker_id, arrival_timestamp, stop_id, departure_time, arr
         tracker_id), arrival_unix_timestamp, arrival_unix_timestamp)
     p.zadd(get_train_tracker_tracked_stop_times_key(tracker_id),
            arrival_unix_timestamp, stop_id_and_departure_time)
-    if arrival_timestamp2:
-        p.zremrangebyscore(get_train_tracker_tracked_stop_times_key(
-            tracker_id), arrival_unix_timestamp2, arrival_unix_timestamp2)
-        p.zadd(get_train_tracker_tracked_stop_times_key(
-            tracker_id), arrival_unix_timestamp2, stop_id_and_departure_time2)
 
 
 def print_tracked_stop_times(tracker_id):
@@ -276,8 +265,6 @@ def try_add_report(tracker_id, report):
                                                    prev_stop_id, 
                                                    timestamp, 
                                                    True)
-                #update_stop_time(tracker_id, timestamp,
-                                 #prev_stop_id, None, stop_time.arrival, prev_stop_id, prev_timestamp, True)
                 is_updated_stop_time = True
             elif prev_stop_id != stop_id:
                 assert False, 'check this code works'
