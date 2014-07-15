@@ -38,50 +38,49 @@ import trip_ground_truth
 from alg_logger import MessageExcludeFilter
 
 
+def track_device(device_id, do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=False):
+    #device_coords, device_timestamps, device_accuracies_in_meters, device_accuracies_in_coords = get_location_info_from_device_id(device_id)
+    now = ot_utils.get_localtime_now()
+    reports_queryset = stop_detector_test.get_device_id_reports(device_id)
+    tracker_id = device_id
+    
+    fps_period_start = time.clock()
+    fps_period_length = 100
+    if do_preload_reports:
+        reports_queryset = list(reports_queryset)
+    count = len(reports_queryset) if isinstance(reports_queryset, list) else reports_queryset.count()
+    for i in xrange(count):
+        if i % fps_period_length == 0:
+            elapsed = (time.clock() - fps_period_start)
+            if elapsed > 0:
+                logger.debug('%d\t%.1f qps' % (i, fps_period_length/elapsed))
+            else:
+                logger.debug('Elapsed time should be positive but is %d' % (elapsed))
+            fps_period_start = time.clock()                
+        
+        report = reports_queryset[i]
+        
+        if set_reports_to_same_weekday_last_week:
+            # fix finding same weekday last week by http://stackoverflow.com/questions/6172782/find-the-friday-of-previous-last-week-in-python
+            day_fix = (now.weekday() - report.timestamp.weekday()) % 7
+            day = now + datetime.timedelta(days=-day_fix)
+            # move day and correct for DST (daylight savings time)
+            dst_before = report.get_timestamp_israel_time().dst()
+            report.timestamp = report.timestamp.replace(year=day.year, month=day.month, day=day.day)
+            dst_after = report.get_timestamp_israel_time().dst()
+            report.timestamp -= dst_after-dst_before
+            
+        add_report(report)
+        
+
+    #tracker.print_tracked_stop_times()
+    #tracker.print_possible_trips()
+    trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id))
+    trips = get_trusted_trips(trip_delays_ids_list_of_lists)
+    return tracker_id, trips
+
 class train_tracker_test(TestCase):
 
-    def track_device(self, device_id, do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=False):
-        #device_coords, device_timestamps, device_accuracies_in_meters, device_accuracies_in_coords = get_location_info_from_device_id(device_id)
-        now = ot_utils.get_localtime_now()
-        reports_queryset = stop_detector_test.get_device_id_reports(device_id)
-        tracker_id = device_id
-        
-        fps_period_start = time.clock()
-        fps_period_length = 100
-        if do_preload_reports:
-            reports_queryset = list(reports_queryset)
-        count = len(reports_queryset) if isinstance(reports_queryset, list) else reports_queryset.count()
-        for i in xrange(count):
-            if i % fps_period_length == 0:
-                elapsed = (time.clock() - fps_period_start)
-                if elapsed > 0:
-                    logger.debug('%d\t%.1f qps' % (i, fps_period_length/elapsed))
-                else:
-                    logger.debug('Elapsed time should be positive but is %d' % (elapsed))
-                fps_period_start = time.clock()                
-            
-            report = reports_queryset[i]
-            
-            if set_reports_to_same_weekday_last_week:
-                # fix finding same weekday last week by http://stackoverflow.com/questions/6172782/find-the-friday-of-previous-last-week-in-python
-                day_fix = (now.weekday() - report.timestamp.weekday()) % 7
-                day = now + datetime.timedelta(days=-day_fix)
-                # move day and correct for DST (daylight savings time)
-                dst_before = report.get_timestamp_israel_time().dst()
-                report.timestamp = report.timestamp.replace(year=day.year, month=day.month, day=day.day)
-                dst_after = report.get_timestamp_israel_time().dst()
-                report.timestamp -= dst_after-dst_before
-                
-            add_report(report)
-            
-
-        #tracker.print_tracked_stop_times()
-        #tracker.print_possible_trips()
-        trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id))
-        trips = get_trusted_trips(trip_delays_ids_list_of_lists)
-        return tracker_id, trips
-        
-  
     def track_mock_reports(self, reports, tracker_id):
         for i, report in enumerate(reports):
             add_report(report)
@@ -123,14 +122,16 @@ class train_tracker_test(TestCase):
         device_ids.append('ofer_995357870c491cad')
         device_ids.append('ofer_207fabab5f381476')
         for device_id in device_ids:
-            trip_suffixes_list.append(trip_ground_truth.data[device_id])
+            suffix_list = [x[x.index('_'):] for x in trip_ground_truth.data[device_id]]
+            
+            trip_suffixes_list.append(suffix_list)
         
         stop_detector_test.remove_from_redis(device_ids)
         
         for i in xrange(len(device_ids)):
             device_id = device_ids[i] 
             trip_suffixes = trip_suffixes_list[i]
-            tracker_id, trips = self.track_device(device_id, do_preload_reports=True)
+            tracker_id, trips = track_device(device_id, do_preload_reports=True)
             for trip_id in trips:
                 timetable.services.print_trip_stop_times(trip_id)
             stop_detector.print_tracked_stop_times(device_id)
