@@ -5,9 +5,9 @@ dir=os.path.dirname(os.path.dirname(__file__))
 sys.path.append(dir)
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 import sys
-import gtfs.services
+import timetable.services
 
-trip = gtfs.services.get_trip(sys.argv[1])
+trip = timetable.services.get_trip(sys.argv[1])
 print('')
 trip.print_stoptimes()
 print('')
