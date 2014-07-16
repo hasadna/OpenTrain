@@ -59,7 +59,7 @@ def set_tracker_day(tracker_id, report):
     save_by_key(get_train_tracker_day_key(tracker_id), day_str, cl=p)
     return report.timestamp.date()
 
-def add_report(report):  
+def add_report(report): 
     bssid_tracker.tracker.add(report)
     add_report_to_tracker(report.device_id, report)
 

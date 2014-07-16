@@ -66,6 +66,7 @@ def dump_item(item):
                                              report=m))
     models.SingleWifiReport.objects.bulk_create(wifis)
     models.LocationInfo.objects.bulk_create(locs)
+    return m
 
 def delete_all_reports():
     common.ot_utils.delete_from_model(models.SingleWifiReport)

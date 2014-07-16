@@ -33,7 +33,7 @@ def main(ns):
         print 'Sent %d / %d so far' % (idx,len(reports))
 
 if __name__ == '__main__':
-    default_device_id = common.ot_utils.get_localtime_now().strftime('%Y%m%d%H%M')
+    default_device_id = common.ot_utils.get_localtime_now().strftime('test_%Y%m%d%H%M')
     parser = argparse.ArgumentParser(description='mock trip id')
     parser.add_argument('--server',type=str,required=True)
     parser.add_argument('--device_id',type=str,default=default_device_id)
