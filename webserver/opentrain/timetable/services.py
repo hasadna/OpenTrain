@@ -104,7 +104,8 @@ def print_trip_stop_times(trip_id):
     trip.print_stoptimes()
     print('')
    
-   
+def get_stop(gtfs_stop_id):
+    return TtStop.objects.get(gtfs_stop_id=gtfs_stop_id)
    
  
     
