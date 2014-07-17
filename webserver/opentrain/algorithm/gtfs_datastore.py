@@ -135,7 +135,7 @@ def GetRedisData(redis_key, day=None):
         for stop_id in data[trip_id]['stops']:
           stop_data = data[trip_id]['stops'][stop_id]
           stop_data[1] = ot_utils.get_localtime(dateutil.parser.parse(stop_data[1]))
-          stop_data[2] = ot_utils.get_localtime(dateutil.parser.parse(stop_data[2]))
+          #stop_data[2] = ot_utils.get_localtime(dateutil.parser.parse(stop_data[2]))
           data[trip_id]['stops'][stop_id][2] = stop_data
   
   redis_cache[redis_key] = data
