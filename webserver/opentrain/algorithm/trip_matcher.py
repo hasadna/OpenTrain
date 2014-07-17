@@ -32,12 +32,12 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
         return None
     detected_stop_ids = [x.stop_id for x in detected_stop_times]   
     trip_datastore = TripDatastore(day)
-    costops = trip_datastore.costop_matrix
+    costops = trip_datastore.costop_matrix # beseder
     
     stop_ids = [x.stop_id for x in detected_stop_times]
     stop_ids_inds = [all_stops.id_list.index(x) for x in stop_ids]
 
-    trips_with_visited_stops = trip_datastore.GetTripsByStops(stop_ids_inds)
+    trips_with_visited_stops = trip_datastore.GetTripsByStops(stop_ids_inds) # beseder
     
     trip_in_right_direction = []
     arrival_delta_abs_means_seconds = []
@@ -55,7 +55,7 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
             if start_time <= arrival and arrival <= end_time:
                 detected_stop_times_in_time_range.append(x)
         filtered_detected_stop_times_stop_inds = [all_stops.id_list.index(x.stop_id) for x in detected_stop_times_in_time_range]
-        impossible_stops_inds = trip_datastore.GetImpossibleCostops(filtered_detected_stop_times_stop_inds)
+        impossible_stops_inds = trip_datastore.GetImpossibleCostops(filtered_detected_stop_times_stop_inds) # beseder
         impossible_stops_ids = [all_stops.id_list[x] for x in impossible_stops_inds]
         has_impossible_stops = bool([x for x in impossible_stops_ids if x in stops_dict])
         if has_impossible_stops:
@@ -82,8 +82,8 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
         non_tel_aviv_stops = len([x for x in filtered_detected_stop_times if x.stop_id not in [4900, 3600, 3700, 4600]])
         stop_count_with_tel_aviv_as_one_stop = non_tel_aviv_stops + int(has_tel_aviv_stop)
         if stop_count_with_tel_aviv_as_one_stop >= 2:
-            gtfs_arrival_of_detected_stops = [x[1] for x in trip_stop_tuples]
-            if is_increasing(gtfs_arrival_of_detected_stops):
+            gtfs_sequence_of_detected_stops = [x[0] for x in trip_stop_tuples]
+            if is_increasing(gtfs_sequence_of_detected_stops):
                 trips_filtered_by_stop_order.append(t)
                 trips_filtered_by_stop_order_detected_stop_inds.append(filtered_detected_stop_times_inds)
                 # calc deviation from gtfs arrival time:
