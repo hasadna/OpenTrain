@@ -61,7 +61,7 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
         if has_impossible_stops:
             continue
 
-        trip_stop_tuples = []
+        gtfs_sequence_of_detected_stops = []
         filtered_detected_stop_times = []
         filtered_detected_stop_times_inds = []
         for i, x in enumerate(detected_stop_times):
@@ -70,7 +70,7 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
             # - stops that are in trip time range:
             arrival = x.arrival
             if x.stop_id in stops_dict and start_time <= arrival and arrival <= end_time:
-                trip_stop_tuples.append(stops_dict[x.stop_id])
+                gtfs_sequence_of_detected_stops.append(stops_dict[x.stop_id][0])
                 filtered_detected_stop_times.append(x)
                 filtered_detected_stop_times_inds.append(i)
         # filter by stop order and at least two detected stops:    
@@ -82,7 +82,6 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
         non_tel_aviv_stops = len([x for x in filtered_detected_stop_times if x.stop_id not in [4900, 3600, 3700, 4600]])
         stop_count_with_tel_aviv_as_one_stop = non_tel_aviv_stops + int(has_tel_aviv_stop)
         if stop_count_with_tel_aviv_as_one_stop >= 2:
-            gtfs_sequence_of_detected_stops = [x[0] for x in trip_stop_tuples]
             if is_increasing(gtfs_sequence_of_detected_stops):
                 trips_filtered_by_stop_order.append(t)
                 trips_filtered_by_stop_order_detected_stop_inds.append(filtered_detected_stop_times_inds)
