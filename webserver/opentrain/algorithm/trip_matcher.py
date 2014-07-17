@@ -21,6 +21,7 @@ import json
 from stop_detector import DetectedStopTime
 from ot_profiler import do_profile
 from gtfs_datastore import TripDatastore
+import timetable.services
 
 all_stops = stops.all_stops
     
@@ -90,7 +91,8 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
                 for detected_stop_time in filtered_detected_stop_times:
                     stop_and_arrival_gtfs = stops_dict.get(detected_stop_time.stop_id)
                     if stop_and_arrival_gtfs:
-                        arrival_delta_seconds = stop_and_arrival_gtfs[1] - detected_stop_time.arrival
+                        exp_arrival = ot_utils.get_localtime(dateutil.parser.parse(stop_and_arrival_gtfs[1]))
+                        arrival_delta_seconds = exp_arrival - detected_stop_time.arrival
                         arrival_delta_abs_sum += abs(arrival_delta_seconds).total_seconds()
                 arrival_delta_abs_mean = arrival_delta_abs_sum/len(filtered_detected_stop_times_inds)
                 arrival_delta_abs_means_seconds.append(arrival_delta_abs_mean)                
