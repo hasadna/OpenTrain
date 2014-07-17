@@ -38,10 +38,6 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
     stop_ids_inds = [all_stops.id_list.index(x) for x in stop_ids]
 
     trips_with_visited_stops = trip_datastore.GetTripsByStops(stop_ids_inds)
-    #impossible_stops_inds = trip_datastore.GetImpossibleCostops(stop_ids_inds)
-    #trips_with_impossible_stops = trip_datastore.GetTripsByStops(impossible_stops_inds)
-    #trips_filtered_by_stops = list(set(trips_with_visited_stops) - set(trips_with_impossible_stops))
-    
     
     trip_in_right_direction = []
     arrival_delta_abs_means_seconds = []
@@ -112,7 +108,7 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
         trip_delays_ids_list += intersecting_trip_delays_ids
         trip_delays_ids_list_of_lists.append(trip_delays_ids_list)
         trip_delays_ids_temp = [x for x in trip_delays_ids_temp if x not in intersecting_trip_delays_ids]
- 
+    print trip_delays_ids_list_of_lists
     return trip_delays_ids_list_of_lists
 
 cl = get_redis_client()

@@ -39,10 +39,10 @@ from alg_logger import MessageExcludeFilter
 import train_tracker_test
 
 
-def run_tracker_on_trips_without_ground_truth():    
-    device_ids = []
+def run_tracker_on_trips_without_ground_truth(device_ids=None):    
     trip_suffixes_list = []
-    device_ids = [x for x in trip_ground_truth.data if not trip_ground_truth.data[x]]
+    if not device_ids:
+        device_ids = [x for x in trip_ground_truth.data if not trip_ground_truth.data[x]]
     
     stop_detector_test.remove_from_redis(device_ids)
     
@@ -58,4 +58,4 @@ def run_tracker_on_trips_without_ground_truth():
     
 if __name__ == '__main__':
     logger.addFilter(MessageExcludeFilter('saving disabled!!!'))
-    run_tracker_on_trips_without_ground_truth()    
+    run_tracker_on_trips_without_ground_truth(['ofer_df0106ed1d770799'])    
