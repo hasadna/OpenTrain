@@ -54,14 +54,9 @@ class DetectedStopTime(object):
 
     @staticmethod
     def load_from_gtfs(gtfs_stop_time, date):
-        # TODO: Update this with timetable db changes
-        arrival = ot_utils.db_time_to_datetime(
-            gtfs_stop_time.exp_arrival, date)
-        arrival = ot_utils.get_localtime(arrival)
-        departure = ot_utils.db_time_to_datetime(
-            gtfs_stop_time.exp_departure, date)
-        departure = ot_utils.get_localtime(departure)
-        return DetectedStopTime(gtfs_stop_time.stop.stop_id, arrival, departure)
+        arrival = ot_utils.get_localtime(gtfs_stop_time.exp_arrival)
+        departure = ot_utils.get_localtime(gtfs_stop_time.exp_departure)
+        return DetectedStopTime(gtfs_stop_time.stop.gtfs_stop_id, arrival, departure)
 
     @staticmethod
     def get_str(arrival, departure, name):
