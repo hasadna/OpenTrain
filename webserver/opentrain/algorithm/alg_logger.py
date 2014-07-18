@@ -1,4 +1,6 @@
+import os
 import logging
+from django.conf import settings
 
 class MessageExcludeFilter(logging.Filter):
   def __init__(self, param):
@@ -39,6 +41,19 @@ ch.setFormatter(formatter)
 # add ch to logger
 logger.addHandler(ch)
 
+# add file handler
+#when	Type of interval
+#'S'	Seconds
+#'M'	Minutes
+#'H'	Hours
+#'D'	Days
+#'W0'-'W6'	Weekday (0=Monday)
+#'midnight'	Roll over at midnight
+fh = logging.handlers.TimedRotatingFileHandler(os.path.join(settings.DATA_DIR, 'algorithm.log'), when='midnight') 
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
 # example usage:
 logger.addFilter(FilenameLineNumberExcludeFilter('alg', 40))
 logger.addFilter(MessageExcludeFilter('aaa'))
@@ -46,8 +61,8 @@ logger.addFilter(MessageExcludeFilter('aaa'))
 logger.debug('aaa')
 
 
-logger.addFilter(MessageExcludeFilter('qps'))
-logger.addFilter(MessageExcludeFilter('skipped because of large loc_ts_delta'))
+#logger.addFilter(MessageExcludeFilter('qps'))
+#logger.addFilter(MessageExcludeFilter('skipped because of large loc_ts_delta'))
 #logger.addFilter(FilenameLineNumberExcludeFilter('stop_detector_test'))
 #logger.addFilter(MessageIncludeFilter('No stop for bssids'))
 
