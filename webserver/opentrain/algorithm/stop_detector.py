@@ -111,7 +111,7 @@ def _get_report_data(report):
             stop_id = wifi_stops_ids[0]
             state = DetectorState.states.STOP
         else:
-            logger.debug('No stop for bssids: %s' %
+            logger.warning('No stop for bssids: %s' %
                          ','.join([x.key for x in wifis]))
             stop_id = None
             state = DetectorState.states.UNKNOWN_STOP
@@ -124,10 +124,12 @@ def _get_report_data(report):
 
 
 def _start_stop_time(tracker_id, stop_id, arrival_time, prev_stop_time=None, is_report_timegap=False):
+    logger.info('Calling _start_stop_time. is_report_timegap={}'.format(is_report_timegap))
     _update_stop_time(tracker_id, arrival_time, stop_id, None, prev_stop_time, is_report_timegap)
     
 
 def _end_stop_time(tracker_id, stop_id, arrival_time, departure_time, prev_stop_time=None):
+    logger.info('Calling _end_stop_time.')
     _update_stop_time(tracker_id, arrival_time, stop_id, departure_time, prev_stop_time)
 
 
@@ -168,6 +170,7 @@ def print_tracked_stop_times(tracker_id):
 
 
 def add_report(tracker_id, report):
+    logger.info('adding report={}'.format(report))
     is_updated_stop_time = False
     report_id = cl.incr(get_train_tracker_report_id_key(tracker_id))
     updated_report_id_key = get_train_tracker_updated_report_id_key(
@@ -200,11 +203,14 @@ def _try_add_report(tracker_id, report):
     
     detector_state = DetectorState(tracker_id)
     prev_state, prev_stop_id, prev_timestamp = detector_state.get_current()
+    logger.info('prev_state={} prev_stop_id={} prev_timestamp={}'.format(prev_state, prev_stop_id, prev_timestamp))
     # new report is older than last report:
     if prev_timestamp and report.timestamp < prev_timestamp:
+        logger.warning('New report is older than last report. New report timestamp={}. Last report timestamp={}'.format(report.timestamp, prev_timestamp))
         return None
 
     state, stop_id, timestamp = _get_report_data(report)
+    logger.info('state={} stop_id={} timestamp={}'.format(state, stop_id, timestamp))
     if stop_id == stops.NOSTOP_ID: #XXX
         return None
     if prev_timestamp and timestamp - prev_timestamp > config.no_report_timegap:
@@ -212,6 +218,7 @@ def _try_add_report(tracker_id, report):
     else:
         detector_state_transition = DetectorState.transitions.NORMAL
 
+    logger.info('Setting detector state: state={} stop_id={} timestamp={}'.format(state, stop_id, timestamp))
     detector_state.set_current(state, stop_id, timestamp)
     if prev_state in [DetectorState.states.INITIAL, DetectorState.states.NOSTOP]:
         if state == DetectorState.states.NOSTOP:

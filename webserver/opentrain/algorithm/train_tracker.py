@@ -64,16 +64,17 @@ def add_report(report):
     add_report_to_tracker(report.device_id, report)
 
 def add_report_to_tracker(tracker_id, report):
+    logger.info('Adding report to tracker_id "{}": {}'.format(tracker_id, report))
     day = set_tracker_day(tracker_id, report)
     
     # update train position
     if report.get_my_loc():
         update_coords(report, tracker_id)
     
-    is_updated_stop_time = stop_detector.add_report(tracker_id,\
-                                                              report)
+    is_updated_stop_time = stop_detector.add_report(tracker_id, report)
     
     if is_updated_stop_time:
+        logger.info('stop_time updated')
         stop_times = stop_detector.get_detected_stop_times(tracker_id)
         trip_delays_ids_list_of_lists = update_trips(tracker_id, day, stop_times)
         trip_ids = get_trusted_trips(trip_delays_ids_list_of_lists)
@@ -92,25 +93,29 @@ def add_report_to_tracker(tracker_id, report):
                 save_stop_times_to_db(tracker_id, stop_time, trip_id)
 
 def save_stop_times_to_db(tracker_id, detected_stop_time, trip_id):
+    logger.info('Saving stop_time to db. trip_id={}, stop_time={}'.format(trip_id, detected_stop_time))
     stop = timetable.services.get_stop(detected_stop_time.stop_id)
     departure_time = detected_stop_time.departure
     arrival_time = detected_stop_time.arrival
     from analysis.models import RtStop
     try:
         rs = RtStop.objects.get(tracker_id=tracker_id,stop=stop,trip__gtfs_trip_id=trip_id)
+        logger.info('RtStop exists. Overriding.')
     except RtStop.DoesNotExist:
         rs = RtStop()
+        logger.info('RtStop does not exist. Creating new one.')
     rs.tracker_id = tracker_id
     rs.trip = timetable.services.get_trip(trip_id)
     rs.stop = stop
     rs.act_arrival = arrival_time
     rs.act_departure = departure_time
     rs.save() 
-    logger.debug(str(rs))  
+    logger.info('RtStop saved: {}'.format(rs))  
 
 def update_coords(report, tracker_id):
     loc = report.get_my_loc()
     coords = [loc.lat, loc.lon]
+    logger.info('Updating coords for tracker_id={} by report={} to coords={}'.format(tracker_id, report, coords))    
     res_shape_sampled_point_ids, _ = shapes.all_shapes.query_sampled_points(coords, loc.accuracy_in_coords)
      
     added_count = cl.sadd(get_train_tracker_visited_shape_sampled_point_ids_key(tracker_id), res_shape_sampled_point_ids)
@@ -133,7 +138,9 @@ def update_coords(report, tracker_id):
         p.execute()          
 
 def update_trips(tracker_id, day, detected_stop_times):
+    logger.info('Updating trips for tracker_id={}'.format(tracker_id))
     trip_delays_ids_list_of_lists = trip_matcher.get_matched_trips(tracker_id, detected_stop_times, day)
+    logger.info('Updated trip_delays_ids_list_of_lists for tracker_id={}: {}'.format(tracker_id, trip_delays_ids_list_of_lists))
     save_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(tracker_id), trip_delays_ids_list_of_lists)
     return trip_delays_ids_list_of_lists
 
@@ -147,7 +154,8 @@ def get_trusted_trips(trip_delays_ids_list_of_lists):
         trip_id = get_trusted_trip_or_none(trips, time_deviation_in_seconds)
         if trip_id:
             trip_ids.append(trip_id)
-            
+    
+    logger.info('Trusted trips={} for trip_delays_ids_list_of_lists={}'.format(trip_ids, trip_delays_ids_list_of_lists))
     return trip_ids
 
 def get_trusted_trip_or_none(trips, time_deviation_in_seconds):
@@ -161,8 +169,10 @@ def get_trusted_trip_or_none(trips, time_deviation_in_seconds):
         time_deviation_ratio = 0;
     do_trust_trip = len(trips) > 0 and time_deviation_ratio < 0.5
     if do_trust_trip:
+        logger.info('time_deviation_ratio={} and so we trust trip={}'.format(time_deviation_ratio, trips[0]))
         return trips[0] 
     else:
+        logger.info('time_deviation_ratio={} and so we do not trust trip={}'.format(time_deviation_ratio, trips[0]))
         return None 
 
 cl = get_redis_client()
