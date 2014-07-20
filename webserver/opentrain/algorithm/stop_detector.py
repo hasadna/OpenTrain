@@ -72,6 +72,7 @@ class DetectedStopTime(object):
 class DetectorState(object):
 
     def __init__(self, tracker_id):
+        logger.info('init detector_state')
         self.tracker_id = tracker_id
 
     def get_current(self):
@@ -180,8 +181,10 @@ def add_report(tracker_id, report):
     # This is done using check-and-set (see http://redis.io/topics/transactions)
     done = False
     while not done:
+        logger.info('in while loop')
         p.watch(updated_report_id_key)
         updated_report_id = load_by_key(updated_report_id_key)
+        logger.info('updated_report_id={}, report_id={}'.format(updated_report_id, report_id))
         if not updated_report_id or updated_report_id < report_id:
             try:
                 p.multi()
@@ -199,10 +202,12 @@ def add_report(tracker_id, report):
 
 
 def _try_add_report(tracker_id, report):
-    logger.info('_try_add_report tracker_id={} report={}'.format(tracker_id, report))
+    logger.info('tracker_id={} report={}'.format(tracker_id, report))
     is_updated_stop_time = False
     
+    logger.info('fetching detector_state.')
     detector_state = DetectorState(tracker_id)
+    logger.info('fetched detector_state.')
     prev_state, prev_stop_id, prev_timestamp = detector_state.get_current()
     logger.info('prev_state={} prev_stop_id={} prev_timestamp={}'.format(prev_state, prev_stop_id, prev_timestamp))
     # new report is older than last report:
@@ -223,12 +228,14 @@ def _try_add_report(tracker_id, report):
     detector_state.set_current(state, stop_id, timestamp)
     if prev_state in [DetectorState.states.INITIAL, DetectorState.states.NOSTOP]:
         if state == DetectorState.states.NOSTOP:
+            logger.info('passing big if statement')
             pass
         elif state == DetectorState.states.STOP:
             _start_stop_time(tracker_id, stop_id, timestamp)
             is_updated_stop_time = True
         elif state == DetectorState.states.UNKNOWN_STOP:
             # TODO: Add handling of UNKNOWN_STOP stop_time
+            logger.info('passing big if statement')
             pass
     elif prev_state == DetectorState.states.STOP:
         if state == DetectorState.states.NOSTOP:
@@ -250,16 +257,20 @@ def _try_add_report(tracker_id, report):
                 is_updated_stop_time = True
         elif state == DetectorState.states.UNKNOWN_STOP:
             # TODO: Add handling of UNKNOWN_STOP stop_time
+            logger.info('passing big if statement')
             pass
     elif prev_state == DetectorState.states.UNKNOWN_STOP:
         if state == DetectorState.states.NOSTOP:
             # TODO: Add handling of UNKNOWN_STOP stop_time
+            logger.info('passing big if statement')
             pass
         elif state == DetectorState.states.STOP:
             # TODO: Add handling of UNKNOWN_STOP stop_time
+            logger.info('passing big if statement')
             pass
         elif state == DetectorState.states.UNKNOWN_STOP:
             # TODO: Add handling of UNKNOWN_STOP stop_time
+            logger.info('passing big if statement')
             pass
 
     return is_updated_stop_time
