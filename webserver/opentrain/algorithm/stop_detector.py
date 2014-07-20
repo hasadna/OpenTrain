@@ -182,9 +182,9 @@ def add_report(tracker_id, report):
     # This is done using check-and-set (see http://redis.io/topics/transactions)
     done = False
     while not done:
-        logger.info('in while loop')
+        logger.info('watching {}'.format(updated_report_id_key))
         p.watch(updated_report_id_key)
-        updated_report_id = load_by_key(updated_report_id_key)
+        updated_report_id = load_by_key(updated_report_id_key, logger=logger)
         logger.info('updated_report_id={}, report_id={}'.format(updated_report_id, report_id))
         if not updated_report_id or updated_report_id < report_id:
             try:
@@ -217,13 +217,13 @@ def _try_add_report(tracker_id, report):
     # new report is older than last report:
     if prev_timestamp and report.timestamp < prev_timestamp:
         logger.warning('New report is older than last report. New report timestamp={}. Last report timestamp={}'.format(report.timestamp, prev_timestamp))
-        return None
+        return is_updated_stop_time
 
     state, stop_id, timestamp = _get_report_data(report)
     logger.info('state={} stop_id={} timestamp={}'.format(state, stop_id, timestamp))
     if stop_id == stops.NOSTOP_ID: #XXX
-        logger.info('stop_id == stops.NOSTOP_ID, so returning None')
-        return None
+        logger.info('stop_id == stops.NOSTOP_ID, so returning is_updated_stop_time')
+        return is_updated_stop_time
     if prev_timestamp and timestamp - prev_timestamp > config.no_report_timegap:
         detector_state_transition = DetectorState.transitions.NOREPORT_TIMEGAP
     else:

@@ -9,13 +9,17 @@ def get_redis_client():
 def get_redis_pipeline():
     return _CLIENT.pipeline()
 
-def load_by_key(key,default=None):
-    val = _CLIENT.get(key)
+def load_by_key(key, default=None, cl=None, logger=None):
+    if not cl:
+        cl = _CLIENT    
+    val = cl.get(key)
+    if logger:
+        logger.info('key={} val={}'.format(key, val))
     if val:
         return json.loads(val)
     return default
 
-def save_by_key(key,value,timeout=None, cl=None):
+def save_by_key(key, value, timeout=None, cl=None):
     if not cl:
         cl = _CLIENT
     if timeout:
