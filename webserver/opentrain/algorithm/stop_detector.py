@@ -48,7 +48,10 @@ class DetectedStopTime(object):
     def load_from_redis(redis_data):
         arrival = ot_utils.unix_time_to_localtime(int(redis_data[1]))
         data = json.loads(redis_data[0])
-        stop_id = data[0]
+        if data[0] == str(None):
+            stop_id = None
+        else:
+            stop_id = int(data[0])
         departure = ot_utils.isoformat_to_localtime(data[1]) if data[1] else None
         return DetectedStopTime(stop_id, arrival, departure)
 
@@ -147,7 +150,7 @@ def _update_stop_time(tracker_id, arrival_timestamp, stop_id, departure_time, pr
 
     arrival_unix_timestamp = int(ot_utils.dt_time_to_unix_time(arrival_timestamp))
     departure_time = departure_time.isoformat() if departure_time else None
-    stop_id_and_departure_time = json.dumps((stop_id, departure_time))
+    stop_id_and_departure_time = json.dumps((str(stop_id), departure_time))
 
     p.zremrangebyscore(get_train_tracker_tracked_stop_times_key(
         tracker_id), arrival_unix_timestamp, arrival_unix_timestamp)
