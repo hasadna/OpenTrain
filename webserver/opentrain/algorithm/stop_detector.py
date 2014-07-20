@@ -80,6 +80,10 @@ class DetectorState(object):
         if data:
             (state, stop_id, timestamp) = data
             timestamp = ot_utils.isoformat_to_localtime(timestamp)
+            if stop_id == str(None):
+                stop_id = None
+            else:
+                stop_id = int(stop_id)
             return state, stop_id, timestamp
         else:
             return DetectorState.states.INITIAL, None, None
@@ -87,7 +91,7 @@ class DetectorState(object):
     def set_current(self, state, stop_id, timestamp):
         key = get_train_tracker_data_key(
             self.tracker_id)
-        value = (state, stop_id, timestamp.isoformat())
+        value = (state, str(stop_id), timestamp.isoformat())
         logger.info('key={}, value={}'.format(key, value))
         save_by_key(key, value, cl=p)
 
