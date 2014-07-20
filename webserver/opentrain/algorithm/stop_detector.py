@@ -199,6 +199,7 @@ def add_report(tracker_id, report):
 
 
 def _try_add_report(tracker_id, report):
+    logger.info('_try_add_report tracker_id={} report={}'.format(tracker_id, report))
     is_updated_stop_time = False
     
     detector_state = DetectorState(tracker_id)
