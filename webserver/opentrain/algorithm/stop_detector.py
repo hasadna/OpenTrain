@@ -88,6 +88,7 @@ class DetectorState(object):
         key = get_train_tracker_data_key(
             self.tracker_id)
         value = (state, stop_id, timestamp.isoformat())
+        logger.info('key={}, value={}'.format(key, value))
         save_by_key(key, value, cl=p)
 
     states = enum(INITIAL='initial', NOSTOP='nostop',
@@ -193,11 +194,14 @@ def add_report(tracker_id, report):
                 p.execute()
                 done = True
             except WatchError:
+                logger.info('WatchError: {}'.format(WatchError))
                 done = False
                 p.unwatch()
         else:
+            logger.info('Report not used because of report_id.')
             done = True
             p.unwatch()
+    logger.info('is_updated_stop_time={}, done={}'.format(is_updated_stop_time, done))
     return is_updated_stop_time and done
 
 
@@ -218,6 +222,7 @@ def _try_add_report(tracker_id, report):
     state, stop_id, timestamp = _get_report_data(report)
     logger.info('state={} stop_id={} timestamp={}'.format(state, stop_id, timestamp))
     if stop_id == stops.NOSTOP_ID: #XXX
+        logger.info('stop_id == stops.NOSTOP_ID, so returning None')
         return None
     if prev_timestamp and timestamp - prev_timestamp > config.no_report_timegap:
         detector_state_transition = DetectorState.transitions.NOREPORT_TIMEGAP
