@@ -228,9 +228,6 @@ def _try_add_report(tracker_id, report):
 
     state, stop_id, timestamp = _get_report_data(report)
     logger.info('state={} stop_id={} timestamp={}'.format(state, stop_id, timestamp))
-    if stop_id == stops.NOSTOP_ID: #XXX
-        logger.info('stop_id == stops.NOSTOP_ID, so returning is_updated_stop_time')
-        return is_updated_stop_time
     if prev_timestamp and timestamp - prev_timestamp > config.no_report_timegap:
         detector_state_transition = DetectorState.transitions.NOREPORT_TIMEGAP
     else:
