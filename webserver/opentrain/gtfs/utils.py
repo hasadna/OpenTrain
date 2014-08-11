@@ -52,7 +52,7 @@ def download_gtfs_file(force=False,gtfs_url=None):
 def write_success():
     import common.ot_utils
     last_dir = ot_utils.find_lastest_in_dir(GTFS_DATA_DIR)
-    with open(os.path.join(last_dir,'success')) as fh:
+    with open(os.path.join(last_dir,'success'),'w') as fh:
         fh.write('success on %s\n' % common.ot_utils.get_utc_now().isoformat())
 
         
