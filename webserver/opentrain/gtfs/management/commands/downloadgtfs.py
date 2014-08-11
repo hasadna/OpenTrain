@@ -53,6 +53,7 @@ class Command(BaseCommand):
             gtfs.utils.create_all(dirname=dirname, clean=True)
             timetable.utils.build_from_gtfs(start_date, options['days']) 
             gtfs.utils.clean_all()
+        gtfs.utils.write_success()
         self.stdout.write('GTFS command completed')
         
 

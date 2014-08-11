@@ -9,6 +9,7 @@ import argparse
 import time
 import common.mock_reports_generator
 
+
 def main(ns):
     reports = common.mock_reports_generator.generate_mock_reports(ns.device_id,ns.trip_id,nostop_percent=0.05)
     print 'Going to send %d reports' % (len(reports))
@@ -23,7 +24,7 @@ def main(ns):
         headers = {'content-type':'application/json'}
         body = json.dumps(rr)
         resp = requests.post(url,headers=headers,data=body)
-        if resp.status_code >= 400:
+        if not resp.ok:
             print 'failed with: ' + resp.content[0:100]
             print 'full log in /tmp/error.html'
             with open('/tmp/error.html','w') as fh:
