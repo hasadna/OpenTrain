@@ -177,7 +177,7 @@ def get_trusted_trip_or_none(trips, time_deviation_in_seconds):
 
 def get_device_status(device_id):
     trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(device_id))
-    return str(trip_delays_ids_list_of_lists)
+    return trip_delays_ids_list_of_lists
 
 cl = get_redis_client()
 p = get_redis_pipeline()
