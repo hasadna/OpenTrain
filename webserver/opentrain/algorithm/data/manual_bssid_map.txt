@@ -39,15 +39,17 @@ b4c799a3db40 3400 Bet Yehoshua 2
 b4c79982a160 3300 Natanya 1
 b4c799a3dc90 3300 Natanya 2
 b4c799a3dee0 3300 Natanya 3
-b4c79982bab0 5000 Lod 4
-b4c7999bc010 5000 Lod 5
+#b4c79982bab0 5000 Lod 4
+#b4c7999bc010 5000 Lod 5
 b4c7999bbf00 3500 Herzliyya 1
 b4c799be1fe0 3500 Herzliyya 2
-b4c799a3dd60 5000 Lod 6?
+b4c799a3dd60 5150 Lod Ganey Aviv 1
 # Log 1-2-3 seem to be together and separate than 5000 Lod 4-5-5b and another group is 5000 Lod 6
 # Rishon might be the other station
 #ofer_b3b994f2ff17f4be
-b4c79982bb40 5000 Lod 5b
+#b4c79982bb40 5000 Lod 5b
+b4c7999bc1b0 5000 Lod 7?
+b4c7991ffcd0 5000 Lod 4b
 #992d69efe920047a
 b4c799a3e120 300 Modiin 2
 #6a469b18
@@ -107,7 +109,6 @@ b4c799d11c50 9600 Sderot 2
 b4c799d16400 9600 Sderot 3
 b4c799830f40 4660 Holon - Wolfson 3
 #Amit_e5066b39c330e434
-b4c7999bc1b0 5000 Lod 7?
 #ofer_e402a16800ea3cc9
 b4c79982aaa0 2300 Haifa Hof HaKarmel (Razi'el) 1
 b4c79982b980 2300 Haifa Hof HaKarmel (Razi'el) 2
@@ -125,7 +126,6 @@ b4c79982bcd0 1220 Leb Hmifratz 2
 b4c7998286b0 2100 Haifa Center HaShmona 1
 b4c7999c5200 2100 Haifa Center HaShmona 2
 #ofer_a805c254139a38e9
-b4c7991ffcd0 5000 Lod 4b
 #940e3161c577f921
 b4c7998250c0 700 Kiryat Hayyim 1
 b4c79982aac0 700 Kiryat Hayyim 2

@@ -71,7 +71,7 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
             # - stops that are in trip time range:
             arrival = x.arrival
             if ((x.stop_id in stops_dict and start_time <= arrival and arrival <= end_time) or 
-                (x.stop_id in stops_dict and stops_dict[x.stop_id][0] == 1 and arrival <= end_time)):  # first stop in trip
+                (x.stop_id in stops_dict and stops_dict[x.stop_id][0] == 1 and arrival <= end_time and x.departure)):  # first stop in trip
                 gtfs_sequence_of_detected_stops.append(stops_dict[x.stop_id][0])
                 filtered_detected_stop_times.append(x)
                 filtered_detected_stop_times_inds.append(i)
@@ -108,12 +108,14 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
     while len(trip_delays_ids_temp) > 0:
         trip_delay_id_root = trip_delays_ids_temp[0]
         del trip_delays_ids_temp[0]
+        if trip_delay_id_root[0] > 1800:  # half an hour
+            continue
         trip_delays_ids_list = [trip_delay_id_root]
         intersecting_trip_delays_ids = [x for x in trip_delays_ids_temp if trip_datastore.DoTripsIntersect(trip_delay_id_root[1], x[1])]
         trip_delays_ids_list += intersecting_trip_delays_ids
         trip_delays_ids_list_of_lists.append(trip_delays_ids_list)
         trip_delays_ids_temp = [x for x in trip_delays_ids_temp if x not in intersecting_trip_delays_ids]
-    #print trip_delays_ids_list_of_lists
+    print trip_delays_ids_list_of_lists
     return trip_delays_ids_list_of_lists
 
 cl = get_redis_client()
