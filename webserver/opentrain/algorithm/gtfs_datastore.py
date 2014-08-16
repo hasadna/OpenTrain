@@ -108,7 +108,7 @@ def GenerateTripData(day):
     result[trip.gtfs_trip_id]['stop_inds'] = []
     stop_times = list(trip.get_stop_times())
     for stop_time in stop_times:
-      result[trip.gtfs_trip_id]['stops'][str(stop_time.stop.gtfs_stop_id)] = (stop_time.stop_sequence, stop_time.exp_arrival, stop_time.exp_departure)
+      result[trip.gtfs_trip_id]['stops'][str(stop_time.stop.gtfs_stop_id)] = (stop_time.stop_sequence, stop_time.exp_arrival)
       result[trip.gtfs_trip_id]['stop_inds'].append(stops.all_stops.id_list.index(stop_time.stop.gtfs_stop_id))
       result[trip.gtfs_trip_id]['start_time'] = stop_times[0].exp_arrival
       result[trip.gtfs_trip_id]['end_time'] = stop_times[-1].exp_departure
@@ -136,7 +136,7 @@ def GetRedisData(redis_key, day=None):
           stop_data = data[trip_id]['stops'][stop_id]
           #stop_data[1] = ot_utils.get_localtime(dateutil.parser.parse(stop_data[1]))
           #stop_data[2] = ot_utils.get_localtime(dateutil.parser.parse(stop_data[2]))
-          data[trip_id]['stops'][stop_id][2] = stop_data
+          data[trip_id]['stops'][stop_id] = stop_data
   
   redis_cache[redis_key] = data
   return data

@@ -58,4 +58,4 @@ def run_tracker_on_trips_without_ground_truth(device_ids=None):
     
 if __name__ == '__main__':
     logger.addFilter(MessageExcludeFilter('saving disabled!!!'))
-    run_tracker_on_trips_without_ground_truth(['ofer_df0106ed1d770799'])    
+    run_tracker_on_trips_without_ground_truth(['ofer_bd8328013f7ccaee'])    
