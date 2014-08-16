@@ -52,4 +52,5 @@ a.log*
 webserver/opentrain/tmp-trans
 \#*
 \.#*
+.idea
 

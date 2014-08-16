@@ -27,7 +27,12 @@ class ApiView(View):
                 meta['next'] = req.path + '?' + urllib.urlencode(d)
         content = dict(objects=items,meta=meta)
         return HttpResponse(content=json.dumps(content),content_type='application/json',status=200)
-    
+
+
+    def get_json_resp(self,content,status=200):
+        return HttpResponse(content=json.dumps(content),content_type='application/json',status=status)
+
+
     def get_bool(self,key,defval=None):
         val = self.GET.get(key,None)
         if val is None:
@@ -38,7 +43,9 @@ class ApiView(View):
         if val == 'true':
             return True
         return bool(int(val))
-    
+
+
+
     def get_doc(self):
         return self.__doc__
     
@@ -87,7 +94,7 @@ class TripIdsForDate(ApiView):
         objects=[trip.gtfs_trip_id for trip in trips]
         result = dict(objects=objects,
                       meta=dict(total_count=len(objects)))
-        return HttpResponse(status=200,content=json.dumps(result),content_type='application/json')
+        return self.get_json_resp(result)
 
 class TripDetails(ApiView):
     """ Return details for trip with id trip_id (given in url) 
@@ -98,7 +105,7 @@ class TripDetails(ApiView):
         import timetable.services
         trip = timetable.services.get_trip(gtfs_trip_id)
         result = trip.to_json_full()
-        return HttpResponse(status=200,content=json.dumps(result),content_type='application/json')
+        return self.get_json_resp(result)
 
 class CurrentTrips(ApiView):
     """ Return current trips """
@@ -119,7 +126,7 @@ class TripsLocation(ApiView):
         live_trips = analysis.logic.get_trips_location(trip_ids.split(','))     
         result = dict(objects=live_trips)
         result['meta'] = dict()
-        return HttpResponse(content=json.dumps(result),content_type='application/json',status=200)
+        return self.get_json_resp(result)
 
 class Devices(ApiView): 
     """ Return list of devices """
@@ -147,6 +154,17 @@ class DeviceReports(ApiView):
         reports = analysis.logic.get_device_reports(device_id,info)
         return self._prepare_list_resp(request,reports,info)
 
+class DeviceStatus(ApiView):
+    """ Returns the status of current device, e.g. its real time location <br/>
+    Should be used mainly for testing
+    """
+    api_url = r'devices/(?P<device_id>[\w ]+)/status/'
+    def get(self,request,device_id):
+        import algorithm.train_tracker
+        result = algorithm.train_tracker.get_device_status(device_id)
+        return self.get_json_resp(result)
+
+
 class BssidToStop(ApiView):
     """ Returns stop info for each bssid 
     get bssids as paramter
@@ -156,5 +174,5 @@ class BssidToStop(ApiView):
         bssids = self.GET.get('bssids').split(',')
         all = self.get_bool('all',False)
         pass
-    
-     
+
+

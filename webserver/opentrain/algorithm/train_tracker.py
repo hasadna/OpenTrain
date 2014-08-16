@@ -175,5 +175,9 @@ def get_trusted_trip_or_none(trips, time_deviation_in_seconds):
         logger.info('time_deviation_ratio={} and so we do not trust trip={}'.format(time_deviation_ratio, trips[0]))
         return None 
 
+def get_device_status(device_id):
+    trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(device_id))
+    return str(trip_delays_ids_list_of_lists)
+
 cl = get_redis_client()
 p = get_redis_pipeline()
