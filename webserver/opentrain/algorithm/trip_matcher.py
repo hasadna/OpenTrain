@@ -70,7 +70,8 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
             # - stops that are detected and are in trip:
             # - stops that are in trip time range:
             arrival = x.arrival
-            if x.stop_id in stops_dict and start_time <= arrival and arrival <= end_time:
+            if ((x.stop_id in stops_dict and start_time <= arrival and arrival <= end_time) or 
+                (x.stop_id in stops_dict and stops_dict[x.stop_id][0] == 1 and arrival <= end_time)):  # first stop in trip
                 gtfs_sequence_of_detected_stops.append(stops_dict[x.stop_id][0])
                 filtered_detected_stop_times.append(x)
                 filtered_detected_stop_times_inds.append(i)
@@ -92,7 +93,10 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
                     stop_and_arrival_gtfs = stops_dict.get(detected_stop_time.stop_id)
                     if stop_and_arrival_gtfs:
                         exp_arrival = ot_utils.get_localtime(dateutil.parser.parse(stop_and_arrival_gtfs[1]))
-                        arrival_delta_seconds = exp_arrival - detected_stop_time.arrival
+                        if stop_and_arrival_gtfs[0] == 1:  # first stop in trip - compare departures
+                            arrival_delta_seconds = exp_arrival - detected_stop_time.departure
+                        else:
+                            arrival_delta_seconds = exp_arrival - detected_stop_time.arrival
                         arrival_delta_abs_sum += abs(arrival_delta_seconds).total_seconds()
                 arrival_delta_abs_mean = arrival_delta_abs_sum/len(filtered_detected_stop_times_inds)
                 arrival_delta_abs_means_seconds.append(arrival_delta_abs_mean)                
@@ -109,7 +113,7 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
         trip_delays_ids_list += intersecting_trip_delays_ids
         trip_delays_ids_list_of_lists.append(trip_delays_ids_list)
         trip_delays_ids_temp = [x for x in trip_delays_ids_temp if x not in intersecting_trip_delays_ids]
-    print trip_delays_ids_list_of_lists
+    #print trip_delays_ids_list_of_lists
     return trip_delays_ids_list_of_lists
 
 cl = get_redis_client()
