@@ -41,7 +41,7 @@ import trip_ground_truth
 from alg_logger import MessageExcludeFilter
 
 
-def track_device(device_id, do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=False):
+def track_device(device_id, do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=False, report_limit=10000000):
     #device_coords, device_timestamps, device_accuracies_in_meters, device_accuracies_in_coords = get_location_info_from_device_id(device_id)
     now = ot_utils.get_localtime_now()
     reports_queryset = stop_detector_test.get_device_id_reports(device_id)
@@ -54,6 +54,8 @@ def track_device(device_id, do_print=False, do_preload_reports=True, set_reports
         reports_queryset = list(reports_queryset)
     count = len(reports_queryset) if isinstance(reports_queryset, list) else reports_queryset.count()
     for i in xrange(count):
+        if i > report_limit:
+            break;
         if i % fps_period_length == 0:
             elapsed = (time.clock() - fps_period_start)
             if elapsed > 0:

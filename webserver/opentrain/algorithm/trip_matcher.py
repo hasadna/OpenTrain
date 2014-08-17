@@ -70,8 +70,8 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
             # - stops that are detected and are in trip:
             # - stops that are in trip time range:
             arrival = x.arrival
-            if ((x.stop_id in stops_dict and start_time <= arrival and arrival <= end_time) or 
-                (x.stop_id in stops_dict and stops_dict[x.stop_id][0] == 1 and arrival <= end_time and x.departure)):  # first stop in trip
+            if ((x.stop_id in stops_dict and arrival <= end_time and 
+                 ((stops_dict[x.stop_id][0] != 1 and start_time <= arrival) or (stops_dict[x.stop_id][0] == 1 and x.departure)))):  # first stop in trip
                 gtfs_sequence_of_detected_stops.append(stops_dict[x.stop_id][0])
                 filtered_detected_stop_times.append(x)
                 filtered_detected_stop_times_inds.append(i)
