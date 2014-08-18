@@ -2,7 +2,7 @@ from django.middleware.common import CommonMiddleware
 import urlparse
 import time
 class OpenTrainMiddleware(CommonMiddleware):
-    def process_exception(request,exception):
+    def process_exception(self,request,exception):
         print '>' * 50
         print 'ERROR'
         print request.path
