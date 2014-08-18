@@ -3,7 +3,12 @@ import urlparse
 import time
 class OpenTrainMiddleware(CommonMiddleware):
     def process_exception(request,exception):
+        print '>' * 50
+        print 'ERROR'
+        print request.path
+        print '=============================='
         print exception
+        print '>' * 50
     
     def process_response(self, request, response):
         from django.db import connection
