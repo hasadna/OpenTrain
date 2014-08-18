@@ -315,7 +315,12 @@ def load_bssids_from_manual_map_file():
     
     return data
             
-            
+
+def get_bssid_data_for_app():
+  bssids = tracker.get_bssids()
+  high_conf_bssids = [x for x in bssids if tracker.has_bssid_high_confidence(x)]
+  stop_ids = [tracker.get_stop_id(x) for x in high_conf_bssids]
+  return dict(zip(high_conf_bssids, stop_ids))
 
 tracker = get_tracker(False)
 if USE_FILE:

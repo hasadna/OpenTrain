@@ -164,7 +164,14 @@ class DeviceStatus(ApiView):
         result = algorithm.train_tracker.get_device_status(device_id)
         return self.get_json_resp(result)
 
-
+class BssidsToStopIds(ApiView):
+    """ returns map of bssids to stops """
+    api_url = r'stops/bssids'
+    def get(self,request):
+        import algorithm.bssid_tracker
+        data = algorithm.bssid_tracker.get_bssid_data_for_app()
+        return self.get_json_resp(result)
+        
 class BssidToStop(ApiView):
     """ Returns stop info for each bssid 
     get bssids as paramter

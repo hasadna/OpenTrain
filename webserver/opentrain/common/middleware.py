@@ -9,6 +9,7 @@ class OpenTrainMiddleware(CommonMiddleware):
         print '=============================='
         print exception
         print '>' * 50
+        return None
     
     def process_response(self, request, response):
         from django.db import connection
