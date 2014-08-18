@@ -137,7 +137,7 @@ if DEBUG:
 
 #print '#DJANGO: DEBUG = %s' % (DEBUG)
 
-
+import time
 LOGGING = {
     'version' : 1,
     'disable_existing_loggers': False,
@@ -150,12 +150,12 @@ LOGGING = {
         'file': {
             'class': 'logging.FileHandler',
             'filename': '/var/log/opentrain/error.log',
+            'formatter' : 'simple',
         },
     },
     'loggers': {
         'opentrain.errors': {
             'handlers': ['file'],
-            'formatter' : 'simple',
         },
     },
 }
