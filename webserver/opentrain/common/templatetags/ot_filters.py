@@ -11,6 +11,7 @@ def week_day(dt):
 
 @register.filter(name='timeonly')
 def timeonly(dt):
+    dt = common.ot_utils.get_localtime(dt)
     h = dt.hour
     m = dt.minute
     s = dt.second
