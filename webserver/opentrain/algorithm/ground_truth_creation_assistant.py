@@ -2,6 +2,9 @@
 export DJANGO_SETTINGS_MODULE="opentrain.settings"
 """
 import os
+import sys
+sys.path.append(os.getcwd())
+sys.path.append(os.path.dirname(os.getcwd()))
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 #/home/oferb/docs/train_project/OpenTrains/webserver
 import timetable.services
@@ -48,7 +51,7 @@ def run_tracker_on_trips_without_ground_truth(device_ids=None):
     
     for i in xrange(len(device_ids)):
         device_id = device_ids[i] 
-        tracker_id, trips = train_tracker_test.track_device(device_id, do_preload_reports=True)
+        tracker_id, trips = train_tracker_test.track_device(device_id, do_preload_reports=True, report_limit=100)
         print 'DEVICE_ID=%s' % device_id
         for trip_id in trips:
             timetable.services.print_trip_stop_times(trip_id)
@@ -58,4 +61,4 @@ def run_tracker_on_trips_without_ground_truth(device_ids=None):
     
 if __name__ == '__main__':
     logger.addFilter(MessageExcludeFilter('saving disabled!!!'))
-    run_tracker_on_trips_without_ground_truth(['ofer_df0106ed1d770799'])    
+    run_tracker_on_trips_without_ground_truth(['ofer_3138f247524647e4'])    

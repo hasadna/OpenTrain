@@ -61,6 +61,7 @@ class BSSIDTracker(object):
             if file_map.has_key(bssid):
                 return file_map[bssid], 1, 1
             else:
+                logger.warn('Unknown bssid: %s' % bssid)
                 return stops.NOSTOP_ID, 0, 0
         else:
             p = get_redis_pipeline()
@@ -94,9 +95,13 @@ class BSSIDTracker(object):
     
     def has_bssid_high_confidence(self, bssid):
         if USE_FILE and not bssid.startswith(FAKE_BSSID_PREFIX):
-            return file_map.has_key(bssid)
+            result = file_map.has_key(bssid)
+            if not result:
+                logger.warn('Unknown bssid: %s' % bssid)
+            return result
         else:        
             if not self.has_bssid(bssid):
+                logger.warn('Unknown bssid: %s' % bssid)
                 return False
             
             _, stop_probability, total = self.get_stop_id(bssid)

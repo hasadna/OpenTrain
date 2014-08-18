@@ -70,7 +70,8 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
             # - stops that are detected and are in trip:
             # - stops that are in trip time range:
             arrival = x.arrival
-            if x.stop_id in stops_dict and start_time <= arrival and arrival <= end_time:
+            if ((x.stop_id in stops_dict and arrival <= end_time and 
+                 ((stops_dict[x.stop_id][0] != 1 and start_time <= arrival) or (stops_dict[x.stop_id][0] == 1 and x.departure)))):  # first stop in trip
                 gtfs_sequence_of_detected_stops.append(stops_dict[x.stop_id][0])
                 filtered_detected_stop_times.append(x)
                 filtered_detected_stop_times_inds.append(i)
@@ -92,7 +93,10 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
                     stop_and_arrival_gtfs = stops_dict.get(detected_stop_time.stop_id)
                     if stop_and_arrival_gtfs:
                         exp_arrival = ot_utils.get_localtime(dateutil.parser.parse(stop_and_arrival_gtfs[1]))
-                        arrival_delta_seconds = exp_arrival - detected_stop_time.arrival
+                        if stop_and_arrival_gtfs[0] == 1:  # first stop in trip - compare departures
+                            arrival_delta_seconds = exp_arrival - detected_stop_time.departure
+                        else:
+                            arrival_delta_seconds = exp_arrival - detected_stop_time.arrival
                         arrival_delta_abs_sum += abs(arrival_delta_seconds).total_seconds()
                 arrival_delta_abs_mean = arrival_delta_abs_sum/len(filtered_detected_stop_times_inds)
                 arrival_delta_abs_means_seconds.append(arrival_delta_abs_mean)                
@@ -104,6 +108,8 @@ def get_matched_trips(tracker_id, detected_stop_times, day):
     while len(trip_delays_ids_temp) > 0:
         trip_delay_id_root = trip_delays_ids_temp[0]
         del trip_delays_ids_temp[0]
+        if trip_delay_id_root[0] > 1800:  # half an hour
+            continue
         trip_delays_ids_list = [trip_delay_id_root]
         intersecting_trip_delays_ids = [x for x in trip_delays_ids_temp if trip_datastore.DoTripsIntersect(trip_delay_id_root[1], x[1])]
         trip_delays_ids_list += intersecting_trip_delays_ids

@@ -1,4 +1,7 @@
 import os
+import sys
+sys.path.append(os.getcwd())
+sys.path.append(os.path.dirname(os.getcwd()))
 os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
 import analysis.models
 import numpy as np
@@ -55,7 +58,7 @@ def find_index_of_first_consecutive_value(values, start_index):
     
     return res
 
-def get_report_counts_and_dates():
+def get_report_counts_and_dates(do_print=False):
     result = []
     device_ids = analysis.models.Report.objects.values_list('device_id', flat=True).distinct()
     for device_id in device_ids:
@@ -63,10 +66,13 @@ def get_report_counts_and_dates():
         report = analysis.models.Report.objects.filter(device_id=device_id).order_by('timestamp')[:1].get()
         result.append((report.timestamp.date(), count, device_id))
     result = sorted(result)
+    if do_print:
+        for x in result:
+            print x    
     return result        
     
         
 
 if __name__ == '__main__':
     pass
-    get_reports_and_dates()
+    get_report_counts_and_dates(True)

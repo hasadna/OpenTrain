@@ -27,6 +27,7 @@ class StopList(dict):
         super(StopList, self).__init__()
         
         stops = timetable.services.get_all_stops_ordered_by_id()
+        assert len(stops) > 0, 'No stops in DB'
         stops = list(stops)
         
         self.id_list = []

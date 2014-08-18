@@ -2,7 +2,10 @@
 export DJANGO_SETTINGS_MODULE="opentrain.settings"
 """
 import os
-os.environ['DJANGO_SETTINGS_MODULE']='opentrain.settings'
+import sys
+sys.path.append(os.getcwd())
+sys.path.append(os.path.dirname(os.getcwd()))
+os.environ['DJANGO_SETTINGS_MODULE'] = 'opentrain.settings'
 #/home/oferb/docs/train_project/OpenTrains/webserver
 import timetable.services
 import analysis.models
@@ -38,10 +41,11 @@ import trip_ground_truth
 from alg_logger import MessageExcludeFilter
 
 
-def track_device(device_id, do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=False):
+def track_device(device_id, do_print=False, do_preload_reports=True, set_reports_to_same_weekday_last_week=False, report_limit=10000000):
     #device_coords, device_timestamps, device_accuracies_in_meters, device_accuracies_in_coords = get_location_info_from_device_id(device_id)
     now = ot_utils.get_localtime_now()
     reports_queryset = stop_detector_test.get_device_id_reports(device_id)
+    assert reports_queryset.count() > 0, 'No device reports in db'
     tracker_id = device_id
     
     fps_period_start = time.clock()
@@ -50,6 +54,8 @@ def track_device(device_id, do_print=False, do_preload_reports=True, set_reports
         reports_queryset = list(reports_queryset)
     count = len(reports_queryset) if isinstance(reports_queryset, list) else reports_queryset.count()
     for i in xrange(count):
+        if i > report_limit:
+            break;
         if i % fps_period_length == 0:
             elapsed = (time.clock() - fps_period_start)
             if elapsed > 0:
@@ -88,7 +94,7 @@ class train_tracker_test(TestCase):
         trips = get_trusted_trips(trip_delays_ids_list_of_lists)
         return trips
     
-    def test_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_1', trip_ids = ['010714_00115', '010714_00283'], remove_some_locations=True):
+    def test_tracker_on_mock_device_multiple_trips(self, device_id = 'fake_device_2', trip_ids = ['010714_00115', '010714_00283'], remove_some_locations=True):
         self.test_tracker_on_mock_device(device_id, trip_ids, remove_some_locations)
         
     def test_tracker_on_mock_device(self, device_id = 'fake_device_1', trip_ids = ['010714_00115'], remove_some_locations=True):
