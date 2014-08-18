@@ -9,22 +9,38 @@ import argparse
 import time
 import common.mock_reports_generator
 
+SEND_REPORT_URL = 'http://%s/reports/add/'
+
 
 def send_reports(reports, server, delay=0):
-    url = 'http://%s/reports/add/' % (server)
+    print 'Going to send %d reports' % (len(reports))
+    url = SEND_REPORT_URL % (server)
     for idx,report in enumerate(reports):
-        rr = common.mock_reports_generator.raw_report_from_report(report)
-        headers = {'content-type':'application/json'}
-        body = json.dumps(rr)
-        resp = requests.post(url,headers=headers,data=body)
-        if not resp.ok:
-            print 'failed with: ' + resp.content[0:100]
-            print 'full log in /tmp/error.html'
-            with open('/tmp/error.html','w') as fh:
-                fh.write(resp.content)
-            sys.exit(1)
+        send_report(report, url)
         time.sleep(delay)
         print 'Sent %d / %d so far' % (idx + 1, len(reports))
+
+
+def send_report(report, url):
+    rr = common.mock_reports_generator.raw_report_from_report(report)
+    headers = {'content-type':'application/json'}
+    body = json.dumps(rr)
+    resp = requests.post(url,headers=headers,data=body)
+    if not resp.ok:
+        print 'failed with: ' + resp.content[0:100]
+        print 'full log in /tmp/error.html'
+        with open('/tmp/error.html','w') as fh:
+            fh.write(resp.content)
+        sys.exit(1)
+
+
+def print_sending_params(server, device_id, trip_id, delay):
+    print 'trip_id = %s' % (trip_id)
+    print 'device_id = %s' % (device_id)
+    print 'server = %s' % (server)
+    print 'delay = %s' % (delay)
+    print 'website url = http://opentrain.hasadna.org.il/analysis/device-reports/?device_id={}'.format(device_id)
+
 
 if __name__ == '__main__':
     default_device_id = common.ot_utils.get_localtime_now().strftime('test_%Y%m%d_%H%M')
@@ -36,13 +52,6 @@ if __name__ == '__main__':
     
     ns = parser.parse_args()
     reports = common.mock_reports_generator.generate_mock_reports(ns.device_id, ns.trip_id, nostop_percent=0.05)
-    print 'Going to send %d reports' % (len(reports))
-    
-    print 'trip_id = %s' % (ns.trip_id)
-    print 'device_id = %s' % (ns.device_id)
-    print 'server = %s' % (ns.server)
-    print 'delay = %s' % (ns.delay)
-    print 'website url = http://opentrain.hasadna.org.il/analysis/device-reports/?device_id={}'.format(ns.device_id)    
-    
+    print_sending_params(**ns.__dict__)
     send_reports(reports, ns.server, ns.delay)
     

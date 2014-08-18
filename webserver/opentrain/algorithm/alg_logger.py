@@ -58,9 +58,9 @@ logger.addHandler(fh)
 logger.addFilter(FilenameLineNumberExcludeFilter('alg', 40))
 logger.addFilter(MessageExcludeFilter('aaa'))
 #logger.addFilter(FilenameLineNumberExcludeFilter('stop_detector.py'))
-logger.addFilter(FilenameLineNumberExcludeFilter('train_tracker.py', 67))
-logger.addFilter(FilenameLineNumberExcludeFilter('train_tracker.py', 118))
-logger.addFilter(FilenameLineNumberExcludeFilter('client.py', 17))
+#logger.addFilter(FilenameLineNumberExcludeFilter('train_tracker.py', 67))
+#logger.addFilter(FilenameLineNumberExcludeFilter('train_tracker.py', 118))
+#logger.addFilter(FilenameLineNumberExcludeFilter('client.py', 17))
 # this will get filtered out by both rules:
 logger.debug('aaa')
 
