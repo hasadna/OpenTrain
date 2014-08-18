@@ -138,3 +138,25 @@ if DEBUG:
 #print '#DJANGO: DEBUG = %s' % (DEBUG)
 
 
+LOGGING = {
+    'version' : 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple' : {
+            'format' : "%(asctime)s %(levelname)s %(message)s",   
+        },
+    }, 
+    'handlers': {
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': '/var/log/opentrain/error.log',
+        },
+    },
+    'loggers': {
+        'opentrain.errors': {
+            'handlers': ['file'],
+            'formatter' : 'simple',
+        },
+    },
+}
+
