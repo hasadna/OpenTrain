@@ -320,13 +320,19 @@ def get_bssid_data_for_app():
   bssids = tracker.get_bssids()
   high_conf_bssids = [x for x in bssids if tracker.has_bssid_high_confidence(x)]
   result = dict()
+  all_stops = list(TtStop.all())
+  all_stops_by_gtfs_stop_id = dict()
+  for stop in all_stops:
+      all_stops_by_gtfs_stop_id[stop.gtfs_stop_id] = stop
   for bssid in high_conf_bssids:
+      from timetable.models import TtStop
       (stop_id,prob,total) = tracker.get_stop_id(x)
-      entry = {
-        'stop_id': stop_id,
+      stop = all_stops_by_gtfs_stop_id(stop_id)
+      entry = stop.to_json()
+      entry.update({
         'probability' : prob,
         'total' : total
-      }
+      });
       result[bssid] = entry
   return result
 

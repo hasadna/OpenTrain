@@ -13,7 +13,8 @@ class TtStop(models.Model):
     
     def to_json(self):
         return dict(stop_name=self.stop_name,
-                    latlon=[self.stop_lat,self.stop_lon])
+                    latlon=[self.stop_lat,self.stop_lon],
+                    gtfs_stop_id=self.gtfs_stop_id)
 
 
 
