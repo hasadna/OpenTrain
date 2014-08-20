@@ -328,7 +328,7 @@ def get_bssid_data_for_app():
   for bssid in high_conf_bssids:
       from timetable.models import TtStop
       (stop_id,prob,total) = tracker.get_stop_id(x)
-      stop = all_stops_by_gtfs_stop_id(stop_id)
+      stop = all_stops_by_gtfs_stop_id[stop_id]
       entry = stop.to_json()
       entry.update({
         'probability' : prob,
