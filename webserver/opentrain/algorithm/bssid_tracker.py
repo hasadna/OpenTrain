@@ -324,7 +324,7 @@ def get_bssid_data_for_app():
       (stop_id,prob,total) = tracker.get_stop_id(x)
       entry = {
         'stop_id': stop_id,
-        'probability' : prob
+        'probability' : prob,
         'total' : total
       }
       result[bssid] = entry
