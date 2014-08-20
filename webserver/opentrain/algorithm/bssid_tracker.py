@@ -327,6 +327,7 @@ def get_bssid_data_for_app():
         'probability' : prob
         'total' : total
       }
+      result[bssid] = entry
   return result
 
 tracker = get_tracker(False)
