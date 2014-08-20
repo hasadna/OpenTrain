@@ -170,14 +170,8 @@ class BssidsToStopIds(ApiView):
     def get(self,request):
         import algorithm.bssid_tracker
         data = algorithm.bssid_tracker.get_bssid_data_for_app()
-        return self.get_json_resp(result)
+        return self.get_json_resp(data)
 
-class GenError(ApiView):
-    """ dummy call to gen error """
-    api_url = r'dummy/error'
-    def get(self,request):
-        raise Exception('dummy error')
-        
 class BssidToStop(ApiView):
     """ Returns stop info for each bssid 
     get bssids as paramter
