@@ -179,9 +179,18 @@ def get_device_status(device_id):
     trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(device_id))
     return trip_delays_ids_list_of_lists
 
-def get_device_status_for_app(device_id):
+def get_device_status_for_app(report):
+    """
+    :param report
+    :return: trusted trip for this report
+    currently it just returns the first one, but later it should changed to return based on the report timestamp
+    """
+    device_id = report.device_id
     trip_delays_ids_list_of_lists = load_by_key(get_train_tracker_trip_delays_ids_list_of_lists_key(device_id))
-    return get_trusted_trips(trip_delays_ids_list_of_lists)
+    trusted_trips = get_trusted_trips(trip_delays_ids_list_of_lists)
+    if trusted_trips:
+        return trusted_trips[0]
+    return None
 
 cl = get_redis_client()
 p = get_redis_pipeline()

@@ -20,8 +20,8 @@ def add(req):
         return HttpResponseBadRequest(content="Could not parse json",content_type='plain/text')
     rep = models.RawReport(text=text)
     rep.save()
-    analysis.logic.analyze_single_raw_report(rep)
-    content = {'cur_gtfs_trip_id': None}
+    cur_gtfs_trip_id = analysis.logic.analyze_single_raw_report(rep)
+    content = {'cur_gtfs_trip_id': cur_gtfs_trip_id}
     return HttpResponse(status=201,content=json.dumps(content),content_type='application/json')
 
 def show(req):

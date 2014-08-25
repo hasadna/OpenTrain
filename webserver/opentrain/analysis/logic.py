@@ -93,7 +93,7 @@ def analyze_single_raw_report(rr):
             reports.append(report)
     for report in reports: 
         algorithm.train_tracker.add_report(report) 
-    
+    return algorithm.train_tracker.get_device_status_for_app(report)
     
 ## DEVICES SUMMAY ##    
     
