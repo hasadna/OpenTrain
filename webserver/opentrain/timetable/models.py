@@ -1,5 +1,6 @@
 from django.db import models
 import common.ot_utils as ot_utils
+import names.STOP_SHORT_NAMES
 
 class TtStop(models.Model):
     gtfs_stop_id = models.IntegerField(db_index=True,null=True)
@@ -14,7 +15,8 @@ class TtStop(models.Model):
     def to_json(self):
         return dict(stop_name=self.stop_name,
                     latlon=[self.stop_lat,self.stop_lon],
-                    gtfs_stop_id=self.gtfs_stop_id)
+                    gtfs_stop_id=self.gtfs_stop_id,
+                    short_name=names.STOP_SHORT_NAMES.get(self.gtfs_stop_id))
 
 
 

@@ -21,7 +21,8 @@ def add(req):
     rep = models.RawReport(text=text)
     rep.save()
     analysis.logic.analyze_single_raw_report(rep)
-    return HttpResponse(status=201,content="report accepted")
+    content = {'cur_gtfs_trip_id': None}
+    return HttpResponse(status=201,content=json.dumps(content),content_type='application/json')
 
 def show(req):
     count = int(req.GET.get('count',20))
