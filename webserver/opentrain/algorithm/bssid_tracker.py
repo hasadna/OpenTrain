@@ -327,7 +327,7 @@ def get_bssid_data_for_app():
       all_stops_by_gtfs_stop_id[stop.gtfs_stop_id] = stop
   for bssid in high_conf_bssids:
       from timetable.models import TtStop
-      (stop_id,prob,total) = tracker.get_stop_id(x)
+      (stop_id,prob,total) = tracker.get_stop_id(bssid)
       stop = all_stops_by_gtfs_stop_id[stop_id]
       entry = stop.to_json()
       entry.update({
