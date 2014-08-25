@@ -1,6 +1,6 @@
 from django.db import models
 import common.ot_utils as ot_utils
-import names.STOP_SHORT_NAMES
+import names
 
 class TtStop(models.Model):
     gtfs_stop_id = models.IntegerField(db_index=True,null=True)
