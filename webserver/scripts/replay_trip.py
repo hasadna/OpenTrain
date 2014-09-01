@@ -8,6 +8,16 @@ import dateutil.parser
 DIST_TO_STOP = 300
 
 
+class ShapeInfo(object):
+    def __init__(self,stop_idx=None,dist=None):
+        if stop_idx is not None:
+            assert dist,'Dist cannot be None if stop_idx is given'
+        self.stop_idx = stop_idx
+        self.dist = dist
+
+    def __nonzero__(self):
+        return self.stop_idx is not None
+
 class Replayer(object):
     def __init__(self, gtfs_trip_id, device_id,server=None):
         self.gtfs_trip_id = gtfs_trip_id
@@ -52,44 +62,54 @@ class Replayer(object):
         self.trip_details = self.do_get('/api/1/trips/%s/details/'  % self.gtfs_trip_id)
         stop_times = self.trip_details['stop_times']
         shapes = self.trip_details['shapes']
-        self.dists = [None] * len(shapes)
+        self.shape_infos = [None] * len(shapes)
         for shape_idx,shape in enumerate(shapes):
             dists = [self.calc_distance(shape,stop_time['stop']['latlon']) for stop_time in stop_times]
             val, idx = min((val, idx) for (idx, val) in enumerate(dists))
             if val < DIST_TO_STOP:
-                self.dists[shape_idx] = (idx,val)
-        print '# of stops = %s' % (len(stop_times))
-        for stop in stop_times:
-            print stop
+                self.shape_infos[shape_idx] = ShapeInfo(stop_idx=idx,dist=val)
+            else:
+                self.shape_infos[shape_idx] = ShapeInfo(stop_idx=None)
 
+        print '# of stops = %s' % (len(stop_times))
+        #for stop in stop_times:
+        #    print stop
+        self.check_shapes()
+        #self.compute_shape_times()
+
+
+    def check_shapes(self):
+        print 'Checking shapes'
+        stop_times = self.trip_details['stop_times']
         last_was_none = False
         all_stop_idxes = []
-        for idx,dist in enumerate(self.dists):
-            if dist:
-                stop_idx,stop_dist = dist
+        for idx,si in enumerate(self.shape_infos):
+            if si:
                 if all_stop_idxes:
                     last_stop_idx = all_stop_idxes[-1]
                 else:
                     last_stop_idx = -1
-                if stop_idx == last_stop_idx:
+                if si.stop_idx == last_stop_idx:
                     if last_was_none:
                         raise Exception('Illegal dist - same idx with null between for idx = %s' % idx)
-                elif stop_idx != last_stop_idx + 1:
+                elif si.stop_idx != last_stop_idx + 1:
                     raise Exception('Illegal dist - should be consecutive for idx = %s' % idx)
                 else:
-                    all_stop_idxes.append(stop_idx)
-                print '%s : %s %.1f' % (idx,stop_idx,stop_dist)
-            if idx == 0 and not dist:
+                    all_stop_idxes.append(si.stop_idx)
+                #print '%s : %s %.1f' % (idx,stop_idx,stop_dist)
+            if idx == 0 and not si:
                 raise Exception('first idx must have dist')
-            if idx == len(self.dists) - 1 and not dist:
+            if idx == len(self.shape_infos) - 1 and not si:
                 raise Exception('last idx must have dist')
-            last_was_none = False if dist else True
+            last_was_none = False if si else True
 
         if all_stop_idxes != range(0,len(stop_times)):
             print all_stop_idxes
             print range(0,len(stop_times))
             raise Exception('not all stop idxes were covered')
 
+
+        
 
     def build_bssid(self):
         self.bssid_to_stop = self.do_get('/api/1/stops/bssids')
