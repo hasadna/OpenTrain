@@ -47,14 +47,13 @@ class Replayer(object):
 
 
     def build_trip(self):
-        import pdb
-        pdb.set_trace()
         self.trip_details = self.do_get('/api/1/trips/240814_00146/details/')
         self.dists = [None] * len(self.trip_details['shapes'])
+        import pdb
+        pdb.set_trace()
         for shape_idx,shape in enumerate(self.trip_details['shapes']):
-            self.dists[shape_idx] = [0]*len(self.trip_details['stop_times'])
-            for stop_idx,stop_time in self.trip_details['stop_times']:
-                self.dist[shape_idx][stop_idx] = self.calc_distance(shape,stop_time['stop']['latlon'])
+            dists = [self.calc_distance(shape,stop_time['stop']['latlon']) for stop_time in self.trip_details['stop_times']]
+
 
     def build_bssid(self):
         self.bssid_to_stop = self.do_get('/api/1/stops/bssids')
