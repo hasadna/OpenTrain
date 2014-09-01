@@ -62,10 +62,34 @@ class Replayer(object):
         for stop in stop_times:
             print stop
 
+        last_was_none = False
+        all_stop_idxes = []
         for idx,dist in enumerate(self.dists):
             if dist:
                 stop_idx,stop_dist = dist
+                if all_stop_idxes:
+                    last_stop_idx = all_stop_idxes[-1]
+                else:
+                    last_stop_idx = -1
+                if stop_idx == last_stop_idx:
+                    if last_was_none:
+                        raise Exception('Illegal dist - same idx with null between for idx = %s' % idx)
+                elif stop_idx != last_stop_idx + 1:
+                    raise Exception('Illegal dist - should be consecutive for idx = %s' % idx)
+                else:
+                    all_stop_idxes.append(stop_idx)
                 print '%s : %s %.1f' % (idx,stop_idx,stop_dist)
+            if idx == 0 and not dist:
+                raise Exception('first idx must have dist')
+            if idx == len(self.dists) - 1 and not dist:
+                raise Exception('last idx must have dist')
+            last_was_none = False if dist else True
+
+        if all_stop_idxes != range(0,len(stop_times)):
+            print all_stop_idxes
+            print range(0,len(stop_times))
+            raise Exception('not all stop idxes were covered')
+
 
     def build_bssid(self):
         self.bssid_to_stop = self.do_get('/api/1/stops/bssids')
