@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import argparse
-from sphinx.writers.latex import collected_footnote
 import requests
 import collections
 import dateutil.parser
@@ -48,8 +47,10 @@ class Replayer(object):
 
 
     def build_trip(self):
+        import pdb
+        pdb.set_trace()
         self.trip_details = self.do_get('/api/1/trips/240814_00146/details/')
-        self.dists = [None] * len(self.trip_details['stop_times'])
+        self.dists = [None] * len(self.trip_details['shapes'])
         for shape_idx,shape in enumerate(self.trip_details['shapes']):
             self.dists[shape_idx] = [0]*len(self.trip_details['stop_times'])
             for stop_idx,stop_time in self.trip_details['stop_times']:
