@@ -158,7 +158,7 @@ class DeviceStatus(ApiView):
     """ Returns the status of current device, e.g. its real time location <br/>
     Should be used mainly for testing
     """
-    api_url = r'devices/(?P<device_id>[\w ]+)/status/'
+    api_url = r'^devices/(?P<device_id>[\w ]+)/status/'
     def get(self,request,device_id):
         import algorithm.train_tracker
         result = algorithm.train_tracker.get_device_status(device_id)
@@ -166,7 +166,7 @@ class DeviceStatus(ApiView):
 
 class BssidsToStopIds(ApiView):
     """ returns map of bssids to stops """
-    api_url = r'stops/bssids'
+    api_url = r'^stops/bssids/'
     def get(self,request):
         import algorithm.bssid_tracker
         data = algorithm.bssid_tracker.get_bssid_data_for_app()
