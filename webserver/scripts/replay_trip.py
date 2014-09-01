@@ -5,6 +5,8 @@ import requests
 import collections
 import dateutil.parser
 
+DIST_TO_STOP = 300
+
 
 class Replayer(object):
     def __init__(self, gtfs_trip_id, device_id,server=None):
@@ -23,7 +25,7 @@ class Replayer(object):
             raise Exception('failed in get %s , written to file:///tmp/replay_error.html' % resp.status_code)
         return resp.json()
 
-    def calc_index(self,latlon1,latlon2):
+    def calc_distance(self,latlon1,latlon2):
         """
         Calculate the great circle distance between two points
         on the earth (specified in decimal degrees)
@@ -48,18 +50,29 @@ class Replayer(object):
 
     def build_trip(self):
         self.trip_details = self.do_get('/api/1/trips/240814_00146/details/')
-        self.dists = [None] * len(self.trip_details['shapes'])
-        import pdb
-        pdb.set_trace()
-        for shape_idx,shape in enumerate(self.trip_details['shapes']):
-            dists = [self.calc_distance(shape,stop_time['stop']['latlon']) for stop_time in self.trip_details['stop_times']]
+        stop_times = self.trip_details['stop_times']
+        shapes = self.trip_details['shapes']
+        self.dists = [None] * len(shapes)
+        for shape_idx,shape in enumerate(shapes):
+            dists = [self.calc_distance(shape,stop_time['stop']['latlon']) for stop_time in stop_times]
+            val, idx = min((val, idx) for (idx, val) in enumerate(dists))
+            if val < DIST_TO_STOP:
+                self.dists[shape_idx] = (idx,val)
+        print '# of stops = %s' % (len(stop_times))
+        for stop in stop_times:
+            print stop
 
+        for idx,dist in enumerate(self.dists):
+            if dist:
+                stop_idx,stop_dist = dist
+                print '%s : %s %.1f' % (idx,stop_idx,stop_dist)
 
     def build_bssid(self):
         self.bssid_to_stop = self.do_get('/api/1/stops/bssids')
         self.stop_to_bssids = collections.defaultdict(list)
         for bssid, info in self.bssid_to_stop.iteritems():
             self.stop_to_bssids[info['gtfs_stop_id']].append(bssid)
+
 
     def make_item(self,bssid,ssid,report_time,loc_time=None,latlon=None):
         result = {'app_version_code': 18,
@@ -87,8 +100,8 @@ class Replayer(object):
     def go(self):
         self.print_header()
         self.build_trip()
-        self.build_bssid()
-        self.send_reports()
+        #self.build_bssid()
+        #self.send_reports()
 
 
     def print_header(self):
