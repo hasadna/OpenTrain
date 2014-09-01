@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+from sphinx.writers.latex import collected_footnote
 import requests
 import collections
 import dateutil.parser
@@ -23,8 +24,36 @@ class Replayer(object):
             raise Exception('failed in get %s , written to file:///tmp/replay_error.html' % resp.status_code)
         return resp.json()
 
+    def calc_index(self,latlon1,latlon2):
+        """
+        Calculate the great circle distance between two points
+        on the earth (specified in decimal degrees)
+        """
+        from math import radians, cos, sin, asin, sqrt
+        # convert decimal degrees to radians
+        lat1,lon1 = latlon1
+        lat2,lon2 = latlon2
+        lat1 = radians(lat1)
+        lon1 = radians(lon1)
+        lat2 = radians(lat2)
+        lon2 = radians(lon2)
+
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * asin(sqrt(a))
+        km = 6367 * c
+        return km * 1000
+
+
     def build_trip(self):
         self.trip_details = self.do_get('/api/1/trips/240814_00146/details/')
+        self.dists = [None] * len(self.trip_details['stop_times'])
+        for shape_idx,shape in enumerate(self.trip_details['shapes']):
+            self.dists[shape_idx] = [0]*len(self.trip_details['stop_times'])
+            for stop_idx,stop_time in self.trip_details['stop_times']:
+                self.dist[shape_idx][stop_idx] = self.calc_distance(shape,stop_time['stop']['latlon'])
 
     def build_bssid(self):
         self.bssid_to_stop = self.do_get('/api/1/stops/bssids')
@@ -48,16 +77,6 @@ class Replayer(object):
                                    'provider': 'fused',
                                    'time': self.time_to_ms(loc_time)},
         return result
-
-    def send_stop_report(self, stop_time):
-        bssids = self.stop_to_bssids[stop_time['stop']['gtfs_stop_id']]
-        if not bssids:
-            print 'No bssids for %s' % (stop_time['stop']['gtfs_stop_id'])
-            return
-        arrival_time = dateutil.parser.parse(stop_time['exp_arrival'])
-        item = self.make_item(bssid=bssids[0],
-                              ssid='S-ISRAEL-RAILWAYS',
-                              report_time=arrival_time)
 
     def send_reports(self):
         stop_times = self.trip_details['stop_times']
