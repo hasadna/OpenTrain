@@ -5,7 +5,7 @@ import requests
 import collections
 import dateutil.parser
 
-DIST_TO_STOP = 300
+DIST_TO_STOP = 1000
 
 
 class Replayer(object):
@@ -49,7 +49,7 @@ class Replayer(object):
 
 
     def build_trip(self):
-        self.trip_details = self.do_get('/api/1/trips/240814_00146/details/')
+        self.trip_details = self.do_get('/api/1/trips/%s/details/'  % self.gtfs_trip_id)
         stop_times = self.trip_details['stop_times']
         shapes = self.trip_details['shapes']
         self.dists = [None] * len(shapes)
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
 
 def test():
-    r = Replayer(gtfs_trip_id='240814_00146',device_id='eran')  # ,server='localhost:8000')
+    r = Replayer(gtfs_trip_id='010914_00156',device_id='eran')  # ,server='localhost:8000')
     r.go()
     return r
 

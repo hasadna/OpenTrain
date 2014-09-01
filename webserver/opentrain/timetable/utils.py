@@ -32,7 +32,8 @@ def clean_trips(from_date,to_date):
     qs.delete()
             
 def build_trips(from_date=None,to_date=None):
-    trips = gtfs.models.Trip.objects.all()        
+    trips = gtfs.models.Trip.objects.all()
+    date_str = ot_utils.get_date_underscored()
     print 'Total number of trips: %s' % (trips.count())
     if from_date:
         trips = trips.filter(service__start_date__gte=from_date)
@@ -47,7 +48,7 @@ def build_trips(from_date=None,to_date=None):
         new_trip.gtfs_trip_id = trip.trip_id
         new_trip.date = trip_date
         assert trip.service.start_date == trip.service.end_date
-        new_trip.shape = _get_or_build_shape(trip.shape_id)
+        new_trip.shape = _get_or_build_shape(trip.shape_id, date_str)
         new_trip.save()
         _build_stoptimes(new_trip,trip)
         stops = list(new_trip.get_stop_times())
@@ -55,21 +56,22 @@ def build_trips(from_date=None,to_date=None):
         new_trip.to_stoptime = stops[-1]
         new_trip.save()
      
-def _get_or_build_shape(gtfs_shape_id):
+def _get_or_build_shape(gtfs_shape_id,date_str):
     try:
-        ttshape = TtShape.objects.get(gtfs_shape_id=gtfs_shape_id)
-        # TODO: check same
+        ttshape = TtShape.objects.get(gtfs_shape_id=gtfs_shape_id,gtfs_date_str=date_str)
         return ttshape
     except TtShape.DoesNotExist:
-        return _build_shape(gtfs_shape_id)
+        return _build_shape(gtfs_shape_id,date_str)
     
-def _build_shape(gtfs_shape_id):
-    print 'Building shape for gtfs shape id = %s' % (gtfs_shape_id)
+def _build_shape(gtfs_shape_id,date_str):
+    print 'Building shape for gtfs shape id = %s date_str = %s' % (gtfs_shape_id,date_str)
     points = gtfs.models.Shape.objects.filter(shape_id=gtfs_shape_id).order_by('shape_pt_sequence')
     point_list = []
     for point in points:
         point_list.append([point.shape_pt_lat,point.shape_pt_lon])
-    ttshape = TtShape(gtfs_shape_id=gtfs_shape_id,points=json.dumps(point_list))
+    ttshape = TtShape(gtfs_shape_id=gtfs_shape_id,
+                      gtfs_date_str=date_str,
+                      points=json.dumps(point_list))
     ttshape.save()
     return ttshape
         

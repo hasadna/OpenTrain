@@ -35,6 +35,10 @@ def get_utc_time_underscored():
     t = datetime.datetime.utcnow()
     return t.strftime('%Y_%m_%d_%H_%M_%S')
 
+def get_date_underscored():
+    t = datetime.datetime.utcnow()
+    return t.strftime('%Y_%m_%d')
+
 def get_days_after_today(days):
     t = datetime.date.today()
     timedelta = datetime.timedelta(days=days)

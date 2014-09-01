@@ -19,7 +19,8 @@ class TtStop(models.Model):
                     stop_short_name=names.STOP_SHORT_NAMES.get(self.gtfs_stop_id))
 
 class TtShape(models.Model):
-    gtfs_shape_id = models.CharField(max_length=100,db_index=True,unique=True)
+    gtfs_shape_id = models.CharField(max_length=100,db_index=True)
+    gtfs_date_str = models.CharField(max_length=20,default='2014_dummy')
     points = models.TextField()
     
 class TtTrip(models.Model):
