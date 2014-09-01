@@ -5,7 +5,7 @@ import requests
 import collections
 import dateutil.parser
 
-DIST_TO_STOP = 1000
+DIST_TO_STOP = 300
 
 
 class Replayer(object):
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
 
 def test():
-    r = Replayer(gtfs_trip_id='010914_00156',device_id='eran')  # ,server='localhost:8000')
+    r = Replayer(gtfs_trip_id='020914_00158',device_id='eran')  # ,server='localhost:8000')
     r.go()
     return r
 
