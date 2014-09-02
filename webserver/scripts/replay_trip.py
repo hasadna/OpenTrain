@@ -7,17 +7,29 @@ from datetime import timedelta
 import dateutil.parser
 
 DIST_TO_STOP = 300
-
+HALF_MIN = timedelta(seconds=30)
+TWO_SECS = timedelta(seconds=2)
 
 class ShapeInfo(object):
-    def __init__(self,stop_idx=None,prev_stop_idx=None,dist=None):
+    def __init__(self,shape_idx,stop_idx=None,prev_stop_idx=None,dist=None):
         if stop_idx is not None:
             assert dist,'Dist cannot be None if stop_idx is given'
         else:
             assert prev_stop_idx is not None
         self.stop_idx = stop_idx
         self.dist = dist
-        self.prev_stop_idx = None
+        self.prev_stop_idx = prev_stop_idx
+        self.time = None
+        self.shape_idx = shape_idx
+
+    def __unicode__(self):
+        if self.stop_idx is not None:
+            return "#{self.shape_idx} @{self.time} S = {self.stop_idx} dist = {self.dist:.1f}".format(self=self)
+        else:
+            return "#{self.shape_idx} @{self.time} PS = {self.prev_stop_idx}".format(self=self)
+
+    def __repr__(self):
+        return self.__unicode__()
 
     def __nonzero__(self):
         return self.stop_idx is not None
@@ -72,29 +84,56 @@ class Replayer(object):
             dists = [self.calc_distance(shape,stop_time['stop']['latlon']) for stop_time in stop_times]
             val, idx = min((val, idx) for (idx, val) in enumerate(dists))
             if val < DIST_TO_STOP:
-                self.shape_infos[shape_idx] = ShapeInfo(stop_idx=idx,dist=val)
+                self.shape_infos[shape_idx] = ShapeInfo(shape_idx,stop_idx=idx,dist=val)
                 last_stop_idx = idx
             else:
                 assert last_stop_idx >= 0
-                self.shape_infos[shape_idx] = ShapeInfo(stop_idx=None,prev_stop_idx=last_stop_idx)
+                self.shape_infos[shape_idx] = ShapeInfo(shape_idx,stop_idx=None,prev_stop_idx=last_stop_idx)
 
         print '# of stops = %s' % (len(stop_times))
         #for stop in stop_times:
         #    print stop
         self.check_shapes()
         self.compute_shape_times()
+        self.check_shape_times()
+
+    def check_shape_times(self):
+        print 'Checking times...'
+        assert len(self.shape_infos) == len(self.trip_details['shapes'])
+        sis = self.shape_infos
+        for idx in xrange(1,len(sis)):
+            assert sis[idx].time > sis[idx-1].time,'%s %s' % (sis[idx-1],sis[idx])
+
+    def split_time_to_shapes(self,sis,start_time,stop_time):
+        assert len(sis) > 0,'sis cannot be empty'
+        seconds = (stop_time - start_time).total_seconds()
+        assert seconds > 0,'time diff must be positive'
+        sis[0].time = start_time.replace(microsecond=0)
+        if len(sis) == 1:
+            return
+        step = seconds / (len(sis) - 1)
+        assert step > 1,'step must be > 1'
+        steps = 0
+        for si in sis[1:]:
+            steps += step
+            si.time = (start_time + timedelta(seconds=steps)).replace(microsecond=0)
+        assert abs((sis[-1].time - stop_time).total_seconds()) < 1.0
 
     def compute_shape_times(self):
         stop_times = self.trip_details['stop_times']
         for idx,st in enumerate(stop_times):
-            sis = [si for si in self.shape_infos is si.stop_idx == idx]
-            start_time = st.arrival_time - timedelta(second=30)
-            offset = 0
-            for si in sis:
-                si.time = start_time + timedelta(second=offset)
-                offset += 60.0 / len(sis)
-            sis
-
+            sis = [si for si in self.shape_infos if si.stop_idx == idx]
+            assert len(sis) > 1,'no shape infos for stop_idx = %s' % idx
+            exp_arrival = dateutil.parser.parse(st['exp_arrival'])
+            exp_departure = dateutil.parser.parse(st['exp_departure'])
+            self.split_time_to_shapes(sis,exp_arrival-HALF_MIN,exp_arrival+HALF_MIN)
+            if idx + 1 < len(stop_times):
+                exp_arrival_next = dateutil.parser.parse(stop_times[idx+1]['exp_arrival'])
+                sis = [si for si in self.shape_infos if si.prev_stop_idx == idx]
+                assert len(sis) > 1,'no shape infos for prev_stop_idx = %s' % idx
+                time1 =  exp_departure + HALF_MIN + TWO_SECS
+                time2 = exp_arrival_next - HALF_MIN - TWO_SECS
+                self.split_time_to_shapes(sis,time1,time2)
 
     def check_shapes(self):
         print 'Checking shapes'
@@ -114,6 +153,8 @@ class Replayer(object):
                     raise Exception('Illegal dist - should be consecutive for idx = %s' % idx)
                 else:
                     all_stop_idxes.append(si.stop_idx)
+            else:
+                assert si.prev_stop_idx==all_stop_idxes[-1]
                 #print '%s : %s %.1f' % (idx,stop_idx,stop_dist)
             if idx == 0 and not si:
                 raise Exception('first idx must have dist')
