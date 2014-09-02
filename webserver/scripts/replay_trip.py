@@ -3,17 +3,21 @@
 import argparse
 import requests
 import collections
+from datetime import timedelta
 import dateutil.parser
 
 DIST_TO_STOP = 300
 
 
 class ShapeInfo(object):
-    def __init__(self,stop_idx=None,dist=None):
+    def __init__(self,stop_idx=None,prev_stop_idx=None,dist=None):
         if stop_idx is not None:
             assert dist,'Dist cannot be None if stop_idx is given'
+        else:
+            assert prev_stop_idx is not None
         self.stop_idx = stop_idx
         self.dist = dist
+        self.prev_stop_idx = None
 
     def __nonzero__(self):
         return self.stop_idx is not None
@@ -63,19 +67,33 @@ class Replayer(object):
         stop_times = self.trip_details['stop_times']
         shapes = self.trip_details['shapes']
         self.shape_infos = [None] * len(shapes)
+        last_stop_idx = -1
         for shape_idx,shape in enumerate(shapes):
             dists = [self.calc_distance(shape,stop_time['stop']['latlon']) for stop_time in stop_times]
             val, idx = min((val, idx) for (idx, val) in enumerate(dists))
             if val < DIST_TO_STOP:
                 self.shape_infos[shape_idx] = ShapeInfo(stop_idx=idx,dist=val)
+                last_stop_idx = idx
             else:
-                self.shape_infos[shape_idx] = ShapeInfo(stop_idx=None)
+                assert last_stop_idx >= 0
+                self.shape_infos[shape_idx] = ShapeInfo(stop_idx=None,prev_stop_idx=last_stop_idx)
 
         print '# of stops = %s' % (len(stop_times))
         #for stop in stop_times:
         #    print stop
         self.check_shapes()
-        #self.compute_shape_times()
+        self.compute_shape_times()
+
+    def compute_shape_times(self):
+        stop_times = self.trip_details['stop_times']
+        for idx,st in enumerate(stop_times):
+            sis = [si for si in self.shape_infos is si.stop_idx == idx]
+            start_time = st.arrival_time - timedelta(second=30)
+            offset = 0
+            for si in sis:
+                si.time = start_time + timedelta(second=offset)
+                offset += 60.0 / len(sis)
+            sis
 
 
     def check_shapes(self):
