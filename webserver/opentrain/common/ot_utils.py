@@ -1,5 +1,5 @@
 import datetime
-import dateutil
+import dateutil.parser
 import zipfile
 import os
 import time
