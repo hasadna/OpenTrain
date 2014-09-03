@@ -11,6 +11,7 @@ import datetime
 import pytz
 import time
 import os
+import logging
 
 DIST_TO_STOP = 300
 HALF_MIN = timedelta(seconds=30)
@@ -43,12 +44,12 @@ class ShapeInfo(object):
 
 
 class Replayer(object):
-    def __init__(self, gtfs_trip_id, device_id, batch_size=None,server=None,delay=None,post_server=None):
+    def __init__(self, gtfs_trip_id, device_id=None, batch_size=None,server=None,delay=None,post_server=None):
         self.gtfs_trip_id = gtfs_trip_id
         self.server = server or 'opentrain.hasadna.org.il'
         self.post_server = post_server or self.server
         self.device_id = device_id
-        if device_id == 'auto':
+        if device_id is None:
             self.device_id = '%s_%s' % (os.environ['USER'],datetime.datetime.utcnow().strftime('%Y%m%d%H%M'))
         self.batch_size = batch_size
         self.delay = delay
@@ -275,21 +276,18 @@ class Replayer(object):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='replays trip, for example --gtfs_trip_id 240814_00146')
-    parser.add_argument('--gtfs_trip_id', required=True, help='gtfs trip id, for example 240814_00146')
+    parser = argparse.ArgumentParser(description='replays trip, for example --gtfs_trip_id 020914_00158')
+    parser.add_argument('--gtfs_trip_id', required=True, help='gtfs trip id, for example 020914_00158')
     parser.add_argument('--server')
     parser.add_argument('--post_server')
-    parser.add_argument('--device_id', required=True)
-    parser.add_argument('--batch',default=1,type=int)
-    parser.add_argument('--delay',default=1.0,type=float)
+    parser.add_argument('--device_id',help='fake device id, if none with take $USER with timestamp')
+    parser.add_argument('--batch_size',default=20,type=int,help='number of items in one POST call')
+    parser.add_argument('--delay',default=0.1,type=float,help='delay between calls, default is 0.1')
     ns = parser.parse_args()
-    r = Replayer(gtfs_trip_id=ns.gtfs_trip_id,
-                 server=ns.server,
-                 device_id=ns.device_id,
-                 batch_size=ns.batch,
-                 delay=ns.delay,
-                 post_server=ns.post_server)
-    r.go()
+    r = Replayer(**vars(ns))
+    r.print_header()
+
+    #r.go()
 
 
 def test():
