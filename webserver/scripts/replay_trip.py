@@ -286,8 +286,7 @@ if __name__ == '__main__':
     ns = parser.parse_args()
     r = Replayer(**vars(ns))
     r.print_header()
-
-    #r.go()
+    r.go()
 
 
 def test():
