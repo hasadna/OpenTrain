@@ -155,7 +155,7 @@ class DeviceReports(ApiView):
         return self._prepare_list_resp(request,reports,info)
 
 class DeviceStatus(ApiView):
-    """ Returns the status of current device, e.g. its real time location <br/>
+    """ Returns the status of curret device, e.g. its real time location <br/>
     Should be used mainly for testing
     """
     api_url = r'^devices/(?P<device_id>[\w ]+)/status/'
@@ -171,6 +171,13 @@ class BssidsToStopIds(ApiView):
         import algorithm.bssid_tracker
         data = algorithm.bssid_tracker.get_bssid_data_for_app()
         return self.get_json_resp(data)
+
+class DistBetweenShapes(ApiView):
+    api_url = r'^stops/distance/'
+    def get(self,request):
+        import timetable.utils
+        content = timetable.utils.find_distance_between_stops(request.GET['gtfs_stop_id1'],request.GET['gtfs_stop_id2'])
+        return self.get_json_resp(content)
 
 class BssidToStop(ApiView):
     """ Returns stop info for each bssid 

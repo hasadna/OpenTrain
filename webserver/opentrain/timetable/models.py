@@ -1,6 +1,7 @@
 from django.db import models
 import common.ot_utils as ot_utils
 import names
+import json
 
 class TtStop(models.Model):
     gtfs_stop_id = models.IntegerField(db_index=True,null=True)
@@ -22,6 +23,8 @@ class TtShape(models.Model):
     gtfs_shape_id = models.CharField(max_length=100,db_index=True)
     gtfs_date_str = models.CharField(max_length=20,default='2014_dummy')
     points = models.TextField()
+    def get_points_array(self):
+        return json.loads(self.points)
     
 class TtTrip(models.Model):
     gtfs_trip_id = models.CharField(max_length=100,unique=True,db_index=True,null=True,blank=True)

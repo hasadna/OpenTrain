@@ -81,3 +81,9 @@ def show_gtfs_files(req):
         gtfs_files.sort(key=lambda x : x['path'])
     ctx['gtfs_files'] = gtfs_files
     return render(req,'timetable/gtfs_files.html',ctx)
+
+
+def show_distances(req):
+    ctx = dict()
+    ctx['stops'] = list(TtStop.objects.all())
+    return render(req,'timetable/distances.html',ctx)

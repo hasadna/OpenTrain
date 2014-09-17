@@ -5,6 +5,7 @@ import os.path
 
 urlpatterns = patterns('',
     url(r'^gtfs-files/$',views.show_gtfs_files,name='show-gtfs-files'),
+    url(r'^distance/$' ,views.show_distances,name='distance'),
     url(r'^old-gtfs-files/(?P<path>.*\.zip)$','django.views.static.serve',
         {'document_root' : os.path.join(settings.BASE_DIR,'tmp_data')}),
     url(r'^search-in/$',views.TimeTableSearchIn.as_view(),name='search-in'),   
