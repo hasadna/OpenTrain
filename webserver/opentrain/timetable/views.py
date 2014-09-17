@@ -84,6 +84,24 @@ def show_gtfs_files(req):
 
 
 def show_distances(req):
+    import services
     ctx = dict()
-    ctx['stops'] = list(TtStop.objects.all())
+    stops = list(TtStop.objects.all().order_by('gtfs_stop_id'))
+    ctx['stops'] = stops
+    dists = services.get_dists_matrix()
+    rows = []
+    for stop1 in stops:
+        row = dict(stop=stop1)
+        cells = []
+        for stop2 in stops:
+            dist_entry =  dists.get('{0}---{1}'.format(stop1.gtfs_stop_id,stop2.gtfs_stop_id))
+            if dist_entry:
+                cells.append(dist_entry)
+            else:
+                cells.append(None)
+        row['cells'] = cells
+        rows.append(row)
+    ctx['rows'] = rows
+
+
     return render(req,'timetable/distances.html',ctx)

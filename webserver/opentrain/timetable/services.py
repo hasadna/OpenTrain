@@ -108,4 +108,98 @@ def get_stop(gtfs_stop_id):
     return TtStop.objects.get(gtfs_stop_id=gtfs_stop_id)
    
  
-    
+def find_distance_between_gtfs_stops_ids(gtfs_stop_id1,gtfs_stop_id2):
+    stop1 = TtStop.objects.get(gtfs_stop_id=gtfs_stop_id1)
+    stop2 = TtStop.objects.get(gtfs_stop_id=gtfs_stop_id2)
+    return find_distance_between_stops(stop1,stop2)
+
+MIN_DIST = 100
+
+class ShapeDist(object):
+    def __init__(self,shape,**kwargs):
+        self.shape = shape
+        for k,v in kwargs.iteritems():
+            setattr(self,k,v)
+        self.distance = self.compute_distance()
+        self.shape_diff = abs(self.idx1-self.idx2)
+
+    def compute_distance(self):
+        result = 0
+        points = self.shape.get_points_array()
+        min_idx = min(self.idx1,self.idx2)
+        max_idx = max(self.idx1,self.idx2)
+        last_point = points[min_idx]
+        result = 0.0
+        for point in points[min_idx+1:max_idx+1]:
+            result += common.ot_utils.latlon_to_meters(last_point[0],last_point[1],point[0],point[1])
+            last_point=point
+        return result
+
+def find_min_dist_to(shape,stop):
+    import redis_intf.client
+    cl = redis_intf.client.get_redis_client()
+    redis_key = 'min_dist_{0}_{1}'.format(shape.id,stop.id)
+    val = cl.get(redis_key)
+    if val:
+        return json.loads(val)
+    latlon = stop.stop_lat,stop.stop_lon
+    points = shape.get_points_array()
+    dists = [(common.ot_utils.latlon_to_meters(point[0],point[1],latlon[0],latlon[1]),idx) for idx,point in enumerate(points)]
+    result = min(dists)
+    cl.set(redis_key,json.dumps(result))
+    return result
+
+def find_distance_between_stops(stop1,stop2):
+    import redis_intf.client
+    cl = redis_intf.client.get_redis_client()
+    redis_key = 'dist_stops_{0}_{1}'.format(stop1.gtfs_stop_id,stop2.gtfs_stop_id)
+    val = cl.get(redis_key)
+    if val:
+        return json.loads(val)
+    shapes1 = set(TtStopTime.objects.filter(stop_id=stop1.id).values_list('trip__shape__id',flat=True).distinct())
+    shapes2 = set(TtStopTime.objects.filter(stop__id=stop2.id).values_list('trip__shape__id',flat=True).distinct())
+    common_shapes = shapes1 & shapes2
+    if not common_shapes:
+        return []
+    shapes = models.TtShape.objects.filter(id__in=common_shapes)
+    relevant_shapes = []
+    for shape in shapes:
+        min_dist1,min_idx1 = find_min_dist_to(shape,stop1)
+        min_dist2,min_idx2 = find_min_dist_to(shape,stop2)
+        if min_dist1 < MIN_DIST and min_dist2 < MIN_DIST:
+            relevant_shapes.append(ShapeDist(shape=shape,idx1=min_idx1,idx2=min_idx2))
+    result = []
+    for rs in relevant_shapes:
+        result.append({
+                       'shape_id' : rs.shape.id,
+                       'points_delta' : rs.shape_diff,
+                       'distance' : rs.distance,
+                       'aerial_distance' : common.ot_utils.latlon_to_meters(stop1.stop_lat,
+                                                                     stop1.stop_lon,
+                                                                     stop2.stop_lat,
+                                                                     stop2.stop_lon)})
+    cl.set(redis_key,json.dumps(result))
+    return result
+
+def get_dists_matrix():
+    import redis_intf.client
+    cl = redis_intf.client.get_redis_client()
+    val = cl.get('final_dists')
+    if val:
+        return json.loads(val)
+
+    stops = list(TtStop.objects.all().order_by('gtfs_stop_id'))
+    result = dict()
+    for idx1,stop1 in enumerate(stops):
+        print idx1
+        for idx2,stop2 in enumerate(stops):
+            if stop1.gtfs_stop_id < stop2.gtfs_stop_id:
+                dist_list = find_distance_between_stops(stop1,stop2)
+                if dist_list:
+                    dist = dist_list[0]
+                else:
+                    dist = None
+                result['{0}---{1}'.format(stop1.gtfs_stop_id,stop2.gtfs_stop_id)] = dist
+                result['{1}---{0}'.format(stop1.gtfs_stop_id,stop2.gtfs_stop_id)] = dist
+    cl.set('final_dists',json.dumps(result))
+    return result

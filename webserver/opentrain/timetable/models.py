@@ -9,7 +9,10 @@ class TtStop(models.Model):
     stop_lat = models.FloatField()
     stop_lon = models.FloatField()
     stop_url = models.URLField(blank=True,null=True)
-        
+
+    def get_short_name(self):
+        return names.STOP_SHORT_NAMES.get(self.gtfs_stop_id)
+
     def __unicode__(self):
         return '%s %s' % (self.stop_name,self.gtfs_stop_id)
     
@@ -17,7 +20,7 @@ class TtStop(models.Model):
         return dict(stop_name=self.stop_name,
                     latlon=[self.stop_lat,self.stop_lon],
                     gtfs_stop_id=self.gtfs_stop_id,
-                    stop_short_name=names.STOP_SHORT_NAMES.get(self.gtfs_stop_id))
+                    stop_short_name=self.get_short_name())
 
 class TtShape(models.Model):
     gtfs_shape_id = models.CharField(max_length=100,db_index=True)

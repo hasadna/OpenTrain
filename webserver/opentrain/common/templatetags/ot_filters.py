@@ -42,7 +42,14 @@ def shapes_to_points(shapes):
 @register.filter(name="truefalse")
 def truefalse(val):
     return _('true') if val else _('false')
-        
+
+@register.filter(name="toto")
+def toto(v1,v2):
+    return unicode(v1) + '---' + unicode(v2)
+
+@register.filter(name="getelem")
+def getelem(idx,d):
+    return d.get(idx,'---')
 
 from django.template.defaultfilters import stringfilter
 from django.utils.html import conditional_escape

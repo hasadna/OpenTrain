@@ -175,8 +175,10 @@ class BssidsToStopIds(ApiView):
 class DistBetweenShapes(ApiView):
     api_url = r'^stops/distance/'
     def get(self,request):
-        import timetable.utils
-        content = timetable.utils.find_distance_between_stops(request.GET['gtfs_stop_id1'],request.GET['gtfs_stop_id2'])
+        import timetable.services
+        if 'gtfs_stop_id1' not in request.GET or 'gtfs_stop_id2' not in request.GET:
+            return HttpResponse(status=400,content='gtfs_stop_id1 and gtfs_stop_id2 are mandatory')
+        content = timetable.services.find_distance_between_gtfs_stops_ids(request.GET['gtfs_stop_id1'],request.GET['gtfs_stop_id2'])
         return self.get_json_resp(content)
 
 class BssidToStop(ApiView):

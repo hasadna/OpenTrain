@@ -1,0 +1,43 @@
+{% extends 'common/base.html' %}
+{% load i18n %}
+{% block content %}
+{% load ot_filters %}
+{{ form.media }}
+
+<div class="container">
+	<h2>{% trans 'Distances' %}</h2>
+    <table class="table">
+        <tr>
+            <td>
+            </td>
+            {% for stop2 in stops %}
+            <td>
+                {{stop2.get_short_name}}<br/>
+                {{stop2.gtfs_stop_id}}
+            </td>
+            {% endfor %}
+        </tr>
+         {% for row in rows %}
+        <tr>
+            <td>{{row.stop.get_short_name}}<br/>
+            {{row.stop.gtfs_stop_id}}</td>
+            {% for cell in row.cells %}
+            <td>
+                {% if cell %}
+                {{ cell.distance|floatformat:"0" }}
+                <br/>
+                {{ cell.aerial_distance|floatformat:"0" }}
+                {% else %}
+                ---
+                {% endif %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}
+
+
+
