@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-17 23:30+0300\n"
+"POT-Creation-Date: 2014-09-18 10:08+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -93,6 +93,7 @@ msgid "Live Trains"
 msgstr "מפה חיה"
 
 #: common/static/common/ot_i18n.py:7
+#: timetable/templates/timetable/distances.html:8
 msgid "Distances"
 msgstr "מרחקים"
 
@@ -521,6 +522,10 @@ msgstr "אחרי"
 #: timetable/forms.py:11
 msgid "When"
 msgstr "מתי"
+
+#: timetable/templates/timetable/distances.html:9
+msgid "Download CSV"
+msgstr "הורד CSV"
 
 #: timetable/templates/timetable/search_results.html:8
 msgid "results for"
