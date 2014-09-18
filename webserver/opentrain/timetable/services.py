@@ -203,3 +203,19 @@ def get_dists_matrix():
                 result['{1}---{0}'.format(stop1.gtfs_stop_id,stop2.gtfs_stop_id)] = dist
     cl.set('final_dists',json.dumps(result))
     return result
+
+def create_dists_csv():
+    import csv
+    matrix = get_dists_matrix()
+    with open('/tmp/a.csv','w') as fh:
+        writer = csv.writer(fh)
+        writer.writerow(['stop_id1','stop_id2','distance','aerial_distance'])
+        for k,v in matrix.iteritems():
+            if not v:
+                continue
+            st1,st2 = [int(x) for x in k.split('---')]
+            if st1 < st2:
+                writer.writerow([st1,
+                                    st2,
+                                    v['distance'],
+                                    v['aerial_distance']])
