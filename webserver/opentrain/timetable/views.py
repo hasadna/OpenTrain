@@ -89,19 +89,22 @@ def show_distances(req):
     stops = list(TtStop.objects.all().order_by('gtfs_stop_id'))
     ctx['stops'] = stops
     dists = services.get_dists_matrix()
+    dists_dict = dict()
+    for dist in dists:
+        dists_dict[(dist['gtfs_stop_id1'],dist['gtfs_stop_id2'])] = dist
+        dists_dict[(dist['gtfs_stop_id2'],dist['gtfs_stop_id1'])] = dist
     rows = []
     for stop1 in stops:
         row = dict(stop=stop1)
         cells = []
         for stop2 in stops:
-            dist_entry =  dists.get('{0}---{1}'.format(stop1.gtfs_stop_id,stop2.gtfs_stop_id))
-            if dist_entry:
-                cells.append(dist_entry)
+            dist_entry =  dists_dict.get((stop1.gtfs_stop_id,stop2.gtfs_stop_id))
+            if dist_entry and dist_entry['dists']:
+                cells.append(dist_entry['dists'][0])
             else:
                 cells.append(None)
         row['cells'] = cells
         rows.append(row)
     ctx['rows'] = rows
-
-
     return render(req,'timetable/distances.html',ctx)
+

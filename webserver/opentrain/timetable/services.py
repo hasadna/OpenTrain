@@ -146,21 +146,23 @@ def find_min_dist_to(shape,stop):
     points = shape.get_points_array()
     dists = [(common.ot_utils.latlon_to_meters(point[0],point[1],latlon[0],latlon[1]),idx) for idx,point in enumerate(points)]
     result = min(dists)
-    cl.set(redis_key,json.dumps(result))
+    cl.setex(redis_key,600,json.dumps(result))
     return result
 
-def find_distance_between_stops(stop1,stop2):
-    import redis_intf.client
-    cl = redis_intf.client.get_redis_client()
-    redis_key = 'dist_stops_{0}_{1}'.format(stop1.gtfs_stop_id,stop2.gtfs_stop_id)
-    val = cl.get(redis_key)
-    if val:
-        return json.loads(val)
-    shapes1 = set(TtStopTime.objects.filter(stop_id=stop1.id).values_list('trip__shape__id',flat=True).distinct())
+def find_distance_between_stops(istop1,istop2):
+    import pdb
+    pdb.set_trace()
+    if istop1.gtfs_stop_id < istop2.gtfs_stop_id:
+        stop1 = istop1
+        stop2 = istop2
+    else:
+        stop1 = istop2
+        stop2 = istop1
+    shapes1 = set(TtStopTime.objects.filter(stop__id=stop1.id).values_list('trip__shape__id',flat=True).distinct())
     shapes2 = set(TtStopTime.objects.filter(stop__id=stop2.id).values_list('trip__shape__id',flat=True).distinct())
     common_shapes = shapes1 & shapes2
     if not common_shapes:
-        return []
+        return None
     shapes = models.TtShape.objects.filter(id__in=common_shapes)
     relevant_shapes = []
     for shape in shapes:
@@ -168,9 +170,9 @@ def find_distance_between_stops(stop1,stop2):
         min_dist2,min_idx2 = find_min_dist_to(shape,stop2)
         if min_dist1 < MIN_DIST and min_dist2 < MIN_DIST:
             relevant_shapes.append(ShapeDist(shape=shape,idx1=min_idx1,idx2=min_idx2))
-    result = []
+    dists = []
     for rs in relevant_shapes:
-        result.append({
+        dists.append({
                        'shape_id' : rs.shape.id,
                        'points_delta' : rs.shape_diff,
                        'distance' : rs.distance,
@@ -178,30 +180,28 @@ def find_distance_between_stops(stop1,stop2):
                                                                      stop1.stop_lon,
                                                                      stop2.stop_lat,
                                                                      stop2.stop_lon)})
-    cl.set(redis_key,json.dumps(result))
+    result = {'gtfs_stop_id1': stop1.gtfs_stop_id,
+              'gtfs_stop_id2': stop2.gtfs_stop_id,
+              'dists' : dists}
     return result
 
-def get_dists_matrix():
+def get_dists_matrix(force=False):
+    cache_key = 'final_dists'
     import redis_intf.client
     cl = redis_intf.client.get_redis_client()
-    val = cl.get('final_dists')
-    if val:
+    val = cl.get(cache_key)
+    if not force and val:
         return json.loads(val)
-
     stops = list(TtStop.objects.all().order_by('gtfs_stop_id'))
-    result = dict()
+    result = []
     for idx1,stop1 in enumerate(stops):
         print idx1
         for idx2,stop2 in enumerate(stops):
             if stop1.gtfs_stop_id < stop2.gtfs_stop_id:
-                dist_list = find_distance_between_stops(stop1,stop2)
-                if dist_list:
-                    dist = dist_list[0]
-                else:
-                    dist = None
-                result['{0}---{1}'.format(stop1.gtfs_stop_id,stop2.gtfs_stop_id)] = dist
-                result['{1}---{0}'.format(stop1.gtfs_stop_id,stop2.gtfs_stop_id)] = dist
-    cl.set('final_dists',json.dumps(result))
+                dist_entry = find_distance_between_stops(stop1,stop2)
+                if dist_entry is not None:
+                    result.append(dist_entry)
+    cl.set(cache_key,json.dumps(result))
     return result
 
 def create_dists_csv():
