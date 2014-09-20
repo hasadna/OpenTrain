@@ -150,8 +150,6 @@ def find_min_dist_to(shape,stop):
     return result
 
 def find_distance_between_stops(istop1,istop2):
-    import pdb
-    pdb.set_trace()
     if istop1.gtfs_stop_id < istop2.gtfs_stop_id:
         stop1 = istop1
         stop2 = istop2
@@ -180,9 +178,17 @@ def find_distance_between_stops(istop1,istop2):
                                                                      stop1.stop_lon,
                                                                      stop2.stop_lat,
                                                                      stop2.stop_lon)})
+    dists.sort(key=lambda x : x['distance'])
+    uniq_dists = []
+    if dists:
+        uniq_dists.append(dists[0])
+    for dist in dists:
+        if abs(dist['distance'] - uniq_dists[-1]['distance']) > 10:
+            uniq_dists.append(dist)
+
     result = {'gtfs_stop_id1': stop1.gtfs_stop_id,
               'gtfs_stop_id2': stop2.gtfs_stop_id,
-              'dists' : dists}
+              'dists' : uniq_dists}
     return result
 
 def get_dists_matrix(force=False):
@@ -204,18 +210,36 @@ def get_dists_matrix(force=False):
     cl.set(cache_key,json.dumps(result))
     return result
 
+def check_dists():
+    matrix = get_dists_matrix()
+    for entry in matrix:
+        dists = entry['dists']
+        if not dists:
+            continue
+        min_dist = min(d['distance'] for d in dists)
+        max_dist = max(d['distance'] for d in dists)
+        if abs(max_dist-min_dist) > 10:
+            print entry['gtfs_stop_id1'],entry['gtfs_stop_id2'],min_dist,max_dist
+
 def create_dists_csv():
     import csv
+    import os.path
     matrix = get_dists_matrix()
-    with open('/tmp/a.csv','w') as fh:
+    with open(os.path.join(settings.BASE_DIR,'timetable/static/timetable/dists.csv'),'w') as fh:
         writer = csv.writer(fh)
-        writer.writerow(['stop_id1','stop_id2','distance','aerial_distance'])
-        for k,v in matrix.iteritems():
-            if not v:
-                continue
-            st1,st2 = [int(x) for x in k.split('---')]
-            if st1 < st2:
-                writer.writerow([st1,
-                                    st2,
-                                    v['distance'],
-                                    v['aerial_distance']])
+        writer.writerow(['stop_id1','stop_name1','stop_id2','stop_name2','num_results','distance1','aerial_distance1','distance2','aerial_distance2'])
+        for entry in matrix:
+            stop1 = TtStop.objects.get(gtfs_stop_id=entry['gtfs_stop_id1'])
+            stop2 = TtStop.objects.get(gtfs_stop_id=entry['gtfs_stop_id2'])
+            dists = entry['dists']
+            d0 = dists[0] if len(dists) >= 1 else None
+            d1 = dists[1] if len(dists) >= 2 else None
+            writer.writerow([stop1.gtfs_stop_id,
+                             stop1.get_short_name(),
+                             stop2.gtfs_stop_id,
+                             stop2.get_short_name(),
+                             len(dists),
+                             int(d0['distance']) if d0 else '',
+                             int(d0['aerial_distance']) if d0 else '',
+                             int(d1['distance']) if d1 else '',
+                             int(d1['aerial_distance']) if d1 else ''])

@@ -9,7 +9,9 @@
 	<p><a href="/static/timetable/dists.csv">{% trans "Download CSV" %}</a></p>
     <div class="well">
         המרחקים חושבו רק עבור תחנות שיש ביניהם קו ישיר<br/>
-        המספר העליון הוא מרחק הנסיעה והמרחק התחתון הוא מרחק אווירי
+        המספר העליון הוא מרחק הנסיעה והמרחק התחתון הוא מרחק אווירי<br/>
+        לחלק מתחנות יש שני מסלולים אפשריים בינייהם, במקרה זה צוינו שניהם<br/>
+        כאשר מופיע <b>ניתוק</b> יש בעיה בנתונים והתחנה איננה חלק מהמידע הגיאוגרפי על המסלול<br/>
     </div>
     <table class="table">
         <tr>
@@ -27,11 +29,32 @@
             <td>{{row.stop.get_short_name}}<br/>
             {{row.stop.gtfs_stop_id}}</td>
             {% for cell in row.cells %}
-            <td>
+            <td
+            {% if cell % }
+            {% if cell.dists|length == 2 %}
+            class="danger"
+            {% elif cell.dists|length == 0 %}
+            class="warning"
+            {% endif %}
+            >
                 {% if cell %}
-                {{ cell.distance|floatformat:"0" }}
-                <br/>
-                {{ cell.aerial_distance|floatformat:"0" }}
+                    {% if cell.dists|length == 0 %}
+                        {% trans 'disconnected' %}
+                    {% elif cell.dists|length == 1 %}
+                    {{ cell.dists.0.distance|floatformat:"0" }}
+                    <br/>
+                    {{ cell.dists.0.aerial_distance|floatformat:"0" }}
+
+                    {% else %}
+
+                    {{ cell.dists.0.distance|floatformat:"0" }}
+                    <br/>
+                    {{ cell.dists.0.aerial_distance|floatformat:"0" }}
+                    <br/>
+                    {{ cell.dists.1.distance|floatformat:"0" }}
+                    <br/>
+                    {{ cell.dists.1.aerial_distance|floatformat:"0" }}
+                    {% endif %}
                 {% else %}
                 ---
                 {% endif %}

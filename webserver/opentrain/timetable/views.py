@@ -99,8 +99,8 @@ def show_distances(req):
         cells = []
         for stop2 in stops:
             dist_entry =  dists_dict.get((stop1.gtfs_stop_id,stop2.gtfs_stop_id))
-            if dist_entry and dist_entry['dists']:
-                cells.append(dist_entry['dists'][0])
+            if dist_entry:
+                cells.append(dist_entry)
             else:
                 cells.append(None)
         row['cells'] = cells
