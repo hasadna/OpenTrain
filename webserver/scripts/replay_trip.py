@@ -240,7 +240,7 @@ class Replayer(object):
         sis = self.shape_infos
         batches=[sis[x:x+self.batch_size] for x in xrange(0, len(sis), self.batch_size)]
         for batch in batches:
-            stops = [si for si in sis if si.stop_idx is not None]
+            stops = [si for si in batch if si.stop_idx is not None]
             if stops:
                 self.send_batch(batch)
 

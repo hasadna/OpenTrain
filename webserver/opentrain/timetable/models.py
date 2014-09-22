@@ -90,7 +90,13 @@ class TtStopTime(models.Model):
                     stop=self.stop.to_json()
                     )
         if rt_stop:
-            result['act_arrival'] = rt_stop.act_arrival.replace(microsecond=0).isoformat()
-            result['act_departure'] = rt_stop.act_departure.replace(microsecond=0).isoformat()
+            if rt_stop.act_arrival:
+                result['act_arrival'] = rt_stop.act_arrival.replace(microsecond=0).isoformat()
+            else:
+                result['act_arrival'] = None
+            if rt_stop.act_departure:
+                result['act_departure'] = rt_stop.act_departure.replace(microsecond=0).isoformat()
+            else:
+                result['act_departure'] = None
         return result
     
