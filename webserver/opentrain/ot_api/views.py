@@ -1,4 +1,5 @@
 import json
+from analysis.models import RtStop
 import common.ot_utils
 import datetime
 from django.http.response import HttpResponse, HttpResponseBadRequest
@@ -97,7 +98,7 @@ class TripIdsForDate(ApiView):
         return self.get_json_resp(result)
 
 class TripDetails(ApiView):
-    """ Return details for trip with id trip_id (given in url) 
+    """ Return details for trip with id trip_id (given in url)
         details include the points in order to draw the trip on map
     """
     api_url = r'^trips/(?P<gtfs_trip_id>\w+)/details/$'
@@ -106,6 +107,22 @@ class TripDetails(ApiView):
         trip = timetable.services.get_trip(gtfs_trip_id)
         result = trip.to_json_full()
         return self.get_json_resp(result)
+
+class TripDetails(ApiView):
+    """ Return details for trip with id trip_id (given in url)
+        details include the points in order to draw the trip on map
+    """
+    api_url = r'^trips/(?P<gtfs_trip_id>\w+)/stops/$'
+    def get(self,request,gtfs_trip_id):
+        import timetable.services
+        device_id = request.GET.get('device_id')
+        if device_id is None:
+            return HttpResponseBadRequest('Must specify device_id')
+        trip = timetable.services.get_trip(gtfs_trip_id)
+        rt_stops = RtStop.objects.filter(tracker_id=device_id,trip__gtfs_trip_id=gtfs_trip_id)
+        result = trip.to_json_full(with_shapes=False,rt_stops=rt_stops)
+        return self.get_json_resp(result)
+
 
 class CurrentTrips(ApiView):
     """ Return current trips """

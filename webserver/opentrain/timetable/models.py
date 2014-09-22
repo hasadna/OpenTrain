@@ -52,9 +52,12 @@ class TtTrip(models.Model):
             #delta_str =  delta.strftime('%M:%S') if departure is not None else '--:--'
             print '%s %s %s' % (arrival_str, departure_str, stop.stop.stop_name)
 
-    def to_json_full(self,with_shapes=True):
+    def to_json_full(self,with_shapes=True,rt_stops=None):
         stop_times = self.get_stop_times()
-        stop_times_json = [st.to_json() for st in stop_times]
+        stop_times_json = []
+        for st in stop_times:
+            rt_stops = [s in rt_stops if s.stop_id == st.stop_id]
+            stop_times_json.append(st.to_json(rt_stop=rt_stops[0] if rt_stops else None))
         result = dict(gtfs_trip_id=self.gtfs_trip_id,
                       stop_times=stop_times_json)
         if with_shapes:
@@ -77,10 +80,14 @@ class TtStopTime(models.Model):
     def __unicode__(self):
         return '%s at %s' % (self.stop.stop_name,self.exp_arrival)
     
-    def to_json(self):
-        return dict(exp_arrival=self.exp_arrival.isoformat(),
+    def to_json(self,rt_stop=None):
+        result = dict(exp_arrival=self.exp_arrival.isoformat(),
                     exp_departure=self.exp_departure.isoformat(),
                     stop_sequence=self.stop_sequence,
                     stop=self.stop.to_json()
                     )
+        if rt_stop:
+            result['act_arrival'] = rt_stop.act_arrival.replace(microsecond=0).isoformat()
+            result['act_departure'] = rt_stop.act_departure.replace(microsecond=0).isoformat()
+        return result
     

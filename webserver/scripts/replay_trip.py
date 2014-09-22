@@ -44,8 +44,11 @@ class ShapeInfo(object):
 
 
 class Replayer(object):
-    def __init__(self, gtfs_trip_id, device_id=None, batch_size=None,server=None,delay=None,post_server=None):
-        self.gtfs_trip_id = gtfs_trip_id
+    def __init__(self, gtfs_trip_id, device_id=None, batch_size=None,server=None,delay=None,post_server=None,test=False):
+        if test:
+            self.gtfs_trip_id = '020914_00158'
+        else:
+            self.gtfs_trip_id = gtfs_trip_id
         self.server = server or 'opentrain.hasadna.org.il'
         self.post_server = post_server or self.server
         self.device_id = device_id
@@ -242,7 +245,13 @@ class Replayer(object):
     def send_batch(self,sis):
         items = [self.get_shape_item(si) for si in sis]
         data = dict(items=items)
-        result = self.do_post('/reports/add/',data=json.dumps(data),headers={'content-type' : 'application/json'})
+        while True:
+            try:
+                result = self.do_post('/reports/add/',data=json.dumps(data),headers={'content-type' : 'application/json'})
+                break
+            except Exception,e:
+                print 'Failed in post - retry in 1 second'
+                time.sleep(1)
         desc_list = []
         for si in sis:
             if si.stop_idx is not None:
@@ -277,22 +286,19 @@ class Replayer(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='replays trip, for example --gtfs_trip_id 020914_00158')
-    parser.add_argument('--gtfs_trip_id', required=True, help='gtfs trip id, for example 020914_00158')
+    parser.add_argument('--gtfs_trip_id', help='gtfs trip id, for example 020914_00158')
     parser.add_argument('--server')
     parser.add_argument('--post_server')
     parser.add_argument('--device_id',help='fake device id, if none with take $USER with timestamp')
     parser.add_argument('--batch_size',default=20,type=int,help='number of items in one POST call')
     parser.add_argument('--delay',default=0.1,type=float,help='delay between calls, default is 0.1')
+    parser.add_argument('--test',action='store_true')
     ns = parser.parse_args()
     r = Replayer(**vars(ns))
     r.print_header()
     r.go()
 
 
-def test():
-    r = Replayer(gtfs_trip_id='020914_00158', device_id='auto',batch_size=20,delay=0.1)  # ,server='localhost:8000')
-    r.go()
-    return r
 
 
 
