@@ -240,7 +240,9 @@ class Replayer(object):
         sis = self.shape_infos
         batches=[sis[x:x+self.batch_size] for x in xrange(0, len(sis), self.batch_size)]
         for batch in batches:
-            self.send_batch(batch)
+            stops = [si for si in sis if si.stop_idx is not None]
+            if stops:
+                self.send_batch(batch)
 
     def send_batch(self,sis):
         items = [self.get_shape_item(si) for si in sis]
@@ -264,6 +266,10 @@ class Replayer(object):
                 desc_list.append(desc)
         items_desc = ' ,'.join(desc_list)
         print 'Send %s items of type %s. result = %s' % (len(items),items_desc,result['cur_gtfs_trip_id'])
+        if result['cur_gtfs_trip_id']:
+            details = self.do_get('/api/1/trips/{0}/stops/?device_id={1}'.format(result['cur_gtfs_trip_id'],
+                                                                                 self.device_id))
+            print json.dumps(details)
         time.sleep(self.delay)
 
     def go(self):

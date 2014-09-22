@@ -56,7 +56,10 @@ class TtTrip(models.Model):
         stop_times = self.get_stop_times()
         stop_times_json = []
         for st in stop_times:
-            found = [s for s in rt_stops if s.stop_id == st.stop_id]
+            if rt_stops:
+                found = [s for s in rt_stops if s.stop_id == st.stop_id]
+            else:
+                found = None
             stop_times_json.append(st.to_json(rt_stop=found[0] if found else None))
         result = dict(gtfs_trip_id=self.gtfs_trip_id,
                       stop_times=stop_times_json)
