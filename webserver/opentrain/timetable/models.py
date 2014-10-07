@@ -16,11 +16,14 @@ class TtStop(models.Model):
     def __unicode__(self):
         return '%s %s' % (self.stop_name,self.gtfs_stop_id)
     
-    def to_json(self):
-        return dict(stop_name=self.stop_name,
+    def to_json(self,bssids=None):
+        result =   dict(stop_name=self.stop_name,
                     latlon=[self.stop_lat,self.stop_lon],
                     gtfs_stop_id=self.gtfs_stop_id,
                     stop_short_name=self.get_short_name())
+        if bssids is not None:
+            result['bssids'] = bssids
+        return result
 
 class TtShape(models.Model):
     gtfs_shape_id = models.CharField(max_length=100,db_index=True)

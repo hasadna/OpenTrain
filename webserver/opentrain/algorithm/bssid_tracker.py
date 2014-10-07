@@ -316,6 +316,16 @@ def load_bssids_from_manual_map_file():
     return data
             
 
+def get_bssids_by_stop_ids():
+    from timetable.models import TtStop
+    from collections import defaultdict
+    result = defaultdict(list)
+    high_conf_bssids = [x for x in bssids if tracker.has_bssid_high_confidence(x)]
+    for bssid in high_conf_bssids:
+        (stop_id,prob,total) = tracker.get_stop_id(bssid)
+        result[stop_id].append(bssid)
+    return result
+
 def get_bssid_data_for_app():
   from timetable.models import TtStop
   bssids = tracker.get_bssids()

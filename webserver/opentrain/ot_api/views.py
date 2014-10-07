@@ -1,5 +1,4 @@
 import json
-from analysis.models import RtStop
 import common.ot_utils
 import datetime
 from django.http.response import HttpResponse, HttpResponseBadRequest
@@ -115,6 +114,7 @@ class TripDetails(ApiView):
     api_url = r'^trips/(?P<gtfs_trip_id>\w+)/stops/$'
     def get(self,request,gtfs_trip_id):
         import timetable.services
+        from analysis.models import RtStop
         device_id = request.GET.get('device_id')
         if device_id is None:
             return HttpResponseBadRequest('Must specify device_id')
@@ -189,8 +189,20 @@ class BssidsToStopIds(ApiView):
         data = algorithm.bssid_tracker.get_bssid_data_for_app()
         return self.get_json_resp(data)
 
+class AllStops(ApiView):
+    """ return lists of stops with bssids
+    """
+    api_url = r'^stops/$'
+    def get(self,request):
+        from timetable.models import TtStop
+        stops = TtStop.objects.all().order_by('gtfs_stop_id')
+        import algorithm.bssid_tracker
+        data = algorithm.bssid_tracker.get_bssids_by_stop_ids()
+        content = [stop.to_json(bssids=data.get(stop.id,[])) for stop in stops]
+        return self.get_json_resp(content)
+
 class DistBetweenShapes(ApiView):
-    api_url = r'^stops/distance/'
+    api_url = r'^stops/distance/$'
     def get(self,request):
         import timetable.services
         if 'gtfs_stop_id1' not in request.GET or 'gtfs_stop_id2' not in request.GET:
