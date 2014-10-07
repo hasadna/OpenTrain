@@ -198,7 +198,7 @@ class AllStops(ApiView):
         stops = TtStop.objects.all().order_by('gtfs_stop_id')
         import algorithm.bssid_tracker
         data = algorithm.bssid_tracker.get_bssids_by_stop_ids()
-        content = [stop.to_json(bssids=data.get(stop.gtfs_stp_id,[])) for stop in stops]
+        content = [stop.to_json(bssids=data.get(stop.gtfs_stop_id,[])) for stop in stops]
         return self.get_json_resp(content)
 
 class DistBetweenShapes(ApiView):
