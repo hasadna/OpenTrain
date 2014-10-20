@@ -24,6 +24,22 @@ def add(req):
     content = {'cur_gtfs_trip_id': cur_gtfs_trip_id}
     return HttpResponse(status=201,content=json.dumps(content),content_type='application/json')
 
+@csrf_exempt
+def add_stop(req):
+    body = req.body
+    try:
+        stop_info = json.loads(req.body)
+    except ValueError:
+        return HttpResponse(status=400,content='Wrong json format',content_type='text/plain')
+    if not isinstance(stop_info,dict):
+        return HttpResponse(status=400,content='Wrong json format - should be json object',content_type='text/plain')
+    keys = stop_info.keys()
+    extra_keys = set(keys) - {'gtfs_stop_id','latlon','device_id','bssids'}
+    if extra_keys:
+        return HttpResponse(status=400,content='Extra keys: %s' % list(extra_keys),content_type='text/plain')
+    return HttpResponse(status=201)
+
+
 def show(req):
     count = int(req.GET.get('count',20))
     rrs = list(models.RawReport.objects.order_by('-id'))[0:count-1]
