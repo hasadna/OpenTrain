@@ -1,0 +1,20 @@
+import os
+import sys
+sys.path.append(os.getcwd())
+sys.path.append(os.path.dirname(os.getcwd()))
+os.environ['DJANGO_SETTINGS_MODULE'] = 'opentrain.settings'
+from redis_intf.client import get_redis_pipeline, get_redis_client
+import algorithm.stop_detector as stop_detector
+
+cl = get_redis_client()
+pattern = 'train_tracker:{}*'.format(sys.argv[1])
+print 'pattern={}'.format(pattern)
+keys = cl.keys(pattern=pattern)
+for x in keys:
+  print x
+
+tracker_id=x.split(':')[1]
+
+stop_detector.print_tracked_stop_times(tracker_id)
+
+print cl.get('train_tracker:{}:trip_delays_ids_list_of_lists'.format(tracker_id))
