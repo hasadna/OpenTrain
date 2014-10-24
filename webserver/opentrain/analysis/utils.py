@@ -84,4 +84,12 @@ DEVICE:           %(dev_cur)20s %(dev_next)20s %(dev_delta)10s
             
 def locs_dist(loc1,loc2):
     return common.ot_utils.latlon_to_meters(loc1.lat,loc1.lon,loc2.lat,loc2.lon)
-        
+
+def delete_device_id(device_id):
+    import analysis.models
+    reports_to_delete = analysis.models.Report.objects.filter(device_id=device_id)
+    reports_to_delete.delete()
+    import reports
+    raw_reports = reports.models.RawReport.objects.filter(text__contains=device_id)
+    raw_reports.delete()
+
