@@ -6,7 +6,7 @@ from django.utils.translation import ugettext as _
 from timetable.models import TtStopTime,TtStop,TtTrip
 
 def get_stations():
-    result = models.TtStop.objects.all().order_by('stop_name')
+    result = models.TtStop.objects.all().order_by('stop_name',)
     return list(result)
 
 def get_trip(trip_id):
