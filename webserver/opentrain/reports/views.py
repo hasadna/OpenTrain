@@ -27,10 +27,24 @@ def add(req):
 @csrf_exempt
 def add_stop(req):
     body = req.body
+    with open('/tmp/{0}'.format(time.time()),'w') as fh:
+        fh.write('===============================\n')
+        fh.write('req.body = \n')
+        fh.write(req.body)
+        fh.write('\n===============================\n')
+        fh.write('req.POST = \n')
+        fh.write(req.POST)
+        fh.write('\n===============================\n')
+        fh.write('req.GET = \n')
+        fh.write(req.GET)
+        fh.write('\n===============================\n')
+        fh.write('req.path = \n')
+        fh.write(req.path)
+        fh.write('\n===============================\n')
     try:
         stop_info = json.loads(req.body)
     except ValueError:
-        return HttpResponse(status=400,content='Wrong json format',content_type='text/plain')
+        return HttpResponse(status=400,content='Wrong json format: could not parse json object',content_type='text/plain')
     if not isinstance(stop_info,dict):
         return HttpResponse(status=400,content='Wrong json format - should be json object',content_type='text/plain')
     keys = stop_info.keys()
